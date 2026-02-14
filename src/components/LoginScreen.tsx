@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { checkNip07 } from '../lib/nostr';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props) {
+  const { t } = useTranslation();
   const [hasExtension, setHasExtension] = useState(false);
   const [nsec, setNsec] = useState('');
   const [bunkerUrl, setBunkerUrl] = useState('');
@@ -23,8 +25,8 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.logo}>⚡</div>
-        <h1 style={styles.title}>Nostr + Lightning</h1>
-        <p style={styles.subtitle}>Boilerplate</p>
+        <h1 style={styles.title}>{t.login.title}</h1>
+        <p style={styles.subtitle}>{t.login.subtitle}</p>
 
         {error && <div style={styles.error}>{error}</div>}
 
@@ -33,19 +35,19 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
             style={{ ...styles.tab, ...(tab === 'nip07' ? styles.tabActive : {}) }}
             onClick={() => setTab('nip07')}
           >
-            🔌 Extensión
+            🔌 {t.login.extensionTab}
           </button>
           <button
             style={{ ...styles.tab, ...(tab === 'bunker' ? styles.tabActive : {}) }}
             onClick={() => setTab('bunker')}
           >
-            🔐 Bunker
+            🔐 {t.login.bunkerTab}
           </button>
           <button
             style={{ ...styles.tab, ...(tab === 'nsec' ? styles.tabActive : {}) }}
             onClick={() => setTab('nsec')}
           >
-            🔑 nsec
+            🔑 {t.login.nsecTab}
           </button>
         </div>
 
@@ -53,23 +55,21 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
           {tab === 'nip07' && (
             <div>
               <p style={styles.desc}>
-                {hasExtension
-                  ? 'Extensión NIP-07 detectada. Conectá con Alby, nos2x u otra.'
-                  : 'No se detectó extensión NIP-07. Instalá Alby o nos2x.'}
+                {hasExtension ? t.login.extensionDetected : t.login.extensionNotFound}
               </p>
               <button
                 style={{ ...styles.btn, ...styles.btnPrimary, opacity: hasExtension ? 1 : 0.5 }}
                 onClick={onNip07}
                 disabled={loading || !hasExtension}
               >
-                {loading ? 'Conectando...' : 'Conectar con extensión'}
+                {loading ? t.login.connecting : t.login.connectExtension}
               </button>
             </div>
           )}
 
           {tab === 'bunker' && (
             <div>
-              <p style={styles.desc}>Login remoto via NIP-46 (nsecBunker)</p>
+              <p style={styles.desc}>{t.login.bunkerDesc}</p>
               <input
                 style={styles.input}
                 placeholder="bunker://pubkey?relay=wss://..."
@@ -81,7 +81,7 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
                 onClick={() => onBunker(bunkerUrl)}
                 disabled={loading || !bunkerUrl}
               >
-                {loading ? 'Conectando...' : 'Conectar con Bunker'}
+                {loading ? t.login.connecting : t.login.connectBunker}
               </button>
             </div>
           )}
@@ -89,7 +89,7 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
           {tab === 'nsec' && (
             <div>
               <div style={styles.warning}>
-                ⚠️ Solo para desarrollo. No uses tu nsec principal.
+                ⚠️ {t.login.nsecWarning}
               </div>
               <input
                 style={styles.input}
@@ -103,7 +103,7 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
                 onClick={() => onNsec(nsec)}
                 disabled={loading || !nsec}
               >
-                {loading ? 'Conectando...' : 'Login con nsec'}
+                {loading ? t.login.connecting : t.login.loginNsec}
               </button>
             </div>
           )}
@@ -115,12 +115,10 @@ export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    minHeight: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#0a0f1a',
-    padding: 20,
+    padding: 0,
   },
   card: {
     background: '#111827',

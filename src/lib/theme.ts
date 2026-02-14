@@ -1,0 +1,35 @@
+export const theme = {
+  colors: {
+    background: '#0a0f1a',
+    cardBg: '#111827',
+    cardBgHover: '#1a2332',
+    primary: '#2563eb',
+    primaryHover: '#3b82f6',
+    secondary: '#ff8c00',
+    secondaryHover: '#ffaa33',
+    text: '#ffffff',
+    textMuted: '#9ca3af',
+    textDim: '#6b7280',
+    success: '#34d399',
+    error: '#7f1d1d',
+    errorText: '#fca5a5',
+    warning: '#78350f',
+    warningText: '#fbbf24',
+    border: '#1f2937',
+    borderLight: '#374151',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+  },
+  fonts: {
+    body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    mono: "'SF Mono', 'Fira Code', monospace",
+  },
+  spacing: {
+    navHeight: 64,
+    section: 80,
+    sectionMobile: 48,
+    container: 1200,
+  },
+  breakpoints: {
+    mobile: 768,
+  },
+} as const;

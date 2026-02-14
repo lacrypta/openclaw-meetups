@@ -1,32 +1,76 @@
+import { useState } from 'react';
 import { useNostr } from './hooks/useNostr';
 import { useProfile } from './hooks/useProfile';
-import { LoginScreen } from './components/LoginScreen';
-import { ProfileView } from './components/ProfileView';
+import { Navbar } from './components/Navbar';
+import { HeroSection } from './components/HeroSection';
+import { AboutSection } from './components/AboutSection';
+import { ScheduleSection } from './components/ScheduleSection';
+import { LocationSection } from './components/LocationSection';
+import { RsvpSection } from './components/RsvpSection';
+import { Footer } from './components/Footer';
+import { LoginModal } from './components/LoginModal';
+import { EventBanner } from './components/EventBanner';
+import { theme } from './lib/theme';
 
 function App() {
-  const { pubkey, method, loading, error, loginNip07, loginNsec, loginBunker, logout } = useNostr();
-  const { profile, loading: profileLoading } = useProfile(pubkey);
+  const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } = useNostr();
+  const { profile } = useProfile(pubkey);
+  const [showLogin, setShowLogin] = useState(false);
 
-  if (!pubkey) {
-    return (
-      <LoginScreen
-        loading={loading}
-        error={error}
-        onNip07={loginNip07}
-        onNsec={loginNsec}
-        onBunker={loginBunker}
-      />
-    );
-  }
+  const handleLoginSuccess = () => {
+    setShowLogin(false);
+  };
+
+  const handleNip07 = async () => {
+    await loginNip07();
+    handleLoginSuccess();
+  };
+
+  const handleNsec = async (nsec: string) => {
+    await loginNsec(nsec);
+    handleLoginSuccess();
+  };
+
+  const handleBunker = async (url: string) => {
+    await loginBunker(url);
+    handleLoginSuccess();
+  };
+
+  const scrollToRsvp = () => {
+    document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <ProfileView
-      pubkey={pubkey}
-      profile={profile}
-      loading={profileLoading}
-      method={method}
-      onLogout={logout}
-    />
+    <div style={{ minHeight: '100vh', background: theme.colors.background }}>
+      <Navbar
+        pubkey={pubkey}
+        profile={profile}
+        onLoginClick={() => setShowLogin(true)}
+        onLogout={logout}
+      />
+      <EventBanner />
+      <main>
+        <HeroSection
+          pubkey={pubkey}
+          onLoginClick={() => setShowLogin(true)}
+          onRsvpClick={scrollToRsvp}
+        />
+        <AboutSection />
+        <ScheduleSection />
+        <LocationSection />
+        <RsvpSection pubkey={pubkey} profile={profile} onLoginClick={() => setShowLogin(true)} />
+      </main>
+      <Footer />
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        loading={loading}
+        error={error}
+        onNip07={handleNip07}
+        onNsec={handleNsec}
+        onBunker={handleBunker}
+      />
+    </div>
   );
 }
 
