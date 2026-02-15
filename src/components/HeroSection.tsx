@@ -1,45 +1,48 @@
-import { useTranslation } from '../i18n/useTranslation';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { getNextFirstThursday } from '../hooks/useRsvp';
-import { theme } from '../lib/theme';
+import { useTranslation } from "../i18n/useTranslation";
+import { useIsMobile } from "../hooks/useMediaQuery";
+import { getNextFirstThursday } from "../hooks/useRsvp";
+import { theme } from "../lib/theme";
 
-const EVENT_URL = 'https://luma.com/rm5v3k5r';
-
-interface Props {
-  pubkey: string | null;
-  onLoginClick: () => void;
-  onRsvpClick: () => void;
-}
-
-export function HeroSection({ pubkey, onLoginClick, onRsvpClick }: Props) {
+export function HeroSection() {
   const { t, lang } = useTranslation();
   const isMobile = useIsMobile();
   const nextDate = getNextFirstThursday();
-  const openEventPage = () => {
-    const popup = window.open(EVENT_URL, '_blank', 'noopener,noreferrer');
-    if (!popup) {
-      onLoginClick();
-    }
-  };
 
-  const formattedDate = nextDate.toLocaleDateString(lang === 'es' ? 'es-AR' : 'en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formattedDate = nextDate.toLocaleDateString(
+    lang === "es" ? "es-AR" : "en-US",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   return (
     <section
       style={{
         ...styles.hero,
         paddingTop: theme.spacing.navHeight + (isMobile ? 40 : 80),
-        minHeight: '100vh',
+        minHeight: "100vh",
       }}
     >
       <div style={styles.bgGlow} />
-      <div style={{ ...styles.content, padding: isMobile ? '0 20px' : '0 40px' }}>
-        <div style={styles.lobster}>🦞</div>
+      <div
+        style={{ ...styles.content, padding: isMobile ? "0 20px" : "0 40px" }}
+      >
+        <div style={styles.logoRow}>
+          <img
+            src='/openclaw-logo.png'
+            alt='OpenClaw'
+            style={styles.heroLogo}
+          />
+          <span style={styles.logoX}>x</span>
+          <img
+            src='/lacrypta-logo.png'
+            alt='La Crypta'
+            style={styles.heroLogo}
+          />
+        </div>
         <h1
           style={{
             ...styles.title,
@@ -63,23 +66,6 @@ export function HeroSection({ pubkey, onLoginClick, onRsvpClick }: Props) {
           <span style={styles.dateValue}>{formattedDate}</span>
           <span style={styles.dateTime}>19:00 hs (ART)</span>
         </div>
-
-        <div
-          style={{
-            ...styles.ctas,
-            flexDirection: isMobile ? 'column' : 'row',
-          }}
-        >
-          {!pubkey ? (
-            <button style={styles.ctaPrimary} onClick={openEventPage}>
-              ⚡ {t.hero.ctaLogin}
-            </button>
-          ) : (
-            <button style={styles.ctaSecondary} onClick={onRsvpClick}>
-              {t.hero.ctaRsvp}
-            </button>
-          )}
-        </div>
       </div>
     </section>
   );
@@ -87,107 +73,92 @@ export function HeroSection({ pubkey, onLoginClick, onRsvpClick }: Props) {
 
 const styles: Record<string, React.CSSProperties> = {
   hero: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     background: theme.colors.background,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   bgGlow: {
-    position: 'absolute',
-    top: '30%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    position: "absolute",
+    top: "30%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
     width: 600,
     height: 600,
-    borderRadius: '50%',
+    borderRadius: "50%",
     background: `radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(255, 140, 0, 0.05) 50%, transparent 70%)`,
-    pointerEvents: 'none',
+    pointerEvents: "none",
   },
   content: {
-    position: 'relative',
+    position: "relative",
     zIndex: 1,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
     maxWidth: 800,
   },
-  lobster: {
-    fontSize: 64,
+  logoRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
     marginBottom: 16,
+  },
+  heroLogo: {
+    width: 64,
+    height: 64,
+    objectFit: "contain" as const,
+  },
+  logoX: {
+    fontSize: 24,
+    fontWeight: 700,
+    color: theme.colors.textDim,
   },
   title: {
     color: theme.colors.text,
     fontWeight: 800,
     lineHeight: 1.1,
-    margin: '0 0 8px',
+    margin: "0 0 8px",
   },
   subtitle: {
     color: theme.colors.textMuted,
     fontWeight: 400,
-    margin: '0 0 12px',
+    margin: "0 0 12px",
   },
   tagline: {
     color: theme.colors.secondary,
     fontSize: 14,
     fontWeight: 600,
     letterSpacing: 1,
-    textTransform: 'uppercase' as const,
-    margin: '0 0 40px',
+    textTransform: "uppercase" as const,
+    margin: "0 0 40px",
   },
   dateCard: {
-    display: 'inline-flex',
-    flexDirection: 'column' as const,
+    display: "inline-flex",
+    flexDirection: "column" as const,
     gap: 4,
     background: theme.colors.cardBg,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 12,
-    padding: '20px 32px',
+    padding: "20px 32px",
     marginBottom: 32,
   },
   dateLabel: {
     color: theme.colors.textDim,
     fontSize: 12,
     fontWeight: 600,
-    textTransform: 'uppercase' as const,
+    textTransform: "uppercase" as const,
     letterSpacing: 1,
   },
   dateValue: {
     color: theme.colors.text,
     fontSize: 20,
     fontWeight: 700,
-    textTransform: 'capitalize' as const,
+    textTransform: "capitalize" as const,
   },
   dateTime: {
     color: theme.colors.secondary,
     fontSize: 14,
     fontWeight: 600,
-  },
-  ctas: {
-    display: 'flex',
-    gap: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ctaPrimary: {
-    padding: '14px 32px',
-    border: 'none',
-    borderRadius: 10,
-    background: theme.colors.primary,
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: 700,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  ctaSecondary: {
-    padding: '14px 32px',
-    border: `2px solid ${theme.colors.secondary}`,
-    borderRadius: 10,
-    background: 'transparent',
-    color: theme.colors.secondary,
-    fontSize: 16,
-    fontWeight: 700,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
   },
 };

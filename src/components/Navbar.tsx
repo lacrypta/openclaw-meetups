@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { useTranslation } from '../i18n/useTranslation';
-import type { Language } from '../i18n/context';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { theme } from '../lib/theme';
-import type { NostrProfile } from '../lib/nostr';
+import { useState } from "react";
+import { useTranslation } from "../i18n/useTranslation";
+import type { Language } from "../i18n/context";
+import { useIsMobile } from "../hooks/useMediaQuery";
+import { theme } from "../lib/theme";
+import type { NostrProfile } from "../lib/nostr";
 
 interface Props {
   pubkey: string | null;
@@ -18,10 +18,9 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: '#about', label: t.nav.about },
-    { href: '#schedule', label: t.nav.schedule },
-    { href: '#location', label: t.nav.location },
-    { href: '#rsvp', label: t.nav.rsvp },
+    { href: "#about", label: t.nav.about },
+    { href: "#schedule", label: t.nav.schedule },
+    { href: "#location", label: t.nav.location },
   ];
 
   const toggleLang = (l: Language) => {
@@ -31,11 +30,16 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
   return (
     <nav style={styles.nav}>
       <div style={{ ...styles.inner, maxWidth: theme.spacing.container }}>
-        <a href="#" style={styles.brand}>
-          <span style={styles.lobster}>🦞</span>
-          <span style={styles.brandText}>OpenClaw</span>
+        <a href='#' style={styles.brand}>
+          <img src='/openclaw-logo.png' alt='OpenClaw' style={styles.navLogo} />
+          <span style={styles.brandAccent}>OpenClaw</span>
           <span style={styles.brandDivider}>x</span>
-          <span style={styles.brandAccent}>La Crypta</span>
+          <img
+            src='/lacrypta-logo.png'
+            alt='La Crypta'
+            style={styles.navLogo}
+          />
+          <span style={styles.brandText}>La Crypta</span>
         </a>
 
         {!isMobile && (
@@ -53,18 +57,18 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
             <button
               style={{
                 ...styles.langBtn,
-                ...(lang === 'es' ? styles.langBtnActive : {}),
+                ...(lang === "es" ? styles.langBtnActive : {}),
               }}
-              onClick={() => toggleLang('es')}
+              onClick={() => toggleLang("es")}
             >
               ES
             </button>
             <button
               style={{
                 ...styles.langBtn,
-                ...(lang === 'en' ? styles.langBtnActive : {}),
+                ...(lang === "en" ? styles.langBtnActive : {}),
               }}
-              onClick={() => toggleLang('en')}
+              onClick={() => toggleLang("en")}
             >
               EN
             </button>
@@ -73,7 +77,7 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
           {pubkey ? (
             <div style={styles.profileArea}>
               {profile?.picture ? (
-                <img src={profile.picture} alt="" style={styles.profilePic} />
+                <img src={profile.picture} alt='' style={styles.profilePic} />
               ) : (
                 <div style={styles.profilePlaceholder}>👤</div>
               )}
@@ -91,9 +95,9 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
             <button
               style={styles.hamburger}
               onClick={() => setMenuOpen(!menuOpen)}
-              aria-label="Menu"
+              aria-label='Menu'
             >
-              {menuOpen ? '✕' : '☰'}
+              {menuOpen ? "✕" : "☰"}
             </button>
           )}
         </div>
@@ -119,33 +123,35 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout }: Props) {
 
 const styles: Record<string, React.CSSProperties> = {
   nav: {
-    position: 'fixed',
+    position: "fixed",
     top: 0,
     left: 0,
     right: 0,
     height: theme.spacing.navHeight,
-    background: 'rgba(10, 15, 26, 0.95)',
-    backdropFilter: 'blur(12px)',
+    background: "rgba(10, 15, 26, 0.95)",
+    backdropFilter: "blur(12px)",
     borderBottom: `1px solid ${theme.colors.border}`,
     zIndex: 1000,
   },
   inner: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: '100%',
-    margin: '0 auto',
-    padding: '0 24px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "100%",
+    margin: "0 auto",
+    padding: "0 24px",
   },
   brand: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 8,
-    textDecoration: 'none',
+    textDecoration: "none",
     color: theme.colors.text,
   },
-  lobster: {
-    fontSize: 24,
+  navLogo: {
+    width: 24,
+    height: 24,
+    objectFit: "contain" as const,
   },
   brandText: {
     fontSize: 18,
@@ -161,109 +167,109 @@ const styles: Record<string, React.CSSProperties> = {
     color: theme.colors.secondary,
   },
   links: {
-    display: 'flex',
+    display: "flex",
     gap: 32,
   },
   link: {
     color: theme.colors.textMuted,
     fontSize: 14,
     fontWeight: 500,
-    textDecoration: 'none',
-    transition: 'color 0.2s',
+    textDecoration: "none",
+    transition: "color 0.2s",
   },
   actions: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 12,
   },
   langSwitch: {
-    display: 'flex',
+    display: "flex",
     gap: 2,
     background: theme.colors.border,
     borderRadius: 6,
     padding: 2,
   },
   langBtn: {
-    padding: '4px 10px',
-    border: 'none',
+    padding: "4px 10px",
+    border: "none",
     borderRadius: 4,
-    background: 'transparent',
+    background: "transparent",
     color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
+    cursor: "pointer",
+    transition: "all 0.2s",
   },
   langBtnActive: {
     background: theme.colors.secondary,
     color: theme.colors.text,
   },
   connectBtn: {
-    padding: '8px 16px',
-    border: 'none',
+    padding: "8px 16px",
+    border: "none",
     borderRadius: 8,
     background: theme.colors.primary,
     color: theme.colors.text,
     fontSize: 13,
     fontWeight: 600,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   profileArea: {
-    display: 'flex',
-    alignItems: 'center',
+    display: "flex",
+    alignItems: "center",
     gap: 8,
   },
   profilePic: {
     width: 32,
     height: 32,
-    borderRadius: '50%',
-    objectFit: 'cover' as const,
+    borderRadius: "50%",
+    objectFit: "cover" as const,
   },
   profilePlaceholder: {
     width: 32,
     height: 32,
-    borderRadius: '50%',
+    borderRadius: "50%",
     background: theme.colors.border,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     fontSize: 16,
   },
   logoutBtn: {
-    padding: '6px 12px',
+    padding: "6px 12px",
     border: `1px solid ${theme.colors.borderLight}`,
     borderRadius: 6,
-    background: 'transparent',
+    background: "transparent",
     color: theme.colors.textMuted,
     fontSize: 12,
     fontWeight: 500,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   hamburger: {
-    padding: '4px 8px',
-    border: 'none',
-    background: 'transparent',
+    padding: "4px 8px",
+    border: "none",
+    background: "transparent",
     color: theme.colors.text,
     fontSize: 20,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   mobileMenu: {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     top: theme.spacing.navHeight,
     left: 0,
     right: 0,
-    background: 'rgba(10, 15, 26, 0.98)',
+    background: "rgba(10, 15, 26, 0.98)",
     borderBottom: `1px solid ${theme.colors.border}`,
-    padding: '16px 24px',
-    display: 'flex',
-    flexDirection: 'column' as const,
+    padding: "16px 24px",
+    display: "flex",
+    flexDirection: "column" as const,
     gap: 16,
   },
   mobileLink: {
     color: theme.colors.textMuted,
     fontSize: 16,
     fontWeight: 500,
-    textDecoration: 'none',
-    padding: '8px 0',
+    textDecoration: "none",
+    padding: "8px 0",
   },
 };

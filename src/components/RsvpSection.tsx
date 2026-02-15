@@ -1,8 +1,8 @@
-import { useTranslation } from '../i18n/useTranslation';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { useRsvp } from '../hooks/useRsvp';
-import { theme } from '../lib/theme';
-import type { NostrProfile } from '../lib/nostr';
+import { useTranslation } from "../i18n/useTranslation";
+import { useIsMobile } from "../hooks/useMediaQuery";
+import { useRsvp } from "../hooks/useRsvp";
+import { theme } from "../lib/theme";
+import type { NostrProfile } from "../lib/nostr";
 
 interface Props {
   pubkey: string | null;
@@ -16,12 +16,12 @@ export function RsvpSection({ pubkey, profile, onLoginClick }: Props) {
   const { isAttending, attendeeCount, toggleRsvp } = useRsvp(pubkey);
 
   return (
-    <section id="rsvp" style={styles.section}>
+    <section id='rsvp' style={styles.section}>
       <div
         style={{
           ...styles.inner,
           maxWidth: 600,
-          padding: isMobile ? '0 20px' : '0 40px',
+          padding: isMobile ? "0 20px" : "0 40px",
         }}
       >
         <h2 style={styles.sectionTitle}>{t.rsvp.title}</h2>
@@ -39,12 +39,12 @@ export function RsvpSection({ pubkey, profile, onLoginClick }: Props) {
           <div style={styles.rsvpCard}>
             <div style={styles.profileMini}>
               {profile?.picture ? (
-                <img src={profile.picture} alt="" style={styles.profilePic} />
+                <img src={profile.picture} alt='' style={styles.profilePic} />
               ) : (
                 <div style={styles.profilePlaceholder}>👤</div>
               )}
               <span style={styles.profileName}>
-                {profile?.display_name || profile?.name || 'Anon'}
+                {profile?.display_name || profile?.name || "Anon"}
               </span>
             </div>
 
@@ -80,13 +80,13 @@ const styles: Record<string, React.CSSProperties> = {
     background: theme.colors.cardBg,
   },
   inner: {
-    margin: '0 auto',
+    margin: "0 auto",
   },
   sectionTitle: {
     color: theme.colors.text,
     fontSize: 32,
     fontWeight: 800,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
     marginBottom: 48,
   },
   loginPrompt: {
@@ -94,7 +94,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 16,
     padding: 40,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   },
   lockIcon: {
     fontSize: 36,
@@ -113,43 +113,43 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 24,
   },
   loginBtn: {
-    padding: '14px 32px',
-    border: 'none',
+    padding: "14px 32px",
+    border: "none",
     borderRadius: 10,
     background: theme.colors.primary,
     color: theme.colors.text,
     fontSize: 16,
     fontWeight: 700,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   rsvpCard: {
     background: theme.colors.background,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: 16,
     padding: 32,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   },
   profileMini: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 12,
     marginBottom: 24,
   },
   profilePic: {
     width: 40,
     height: 40,
-    borderRadius: '50%',
-    objectFit: 'cover' as const,
+    borderRadius: "50%",
+    objectFit: "cover" as const,
   },
   profilePlaceholder: {
     width: 40,
     height: 40,
-    borderRadius: '50%',
+    borderRadius: "50%",
     background: theme.colors.border,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     fontSize: 20,
   },
   profileName: {
@@ -158,32 +158,32 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   confirmBtn: {
-    padding: '14px 32px',
-    border: 'none',
+    padding: "14px 32px",
+    border: "none",
     borderRadius: 10,
     background: theme.colors.secondary,
     color: theme.colors.text,
     fontSize: 16,
     fontWeight: 700,
-    cursor: 'pointer',
-    width: '100%',
+    cursor: "pointer",
+    width: "100%",
     maxWidth: 300,
   },
   attendingBlock: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
     gap: 12,
   },
   checkmark: {
     width: 48,
     height: 48,
-    borderRadius: '50%',
-    background: 'rgba(52, 211, 153, 0.15)',
+    borderRadius: "50%",
+    background: "rgba(52, 211, 153, 0.15)",
     color: theme.colors.success,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     fontSize: 24,
     fontWeight: 700,
   },
@@ -193,14 +193,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
   },
   cancelBtn: {
-    padding: '8px 20px',
+    padding: "8px 20px",
     border: `1px solid ${theme.colors.borderLight}`,
     borderRadius: 8,
-    background: 'transparent',
+    background: "transparent",
     color: theme.colors.textMuted,
     fontSize: 13,
     fontWeight: 500,
-    cursor: 'pointer',
+    cursor: "pointer",
   },
   attendeeCount: {
     color: theme.colors.textDim,

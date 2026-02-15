@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useNostr } from './hooks/useNostr';
-import { useProfile } from './hooks/useProfile';
-import { Navbar } from './components/Navbar';
-import { HeroSection } from './components/HeroSection';
-import { AboutSection } from './components/AboutSection';
-import { ScheduleSection } from './components/ScheduleSection';
-import { LocationSection } from './components/LocationSection';
-import { RsvpSection } from './components/RsvpSection';
-import { Footer } from './components/Footer';
-import { LoginModal } from './components/LoginModal';
-import { EventBanner } from './components/EventBanner';
-import { theme } from './lib/theme';
+import { useState } from "react";
+import { useNostr } from "./hooks/useNostr";
+import { useProfile } from "./hooks/useProfile";
+import { Navbar } from "./components/Navbar";
+import { HeroSection } from "./components/HeroSection";
+import { AboutSection } from "./components/AboutSection";
+import { ScheduleSection } from "./components/ScheduleSection";
+import { LocationSection } from "./components/LocationSection";
+import { Footer } from "./components/Footer";
+import { LoginModal } from "./components/LoginModal";
+import { EventBanner } from "./components/EventBanner";
+import { theme } from "./lib/theme";
 
 function App() {
-  const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } = useNostr();
+  const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } =
+    useNostr();
   const { profile } = useProfile(pubkey);
   const [showLogin, setShowLogin] = useState(false);
 
@@ -36,12 +36,8 @@ function App() {
     handleLoginSuccess();
   };
 
-  const scrollToRsvp = () => {
-    document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.background }}>
+    <div style={{ minHeight: "100vh", background: theme.colors.background }}>
       <Navbar
         pubkey={pubkey}
         profile={profile}
@@ -50,15 +46,10 @@ function App() {
       />
       <EventBanner />
       <main>
-        <HeroSection
-          pubkey={pubkey}
-          onLoginClick={() => setShowLogin(true)}
-          onRsvpClick={scrollToRsvp}
-        />
+        <HeroSection />
         <AboutSection />
         <ScheduleSection />
         <LocationSection />
-        <RsvpSection pubkey={pubkey} profile={profile} onLoginClick={() => setShowLogin(true)} />
       </main>
       <Footer />
       <LoginModal

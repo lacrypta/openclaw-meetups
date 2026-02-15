@@ -1,6 +1,6 @@
-import { useTranslation } from '../i18n/useTranslation';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { theme } from '../lib/theme';
+import { useTranslation } from "../i18n/useTranslation";
+import { useIsMobile } from "../hooks/useMediaQuery";
+import { theme } from "../lib/theme";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -12,24 +12,24 @@ export function Footer() {
         style={{
           ...styles.inner,
           maxWidth: theme.spacing.container,
-          flexDirection: isMobile ? 'column' : 'row',
+          flexDirection: isMobile ? "column" : "row",
           gap: isMobile ? 32 : 48,
         }}
       >
         <div style={styles.column}>
           <h4 style={styles.columnTitle}>🦞 OpenClaw</h4>
           <a
-            href="https://github.com/openclaw/openclaw"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://github.com/openclaw/openclaw'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             GitHub
           </a>
           <a
-            href="https://openclaw.ai"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://openclaw.ai'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             Website
@@ -40,56 +40,57 @@ export function Footer() {
         <div style={styles.column}>
           <h4 style={styles.columnTitle}>La Crypta</h4>
           <a
-            href="https://lacrypta.ar"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://lacrypta.ar'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             lacrypta.ar
           </a>
           <a
-            href="https://github.com/lacrypta"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://github.com/lacrypta'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             GitHub
           </a>
-          <span style={styles.tagline}>A revolution disguised as an investment</span>
+          <span style={styles.tagline}>
+            A revolution disguised as an investment
+          </span>
         </div>
 
         <div style={styles.column}>
           <h4 style={styles.columnTitle}>Nostr</h4>
           <a
-            href="https://nostr.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://nostr.com'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             What is Nostr?
           </a>
           <a
-            href="https://getalby.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://getalby.com'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.footerLink}
           >
             Get Alby
           </a>
-          <span style={styles.relay}>relay.lacrypta.ar</span>
         </div>
       </div>
 
       <div style={styles.bottom}>
         <p style={styles.bottomText}>
-          {t.footer.builtWith} 🦞⚡ &middot; {t.footer.rights} &middot;{' '}
+          {t.footer.builtWith} 🦞⚡ &middot; {t.footer.rights} &middot;{" "}
           {new Date().getFullYear()}
         </p>
         <p style={styles.bottomText}>
           <a
-            href="https://github.com/agustinkassis/nostr-lightning-boilerplate"
-            target="_blank"
-            rel="noopener noreferrer"
+            href='https://github.com/agustinkassis/nostr-lightning-boilerplate'
+            target='_blank'
+            rel='noopener noreferrer'
             style={styles.sourceLink}
           >
             {t.footer.openSource}
@@ -104,16 +105,16 @@ const styles: Record<string, React.CSSProperties> = {
   footer: {
     background: theme.colors.cardBg,
     borderTop: `1px solid ${theme.colors.border}`,
-    padding: '48px 24px 24px',
+    padding: "48px 24px 24px",
   },
   inner: {
-    display: 'flex',
-    margin: '0 auto',
-    justifyContent: 'space-between',
+    display: "flex",
+    margin: "0 auto",
+    justifyContent: "space-between",
   },
   column: {
-    display: 'flex',
-    flexDirection: 'column' as const,
+    display: "flex",
+    flexDirection: "column" as const,
     gap: 8,
   },
   columnTitle: {
@@ -125,12 +126,12 @@ const styles: Record<string, React.CSSProperties> = {
   footerLink: {
     color: theme.colors.textMuted,
     fontSize: 14,
-    textDecoration: 'none',
+    textDecoration: "none",
   },
   tagline: {
     color: theme.colors.textDim,
     fontSize: 12,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 4,
   },
   relay: {
@@ -143,7 +144,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: `1px solid ${theme.colors.border}`,
     marginTop: 32,
     paddingTop: 16,
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
   },
   bottomText: {
     color: theme.colors.textDim,
@@ -152,6 +153,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sourceLink: {
     color: theme.colors.primary,
-    textDecoration: 'none',
+    textDecoration: "none",
   },
 };

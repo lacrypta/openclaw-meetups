@@ -66,13 +66,6 @@ src/
     └── theme.ts                    # Design tokens (colors, spacing, fonts)
 ```
 
-## Relays
-
-- `wss://relay.damus.io`
-- `wss://relay.nostr.band`
-- `wss://nos.lol`
-- `wss://relay.lacrypta.ar`
-
 ## Tech Stack
 
 - React 19 + TypeScript
