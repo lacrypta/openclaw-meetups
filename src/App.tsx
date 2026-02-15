@@ -47,9 +47,61 @@ function App() {
       <EventBanner />
       <main>
         <HeroSection />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <iframe
+            src='https://luma.com/embed/event/evt-aAtfxEgfRKNP3nz/simple'
+            width='600'
+            height='720'
+            style={{
+              border: "1px solid #666",
+              borderRadius: "20px",
+            }}
+            allow='fullscreen; payment'
+            aria-hidden='false'
+          ></iframe>
+        </div>
         <AboutSection />
         <ScheduleSection />
         <LocationSection />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            padding: "2rem 0",
+            marginBottom: "2rem",
+          }}
+        >
+          <a
+            href='https://luma.com/rm5v3k5r'
+            className='luma-checkout--button'
+            data-luma-action='checkout'
+            data-luma-event-id='evt-aAtfxEgfRKNP3nz'
+            style={{
+              border: "1px solid #666",
+              borderRadius: "20px",
+              padding: "1rem 2rem",
+              background: "#0a0f1a",
+              color: "#fff",
+              fontSize: "1.2rem",
+              fontWeight: "bold",
+            }}
+          >
+            Inscribirse al evento
+          </a>
+
+          <script
+            id='luma-checkout'
+            src='https://embed.lu.ma/checkout-button.js'
+          ></script>
+        </div>
       </main>
       <Footer />
       <LoginModal

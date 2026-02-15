@@ -1,12 +1,11 @@
 import { useTranslation } from "../i18n/useTranslation";
 import { useIsMobile } from "../hooks/useMediaQuery";
-import { getNextFirstThursday } from "../hooks/useRsvp";
 import { theme } from "../lib/theme";
 
 export function HeroSection() {
   const { t, lang } = useTranslation();
   const isMobile = useIsMobile();
-  const nextDate = getNextFirstThursday();
+  const nextDate = new Date(2026, 1, 19, 19, 0, 0, 0); // February is month 1 (0-based)
 
   const formattedDate = nextDate.toLocaleDateString(
     lang === "es" ? "es-AR" : "en-US",
@@ -23,7 +22,7 @@ export function HeroSection() {
       style={{
         ...styles.hero,
         paddingTop: theme.spacing.navHeight + (isMobile ? 40 : 80),
-        minHeight: "100vh",
+        minHeight: "60vh",
       }}
     >
       <div style={styles.bgGlow} />
