@@ -40,7 +40,7 @@ export const es: Translations = {
     nextDate: "Proximo encuentro",
     agenda: "Programa tipico",
     welcome: "Bienvenida y novedades",
-    talks: "Lightning talks y demos",
+    talks: "Introducción a OpenClaw",
     workshop: "Taller hands-on con OpenClaw",
     networking: "Networking y debate abierto",
     free: "Gratis y abierto a todos",

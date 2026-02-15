@@ -1,11 +1,12 @@
 import { useTranslation } from "../i18n/useTranslation";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { theme } from "../lib/theme";
+import meetupConfig from "../config/meetup.json";
 
 export function HeroSection() {
   const { t, lang } = useTranslation();
   const isMobile = useIsMobile();
-  const nextDate = new Date(2026, 1, 19, 19, 0, 0, 0); // February is month 1 (0-based)
+  const nextDate = new Date(meetupConfig.nextMeetupDate);
 
   const formattedDate = nextDate.toLocaleDateString(
     lang === "es" ? "es-AR" : "en-US",
