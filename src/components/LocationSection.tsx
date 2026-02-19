@@ -3,8 +3,10 @@ import { useIsMobile } from '../hooks/useMediaQuery';
 import { theme } from '../lib/theme';
 
 export function LocationSection() {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const isMobile = useIsMobile();
+
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Villanueva+1367+Buenos+Aires+Argentina";
 
   return (
     <section id="location" style={styles.section}>
@@ -26,33 +28,48 @@ export function LocationSection() {
           <div style={styles.infoCard}>
             <div style={styles.venueIcon}>⚡</div>
             <h3 style={styles.venueName}>{t.location.name}</h3>
-            <p style={styles.venueDetail}>{t.location.neighborhood}</p>
-            <p style={styles.venueDetail}>{t.location.city}</p>
-            <p style={styles.venueDirections}>{t.location.directions}</p>
-            <a
-              href="https://lacrypta.ar"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={styles.websiteBtn}
-            >
-              {t.location.visitWebsite} →
-            </a>
+            <p style={styles.address}>📍 Villanueva 1367</p>
+            <p style={styles.venueDetail}>{t.location.neighborhood}, {t.location.city}</p>
+            <p style={styles.venueDirections}>
+              {lang === "es" 
+                ? "Barrio Belgrano, a pasos de la estación Juramento (Línea D)"
+                : "Belgrano neighborhood, steps from Juramento station (Line D)"}
+            </p>
+            <div style={styles.btnGroup}>
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.mapsBtn}
+              >
+                🗺️ {lang === "es" ? "Abrir en Google Maps" : "Open in Google Maps"}
+              </a>
+              <a
+                href="https://lacrypta.ar"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.websiteBtn}
+              >
+                {t.location.visitWebsite} →
+              </a>
+            </div>
           </div>
 
           <div style={styles.mapCard}>
-            <iframe
-              title="La Crypta Location"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=-58.4650%2C-34.5650%2C-58.4500%2C-34.5550&layer=mapnik&marker=-34.5600%2C-58.4575"
-              style={styles.map}
-              loading="lazy"
-            />
+            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+              <img 
+                src="https://files.catbox.moe/65txy5.jpg" 
+                alt="Mapa La Crypta Belgrano"
+                style={styles.mapImage}
+              />
+            </a>
             <a
-              href="https://www.openstreetmap.org/?mlat=-34.5600&mlon=-58.4575#map=16/-34.5600/-58.4575"
+              href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               style={styles.mapLink}
             >
-              Open in OpenStreetMap →
+              {lang === "es" ? "Ver en Google Maps" : "View on Google Maps"} →
             </a>
           </div>
         </div>
@@ -100,6 +117,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     margin: 0,
   },
+  address: {
+    color: theme.colors.primary,
+    fontSize: 18,
+    fontWeight: 700,
+    margin: '8px 0',
+  },
   venueDetail: {
     color: theme.colors.textMuted,
     fontSize: 15,
@@ -111,9 +134,25 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '8px 0',
     lineHeight: 1.6,
   },
+  btnGroup: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 12,
+    marginTop: 16,
+  },
+  mapsBtn: {
+    display: 'inline-block',
+    padding: '12px 20px',
+    background: '#4285f4',
+    borderRadius: 8,
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 600,
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+  },
   websiteBtn: {
     display: 'inline-block',
-    marginTop: 8,
     padding: '10px 20px',
     border: `1px solid ${theme.colors.primary}`,
     borderRadius: 8,
@@ -128,11 +167,12 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     border: `1px solid ${theme.colors.border}`,
   },
-  map: {
+  mapImage: {
     width: '100%',
     height: 300,
-    border: 0,
+    objectFit: 'cover' as const,
     display: 'block',
+    cursor: 'pointer',
   },
   mapLink: {
     display: 'block',

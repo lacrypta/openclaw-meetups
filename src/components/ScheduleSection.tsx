@@ -19,10 +19,42 @@ export function ScheduleSection() {
   );
 
   const agendaItems = [
-    { time: "19:00", label: t.schedule.welcome, icon: "👋" },
-    { time: "19:30", label: t.schedule.talks, icon: "⚡" },
-    { time: "20:15", label: t.schedule.workshop, icon: "🦞" },
-    { time: "21:00", label: t.schedule.networking, icon: "🤝" },
+    { 
+      time: "19:00", 
+      label: lang === "es" ? "Puertas abiertas" : "Doors open", 
+      speaker: "",
+      icon: "🚪" 
+    },
+    { 
+      time: "20:00", 
+      label: lang === "es" ? "Bienvenida + La Crypta" : "Welcome + La Crypta", 
+      speaker: "Agustin Kassis",
+      icon: "👋" 
+    },
+    { 
+      time: "20:05", 
+      label: lang === "es" ? "Introducción a OpenClaw" : "Introduction to OpenClaw", 
+      speaker: "Cami Velasco",
+      icon: "🦞" 
+    },
+    { 
+      time: "20:20", 
+      label: lang === "es" ? "Experiencia construyendo con OpenClaw" : "Building with OpenClaw", 
+      speaker: "Agustin Kassis",
+      icon: "⚡" 
+    },
+    { 
+      time: "20:35", 
+      label: lang === "es" ? "Charla iterativa con el público" : "Interactive talk with audience", 
+      speaker: "Camila Velasco & Agustin Kassis",
+      icon: "💬" 
+    },
+    { 
+      time: "21:00", 
+      label: lang === "es" ? "Charlas de 10-15 min + Workshop" : "10-15 min talks + Workshop", 
+      speaker: lang === "es" ? "El público" : "The audience",
+      icon: "🎤" 
+    },
   ];
 
   return (
@@ -43,17 +75,27 @@ export function ScheduleSection() {
           }}
         >
           <div style={styles.infoCard}>
-            <div style={styles.recurringBadge}>{t.schedule.recurring}</div>
+            <div style={styles.eventBadge}>
+              {lang === "es" ? "Primer Meetup en Argentina" : "First Meetup in Argentina"}
+            </div>
             <div style={styles.nextDate}>
               <span style={styles.nextLabel}>{t.schedule.nextDate}</span>
               <span style={styles.nextValue}>{formattedDate}</span>
-              <span style={styles.nextTime}>{t.schedule.time}</span>
+              <span style={styles.nextTime}>19:00 - 22:00 hs (ART)</span>
             </div>
             <div style={styles.freeTag}>✓ {t.schedule.free}</div>
+            <div style={styles.capacityBox}>
+              <span style={styles.capacityNumber}>20</span>
+              <span style={styles.capacityLabel}>
+                {lang === "es" ? "lugares disponibles de 100" : "spots available of 100"}
+              </span>
+            </div>
           </div>
 
           <div style={styles.agendaCard}>
-            <h3 style={styles.agendaTitle}>{t.schedule.agenda}</h3>
+            <h3 style={styles.agendaTitle}>
+              {lang === "es" ? "Itinerario" : "Schedule"}
+            </h3>
             <div style={styles.timeline}>
               {agendaItems.map((item, i) => (
                 <div key={i} style={styles.timelineItem}>
@@ -61,9 +103,16 @@ export function ScheduleSection() {
                   {i < agendaItems.length - 1 && (
                     <div style={styles.timelineLine} />
                   )}
-                  <span style={styles.timelineTime}>{item.time}</span>
-                  <span style={styles.timelineIcon}>{item.icon}</span>
-                  <span style={styles.timelineLabel}>{item.label}</span>
+                  <div style={styles.timelineContent}>
+                    <div style={styles.timelineHeader}>
+                      <span style={styles.timelineTime}>{item.time}</span>
+                      <span style={styles.timelineIcon}>{item.icon}</span>
+                      <span style={styles.timelineLabel}>{item.label}</span>
+                    </div>
+                    {item.speaker && (
+                      <span style={styles.timelineSpeaker}>— {item.speaker}</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -104,13 +153,15 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     textAlign: "center" as const,
   },
-  recurringBadge: {
+  eventBadge: {
     background: theme.colors.primary,
     color: theme.colors.text,
-    padding: "8px 20px",
+    padding: "10px 24px",
     borderRadius: 20,
     fontSize: 14,
     fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
   },
   nextDate: {
     display: "flex",
@@ -140,6 +191,25 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontWeight: 600,
   },
+  capacityBox: {
+    background: "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)",
+    padding: "16px 24px",
+    borderRadius: 12,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: 4,
+  },
+  capacityNumber: {
+    color: "#fff",
+    fontSize: 32,
+    fontWeight: 800,
+  },
+  capacityLabel: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: 12,
+    fontWeight: 500,
+  },
   agendaCard: {
     background: theme.colors.background,
     border: `1px solid ${theme.colors.border}`,
@@ -160,7 +230,7 @@ const styles: Record<string, React.CSSProperties> = {
   timelineItem: {
     position: "relative" as const,
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
     paddingLeft: 20,
     paddingBottom: 20,
@@ -182,19 +252,35 @@ const styles: Record<string, React.CSSProperties> = {
     height: "calc(100% - 12px)",
     background: theme.colors.border,
   },
+  timelineContent: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 2,
+  },
+  timelineHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
   timelineTime: {
-    color: theme.colors.textDim,
+    color: theme.colors.primary,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
     fontFamily: theme.fonts.mono,
     minWidth: 44,
   },
   timelineIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   timelineLabel: {
-    color: theme.colors.textMuted,
+    color: theme.colors.text,
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: 600,
+  },
+  timelineSpeaker: {
+    color: theme.colors.textDim,
+    fontSize: 12,
+    fontStyle: "italic" as const,
+    marginLeft: 52,
   },
 };
