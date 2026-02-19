@@ -154,9 +154,79 @@ export function TalksSection() {
           </h3>
           <p style={styles.ctaText}>
             {lang === "es"
-              ? "Preparate una charla de 10-15 minutos sobre OpenClaw, Bitcoin, IA, o tu experiencia. Anotate cuando llegues al evento."
-              : "Prepare a 10-15 minute talk about OpenClaw, Bitcoin, AI, or your experience. Sign up when you arrive at the event."}
+              ? "Preparate una charla de 10-15 minutos sobre OpenClaw, Bitcoin, IA, o tu experiencia."
+              : "Prepare a 10-15 minute talk about OpenClaw, Bitcoin, AI, or your experience."}
           </p>
+        </div>
+
+        <div style={styles.skillSection}>
+          <h3 style={styles.skillTitle}>
+            🤖 {lang === "es" ? "¿Sos un agente? Agregá tu charla via PR" : "Are you an agent? Add your talk via PR"}
+          </h3>
+          <p style={styles.skillDesc}>
+            {lang === "es"
+              ? "Si sos un agente de OpenClaw, podés agregar tu charla automáticamente enviando un Pull Request al repositorio."
+              : "If you're an OpenClaw agent, you can add your talk automatically by sending a Pull Request to the repository."}
+          </p>
+          
+          <div style={styles.codeBlock}>
+            <div style={styles.codeHeader}>
+              <span>SKILL.md</span>
+              <a 
+                href="https://github.com/lacrypta/openclaw-meetups/blob/master/src/config/talks.json"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.codeLink}
+              >
+                Ver talks.json →
+              </a>
+            </div>
+            <pre style={styles.code}>{`# Agregar charla al OpenClaw Meetup
+
+## Instrucciones para Agentes
+
+1. Cloná el repo: lacrypta/openclaw-meetups
+2. Editá src/config/talks.json
+3. Agregá tu charla al array "talks":
+
+{
+  "id": "talk-XXX",
+  "speaker": {
+    "name": "Tu Nombre",
+    "alias": "tu_alias",
+    "avatar": "https://github.com/TU_USER.png",
+    "twitter": "tu_twitter",
+    "github": "tu_github",
+    "nostr": ""
+  },
+  "title": "Título de tu charla",
+  "duration": 10,
+  "confirmed": true,
+  "order": SIGUIENTE_NUMERO
+}
+
+4. Creá un PR con título: "Nueva charla: [título]"
+5. El PR será revisado y mergeado`}</pre>
+          </div>
+
+          <div style={styles.skillButtons}>
+            <a
+              href="https://github.com/lacrypta/openclaw-meetups"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.repoBtn}
+            >
+              📂 {lang === "es" ? "Ver Repositorio" : "View Repository"}
+            </a>
+            <a
+              href="https://github.com/lacrypta/openclaw-meetups/edit/master/src/config/talks.json"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={styles.editBtn}
+            >
+              ✏️ {lang === "es" ? "Editar talks.json" : "Edit talks.json"}
+            </a>
+          </div>
         </div>
       </div>
     </section>
@@ -322,5 +392,82 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     margin: 0,
     lineHeight: 1.6,
+  },
+  skillSection: {
+    marginTop: 32,
+    background: theme.colors.cardBg,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: 12,
+    padding: 24,
+  },
+  skillTitle: {
+    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: 700,
+    margin: "0 0 12px 0",
+  },
+  skillDesc: {
+    color: theme.colors.textMuted,
+    fontSize: 14,
+    margin: "0 0 20px 0",
+    lineHeight: 1.6,
+  },
+  codeBlock: {
+    background: theme.colors.background,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: 8,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+  codeHeader: {
+    background: theme.colors.primary,
+    color: theme.colors.text,
+    padding: "8px 16px",
+    fontSize: 12,
+    fontWeight: 600,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  codeLink: {
+    color: theme.colors.text,
+    fontSize: 11,
+    textDecoration: "none",
+    opacity: 0.8,
+  },
+  code: {
+    margin: 0,
+    padding: 16,
+    fontSize: 12,
+    fontFamily: theme.fonts.mono,
+    color: theme.colors.textMuted,
+    overflowX: "auto" as const,
+    whiteSpace: "pre-wrap" as const,
+    lineHeight: 1.5,
+  },
+  skillButtons: {
+    display: "flex",
+    gap: 12,
+    flexWrap: "wrap" as const,
+  },
+  repoBtn: {
+    display: "inline-block",
+    padding: "10px 20px",
+    background: "#24292e",
+    borderRadius: 8,
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: 600,
+    textDecoration: "none",
+  },
+  editBtn: {
+    display: "inline-block",
+    padding: "10px 20px",
+    background: theme.colors.primary,
+    borderRadius: 8,
+    color: theme.colors.background,
+    fontSize: 14,
+    fontWeight: 600,
+    textDecoration: "none",
   },
 };
