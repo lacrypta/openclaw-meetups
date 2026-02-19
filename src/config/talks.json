@@ -1,0 +1,36 @@
+{
+  "startTime": "21:00",
+  "slotDurationMinutes": 10,
+  "talks": [
+    {
+      "id": "talk-001",
+      "speaker": {
+        "name": "Francisco Calderón",
+        "alias": "Negrunch",
+        "avatar": "",
+        "twitter": "",
+        "github": "",
+        "nostr": ""
+      },
+      "title": "Mi experiencia con OpenClaw: desarrollo rápido y workflows eficientes",
+      "duration": 15,
+      "confirmed": true,
+      "order": 1
+    },
+    {
+      "id": "talk-002",
+      "speaker": {
+        "name": "Matías Romeo",
+        "alias": "",
+        "avatar": "",
+        "twitter": "",
+        "github": "",
+        "nostr": ""
+      },
+      "title": "Hardware stack + OpenClaw orquestado (Kubernetes, Docker, multi-nodo)",
+      "duration": 15,
+      "confirmed": true,
+      "order": 2
+    }
+  ]
+}
