@@ -39,7 +39,7 @@ export function ScheduleSection() {
     },
     { 
       time: "20:20", 
-      label: lang === "es" ? "Experiencia construyendo con OpenClaw" : "Building with OpenClaw", 
+      label: lang === "es" ? "¿Cómo conocí a Claudio?" : "How I met Claudio", 
       speaker: "Agustin Kassis",
       icon: "⚡" 
     },
