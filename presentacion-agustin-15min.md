@@ -1,6 +1,20 @@
 # Presentación Agustin — 15 min
 ## "¿Cómo conocí a Claudio?"
 
+---
+
+### APERTURA (Primeros 3 minutos)
+
+**Frase de impacto + pausa:**
+
+> "Todo lo que es digital va a ser reemplazado por una IA."
+
+*[PAUSA]*
+
+> "Piensen bien qué es lo que hacen. Si están 8 horas por día sentados en una computadora... si sus tareas son en una computadora, un celular, llamadas por teléfono... toda interacción mediada por tecnología... si ese es su trabajo, **va a ser reemplazado**."
+
+---
+
 ### El Journey: De Todo Abierto a Sandbox Controlado
 
 **Fase 1: El Comienzo (Modo YOLO)**
