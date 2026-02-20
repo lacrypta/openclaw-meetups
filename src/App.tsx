@@ -8,6 +8,7 @@ import { ScheduleSection } from "./components/ScheduleSection";
 import { TalksSection } from "./components/TalksSection";
 import { LocationSection } from "./components/LocationSection";
 import { BlogPost } from "./components/BlogPost";
+import { BlogPostClaudio } from "./components/BlogPostClaudio";
 import { Footer } from "./components/Footer";
 import { LoginModal } from "./components/LoginModal";
 import { EventBanner } from "./components/EventBanner";
@@ -71,6 +72,7 @@ function App() {
         <AboutSection />
         <ScheduleSection />
         <TalksSection />
+        <BlogPostClaudio />
         <BlogPost />
         <LocationSection />
         <div
