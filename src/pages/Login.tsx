@@ -13,8 +13,10 @@ export function Login({ onSuccess }: LoginProps) {
   const handleLogin = async () => {
     setLocalError(null);
     try {
-      await login();
-      onSuccess();
+      const result = await login();
+      if (result?.token) {
+        onSuccess();
+      }
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Login failed');
     }

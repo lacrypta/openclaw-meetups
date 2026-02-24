@@ -23,14 +23,14 @@ function App() {
   const { profile } = useProfile(pubkey);
   const [showLogin, setShowLogin] = useState(false);
   const [route, setRoute] = useState<Route>('home');
-  const { isAuthenticated, logout: dashboardLogout } = useAuth();
+  const { isAuthenticated: isAuthChecked, logout: dashboardLogout } = useAuth();
 
   // Simple hash-based routing
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);
       if (hash === '/dashboard') {
-        if (!isAuthenticated) {
+        if (!isAuthChecked) {
           setRoute('login');
         } else {
           setRoute('dashboard');
@@ -45,7 +45,7 @@ function App() {
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [isAuthenticated]);
+  }, [isAuthChecked]);
 
   const handleLoginSuccess = () => {
     setShowLogin(false);
@@ -83,7 +83,7 @@ function App() {
   }
 
   if (route === 'dashboard') {
-    if (!isAuthenticated) {
+    if (!isAuthChecked) {
       setRoute('login');
       return null;
     }

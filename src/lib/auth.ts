@@ -8,7 +8,7 @@ declare global {
 }
 
 const TOKEN_KEY = 'openclaw_jwt';
-const API_BASE = import.meta.env.PROD ? '' : 'http://localhost:3000';
+const API_BASE = import.meta.env.PROD ? window.location.origin : 'http://localhost:3000';
 
 export async function createNip98Event(url: string, method: string): Promise<any> {
   if (!window.nostr) {
