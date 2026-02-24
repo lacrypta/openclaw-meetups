@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { login as authLogin } from '../lib/auth';
 import { theme } from '../lib/theme';
 
 interface LoginProps {
@@ -7,18 +7,19 @@ interface LoginProps {
 }
 
 export function Login({ onSuccess }: LoginProps) {
-  const { login, loading, error } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     setLocalError(null);
+    setLoading(true);
     try {
-      const result = await login();
-      if (result?.token) {
-        onSuccess();
-      }
+      await authLogin();
+      onSuccess();
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,7 +89,7 @@ export function Login({ onSuccess }: LoginProps) {
           {loading ? 'Signing in...' : 'Login with Nostr'}
         </button>
 
-        {(error || localError) && (
+        {localError && (
           <div
             style={{
               marginTop: '1rem',
@@ -99,7 +100,7 @@ export function Login({ onSuccess }: LoginProps) {
               fontSize: '0.875rem',
             }}
           >
-            {error || localError}
+            {localError}
           </div>
         )}
 

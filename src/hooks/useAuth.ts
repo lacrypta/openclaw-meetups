@@ -38,11 +38,20 @@ export function useAuth() {
     setPubkey(null);
   };
 
+  const recheckAuth = () => {
+    const authenticated = isAuthenticated();
+    setIsAuth(authenticated);
+    if (authenticated) {
+      setPubkey(getPubkeyFromToken());
+    }
+  };
+
   return {
     isAuthenticated: isAuth,
     pubkey,
     login,
     logout,
+    recheckAuth,
     loading,
     error,
   };
