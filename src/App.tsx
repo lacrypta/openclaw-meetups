@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNostr } from "./hooks/useNostr";
 import { useProfile } from "./hooks/useProfile";
+import { useAuth } from "./hooks/useAuth";
 import { Navbar } from "./components/Navbar";
 import { HeroSection } from "./components/HeroSection";
 import { AboutSection } from "./components/AboutSection";
@@ -10,13 +11,41 @@ import { LocationSection } from "./components/LocationSection";
 import { Footer } from "./components/Footer";
 import { LoginModal } from "./components/LoginModal";
 import { EventBanner } from "./components/EventBanner";
+import { Login } from "./pages/Login";
+import { Dashboard } from "./pages/Dashboard";
 import { theme } from "./lib/theme";
+
+type Route = 'home' | 'login' | 'dashboard';
 
 function App() {
   const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } =
     useNostr();
   const { profile } = useProfile(pubkey);
   const [showLogin, setShowLogin] = useState(false);
+  const [route, setRoute] = useState<Route>('home');
+  const { isAuthenticated, logout: dashboardLogout } = useAuth();
+
+  // Simple hash-based routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1);
+      if (hash === '/dashboard') {
+        if (!isAuthenticated) {
+          setRoute('login');
+        } else {
+          setRoute('dashboard');
+        }
+      } else if (hash === '/login') {
+        setRoute('login');
+      } else {
+        setRoute('home');
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isAuthenticated]);
 
   const handleLoginSuccess = () => {
     setShowLogin(false);
@@ -37,6 +66,31 @@ function App() {
     handleLoginSuccess();
   };
 
+  const handleDashboardLoginSuccess = () => {
+    setRoute('dashboard');
+    window.location.hash = '/dashboard';
+  };
+
+  const handleDashboardLogout = () => {
+    dashboardLogout();
+    setRoute('home');
+    window.location.hash = '';
+  };
+
+  // Render different routes
+  if (route === 'login') {
+    return <Login onSuccess={handleDashboardLoginSuccess} />;
+  }
+
+  if (route === 'dashboard') {
+    if (!isAuthenticated) {
+      setRoute('login');
+      return null;
+    }
+    return <Dashboard onLogout={handleDashboardLogout} />;
+  }
+
+  // Home/Landing page
   return (
     <div style={{ minHeight: "100vh", background: theme.colors.background }}>
       <Navbar
