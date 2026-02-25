@@ -27,7 +27,6 @@ export async function GET(
         attendees (
           name,
           email,
-          pubkey,
           email_sent,
           email_type
         )
@@ -50,7 +49,7 @@ export async function GET(
       notes: ea.notes,
       name: ea.attendees?.name || '',
       email: ea.attendees?.email || '',
-      pubkey: ea.attendees?.pubkey || null,
+      pubkey: null,
       email_sent: ea.attendees?.email_sent || false,
       email_type: ea.attendees?.email_type || null,
     }));
