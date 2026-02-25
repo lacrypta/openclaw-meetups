@@ -12,14 +12,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "OpenClaw Meetups | La Crypta Buenos Aires",
   description:
-    "Monthly OpenClaw AI meetups at La Crypta, Belgrano, Buenos Aires. Connect with Nostr, learn about open-source AI.",
+    "Meetups mensuales de OpenClaw AI en La Crypta, Belgrano, Buenos Aires. Tu asistente personal de IA, open-source y local.",
   icons: {
     icon: "/lobster.svg",
   },
   openGraph: {
     title: "OpenClaw Meetups | La Crypta Buenos Aires",
     description:
-      "Monthly OpenClaw AI meetups at La Crypta, Belgrano, Buenos Aires.",
+      "Meetups mensuales de OpenClaw AI en La Crypta, Belgrano, Buenos Aires.",
     type: "website",
     url: "https://github.com/lacrypta/openclaw-meetups",
     images: [
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "OpenClaw Meetups | La Crypta Buenos Aires",
     description:
-      "Monthly OpenClaw AI meetups at La Crypta, Belgrano, Buenos Aires.",
+      "Meetups mensuales de OpenClaw AI en La Crypta, Belgrano, Buenos Aires.",
     images: [
       "https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,background=white,quality=75,width=400,height=400/event-covers/5m/430a67d8-047b-4a35-b57c-65441a39ecc9.png",
     ],
@@ -48,7 +48,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
+    <html lang="es" className={inter.variable}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="font-[family-name:var(--font-inter)]">
         <Providers>
           <TooltipProvider>{children}</TooltipProvider>

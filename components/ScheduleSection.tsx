@@ -1,92 +1,110 @@
 "use client";
 
-import { useTranslation } from "../i18n/useTranslation";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import meetupConfig from "../config/meetup.json";
 
 export function ScheduleSection() {
-  const { t, lang } = useTranslation();
   const nextDate = new Date(meetupConfig.nextMeetupDate);
 
-  const formattedDate = nextDate.toLocaleDateString(
-    lang === "es" ? "es-AR" : "en-US",
-    {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  );
-
-  const agendaItems = [
-    { time: "19:00", label: lang === "es" ? "Puertas abiertas" : "Doors open", speaker: "", icon: "🚪" },
-    { time: "20:00", label: lang === "es" ? "Bienvenida + La Crypta" : "Welcome + La Crypta", speaker: "Agustin Kassis", icon: "👋" },
-    { time: "20:05", label: lang === "es" ? "Introducción a OpenClaw" : "Introduction to OpenClaw", speaker: "Cami Velasco", icon: "🦞" },
-    { time: "20:20", label: lang === "es" ? "¿Cómo conocí a Claudio?" : "How I met Claudio", speaker: "Agustin Kassis", icon: "⚡" },
-    { time: "20:35", label: lang === "es" ? "Charla iterativa con el público" : "Interactive talk with audience", speaker: "Camila Velasco & Agustin Kassis", icon: "💬" },
-    { time: "21:00", label: lang === "es" ? "Charlas de 10-15 min + Workshop" : "10-15 min talks + Workshop", speaker: lang === "es" ? "El público" : "The audience", icon: "🎤" },
-  ];
+  const formattedDate = nextDate.toLocaleDateString("es-AR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <section id="schedule" className="py-20 bg-card">
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10">
-        <h2 className="text-foreground text-[32px] font-extrabold text-center mb-12">
-          {t.schedule.title}
+    <section id="experiencias" className="dark-section bg-[#121212] rounded-t-[32px] py-24 md:py-32">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        {/* Section label */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="section-label !text-white/50">
+            Proximo evento
+          </div>
+          <span className="text-white/30 text-[13px] font-['Fragment_Mono',monospace]">(002)</span>
+        </div>
+
+        {/* Giant heading */}
+        <h2 className="text-white font-bold text-[48px] sm:text-[72px] md:text-[96px] lg:text-[120px] leading-[0.95] tracking-[-0.04em] mb-6">
+          Experiencias.
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Info card */}
-          <Card className="bg-background p-8 flex flex-col gap-6 items-center text-center">
-            <Badge className="bg-primary text-foreground px-6 py-2.5 text-sm font-bold uppercase tracking-wide">
-              {lang === "es" ? "Primer Meetup en Argentina" : "First Meetup in Argentina"}
-            </Badge>
-            <div className="flex flex-col gap-1">
-              <span className="text-muted-foreground/60 text-xs font-semibold uppercase tracking-wide">
-                {t.schedule.nextDate}
-              </span>
-              <span className="text-foreground text-xl font-bold capitalize">{formattedDate}</span>
-              <span className="text-accent text-base font-semibold">19:00 - 22:00 hs (ART)</span>
-            </div>
-            <div className="text-success text-sm font-semibold">✓ {t.schedule.free}</div>
-            <div className="bg-gradient-to-br from-accent to-primary px-6 py-4 rounded-xl flex flex-col items-center gap-1">
-              <span className="text-white text-[32px] font-extrabold">20</span>
-              <span className="text-white/90 text-xs font-medium">
-                {lang === "es" ? "lugares disponibles de 100" : "spots available of 100"}
-              </span>
-            </div>
-          </Card>
+        <p className="text-white/50 text-base md:text-lg max-w-lg mb-16">
+          Encuentros mensuales donde la inteligencia artificial open-source se vive en primera persona.
+        </p>
 
-          {/* Agenda card */}
-          <Card className="bg-background p-8">
-            <h3 className="text-foreground text-lg font-bold mb-6">
-              {lang === "es" ? "Itinerario" : "Schedule"}
-            </h3>
-            <div className="flex flex-col">
-              {agendaItems.map((item, i) => (
-                <div key={i} className="relative flex items-start gap-3 pl-5 pb-5">
-                  <div className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-primary" />
-                  {i < agendaItems.length - 1 && (
-                    <div className="absolute left-1 top-[18px] w-0.5 h-[calc(100%-12px)] bg-border" />
-                  )}
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-primary text-[13px] font-bold font-mono min-w-[44px]">
-                        {item.time}
-                      </span>
-                      <span className="text-base">{item.icon}</span>
-                      <span className="text-foreground text-sm font-semibold">{item.label}</span>
-                    </div>
-                    {item.speaker && (
-                      <span className="text-muted-foreground/60 text-xs italic ml-[52px]">
-                        — {item.speaker}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+        {/* Event details grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+          {/* Left - Event info */}
+          <div className="flex flex-col gap-8">
+            <div>
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Fecha</span>
+              <p className="text-white text-xl font-bold capitalize mt-1">{formattedDate}</p>
             </div>
-          </Card>
+            <div>
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Horario</span>
+              <p className="text-white text-xl font-bold mt-1">19:00 - 22:00 hs (ART)</p>
+            </div>
+            <div>
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Lugar</span>
+              <p className="text-white text-xl font-bold mt-1">La Crypta</p>
+              <p className="text-white/50 text-sm mt-0.5">Villanueva 1367, Belgrano, Buenos Aires</p>
+            </div>
+            <div>
+              <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Entrada</span>
+              <p className="text-white text-xl font-bold mt-1">Gratuita</p>
+            </div>
+          </div>
+
+          {/* Right - What to expect */}
+          <div>
+            <h3 className="text-white text-xl font-bold mb-8">Que esperar.</h3>
+            <div className="flex flex-col gap-6">
+              <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
+                <span className="mono-index !text-white/30 min-w-[40px]">(001)</span>
+                <div>
+                  <span className="text-white text-base font-semibold">Charlas de la comunidad</span>
+                  <p className="text-white/40 text-sm mt-1">
+                    Presentaciones de 10-15 minutos sobre OpenClaw, IA, Bitcoin y Nostr.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
+                <span className="mono-index !text-white/30 min-w-[40px]">(002)</span>
+                <div>
+                  <span className="text-white text-base font-semibold">Demos en vivo</span>
+                  <p className="text-white/40 text-sm mt-1">
+                    Demostraciones practicas de OpenClaw corriendo localmente.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
+                <span className="mono-index !text-white/30 min-w-[40px]">(003)</span>
+                <div>
+                  <span className="text-white text-base font-semibold">Workshop interactivo</span>
+                  <p className="text-white/40 text-sm mt-1">
+                    Espacio para que todos puedan experimentar y hacer preguntas.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <span className="mono-index !text-white/30 min-w-[40px]">(004)</span>
+                <div>
+                  <span className="text-white text-base font-semibold">Networking</span>
+                  <p className="text-white/40 text-sm mt-1">
+                    Conecta con desarrolladores, entusiastas de IA y la comunidad Bitcoin.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="flex items-center gap-6 flex-wrap">
+          <a href="#contacto" className="btn-pill !bg-white !text-[#0a0a0a]">
+            Quiero participar <span className="dot !bg-[#0a0a0a]" />
+          </a>
+          <span className="text-white/30 text-sm">Cupos limitados</span>
         </div>
       </div>
     </section>

@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslation } from "../i18n/useTranslation";
-import type { Language } from "../i18n/context";
-import type { NostrProfile } from "../lib/nostr";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sheet,
@@ -12,7 +8,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import type { NostrProfile } from "@/lib/nostr";
 
 interface Props {
   pubkey: string | null;
@@ -23,38 +19,33 @@ interface Props {
 }
 
 export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref }: Props) {
-  const { t, lang, setLang } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: "#about", label: t.nav.about },
-    { href: "#schedule", label: t.nav.schedule },
-    { href: "#location", label: t.nav.location },
+    { href: "#about", label: "Nosotros" },
+    { href: "#experiencias", label: "Experiencias" },
+    { href: "#contacto", label: "Contacto" },
   ];
 
-  const toggleLang = (l: Language) => {
-    setLang(l);
-  };
-
   return (
-    <nav className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-md border-b border-border z-[1000]">
-      <div className="flex items-center justify-between h-full max-w-[1200px] mx-auto px-6">
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md z-[1000]">
+      <div className="flex items-center justify-between h-full max-w-[1400px] mx-auto px-6">
         {/* Brand */}
-        <a href="#" className="flex items-center gap-2">
-          <img src="/openclaw-logo.png" alt="OpenClaw" className="w-6 h-6 object-contain" />
-          <span className="text-base font-semibold text-accent">OpenClaw</span>
-          <span className="text-muted-foreground/60 text-sm">x</span>
+        <a href="#" className="flex items-center gap-3">
+          <img src="/openclaw-logo.png" alt="OpenClaw" className="w-6 h-6 object-contain halftone" />
           <img src="/lacrypta-logo.png" alt="La Crypta" className="w-6 h-6 object-contain" />
-          <span className="text-lg font-bold text-foreground hidden sm:inline">La Crypta</span>
+          <span className="text-[#171717] text-base font-medium hidden sm:inline">
+            OpenClaw Meetups
+          </span>
         </a>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex gap-8">
+        <div className="hidden md:flex gap-10">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="text-muted-foreground text-sm font-medium transition-colors hover:text-foreground"
+              className="text-[#737373] text-[15px] font-medium transition-colors hover:text-[#171717]"
             >
               {link.label}
             </a>
@@ -63,78 +54,120 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref 
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          {/* Language switch */}
-          <div className="flex gap-0.5 bg-border rounded-md p-0.5">
-            <button
-              className={cn(
-                "px-2.5 py-1 border-none rounded text-xs font-semibold cursor-pointer transition-all",
-                lang === "es"
-                  ? "bg-accent text-foreground"
-                  : "bg-transparent text-muted-foreground"
-              )}
-              onClick={() => toggleLang("es")}
-            >
-              ES
-            </button>
-            <button
-              className={cn(
-                "px-2.5 py-1 border-none rounded text-xs font-semibold cursor-pointer transition-all",
-                lang === "en"
-                  ? "bg-accent text-foreground"
-                  : "bg-transparent text-muted-foreground"
-              )}
-              onClick={() => toggleLang("en")}
-            >
-              EN
-            </button>
-          </div>
-
           {pubkey ? (
-            <div className="flex items-center gap-2">
-              <Avatar className="w-8 h-8">
+            <div className="hidden md:flex items-center gap-3">
+              <Avatar className="w-8 h-8 border border-[#e5e5e5]">
                 {profile?.picture ? (
                   <AvatarImage src={profile.picture} alt="" />
                 ) : null}
-                <AvatarFallback className="text-base">👤</AvatarFallback>
+                <AvatarFallback className="bg-[#e5e5e5] text-[#737373] text-xs font-bold">
+                  {profile?.name?.[0]?.toUpperCase() || "?"}
+                </AvatarFallback>
               </Avatar>
               {dashboardHref && (
-                <a href={dashboardHref}>
-                  <Button size="sm" variant="default" className="text-xs">
-                    Dashboard
-                  </Button>
+                <a
+                  href={dashboardHref}
+                  className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors"
+                >
+                  Dashboard
                 </a>
               )}
-              <Button size="sm" variant="outline" className="text-xs" onClick={onLogout}>
-                {t.nav.logout}
-              </Button>
+              <button
+                onClick={onLogout}
+                className="text-[#737373] text-sm font-medium hover:text-[#171717] transition-colors bg-transparent border-none cursor-pointer"
+              >
+                Salir
+              </button>
             </div>
           ) : (
-            <Button size="sm" onClick={onLoginClick}>
-              {t.nav.login}
-            </Button>
+            <button
+              onClick={onLoginClick}
+              className="hidden md:inline-flex btn-pill !py-2 !px-5 text-sm"
+            >
+              Conectar <span className="dot" />
+            </button>
           )}
 
-          {/* Mobile menu */}
+          {/* Hamburger (mobile) */}
           <div className="md:hidden">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <button className="p-1 border-none bg-transparent text-foreground text-xl cursor-pointer">
-                  ☰
+                <button className="flex flex-col gap-1.5 p-2 border-none bg-transparent cursor-pointer">
+                  <span className="block w-5 h-[2px] bg-[#171717]" />
+                  <span className="block w-5 h-[2px] bg-[#171717]" />
+                  <span className="block w-3.5 h-[2px] bg-[#171717]" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-background border-border">
-                <SheetTitle className="sr-only">Navigation</SheetTitle>
-                <div className="flex flex-col gap-4 pt-8">
+              <SheetContent side="right" className="bg-[#f5f5f5] border-[#e5e5e5] pt-20 z-[1001]">
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <div className="flex flex-col gap-8 px-6">
                   {navLinks.map((link) => (
                     <a
                       key={link.href}
                       href={link.href}
-                      className="text-muted-foreground text-base font-medium py-2"
+                      className="text-[#171717] text-2xl font-bold"
                       onClick={() => setMenuOpen(false)}
                     >
                       {link.label}
                     </a>
                   ))}
+
+                  {/* Auth in mobile menu */}
+                  <div className="mt-4 pt-8 border-t border-[#e5e5e5] flex flex-col gap-4">
+                    {pubkey ? (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10 border border-[#e5e5e5]">
+                            {profile?.picture ? (
+                              <AvatarImage src={profile.picture} alt="" />
+                            ) : null}
+                            <AvatarFallback className="bg-[#e5e5e5] text-[#737373] text-sm font-bold">
+                              {profile?.name?.[0]?.toUpperCase() || "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-[#171717] text-base font-bold">
+                              {profile?.name || "Nostr User"}
+                            </span>
+                            <span className="text-[#737373] text-xs">
+                              Conectado
+                            </span>
+                          </div>
+                        </div>
+                        {dashboardHref && (
+                          <a
+                            href={dashboardHref}
+                            className="text-[#171717] text-base font-semibold"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            Dashboard
+                          </a>
+                        )}
+                        <button
+                          onClick={() => { onLogout(); setMenuOpen(false); }}
+                          className="text-[#737373] text-base font-medium text-left bg-transparent border-none cursor-pointer p-0"
+                        >
+                          Salir
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => { onLoginClick(); setMenuOpen(false); }}
+                        className="btn-pill w-fit text-sm"
+                      >
+                        Conectar con Nostr <span className="dot" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-8 border-t border-[#e5e5e5]">
+                    <a
+                      href="mailto:openclaw@lacrypta.ar"
+                      className="text-[#171717] text-sm font-medium underline"
+                    >
+                      openclaw@lacrypta.ar
+                    </a>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

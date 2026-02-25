@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { useNostr } from "@/hooks/useNostr";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,11 +9,9 @@ import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { AboutSection } from "@/components/AboutSection";
 import { ScheduleSection } from "@/components/ScheduleSection";
-import { TalksSection } from "@/components/TalksSection";
 import { LocationSection } from "@/components/LocationSection";
 import { Footer } from "@/components/Footer";
 import { LoginModal } from "@/components/LoginModal";
-import { EventBanner } from "@/components/EventBanner";
 import { login as authLogin } from "@/lib/auth";
 
 export default function HomePage() {
@@ -52,7 +49,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f5f5f5]">
       <Navbar
         pubkey={pubkey}
         profile={profile}
@@ -60,38 +57,11 @@ export default function HomePage() {
         onLogout={logout}
         dashboardHref={isAuthenticated ? "/dashboard" : undefined}
       />
-      <EventBanner />
       <main>
         <HeroSection />
-        <div className="flex justify-center items-center">
-          <iframe
-            src="https://luma.com/embed/event/evt-aAtfxEgfRKNP3nz/simple"
-            width="600"
-            height="720"
-            className="border border-border/50 rounded-2xl"
-            allow="fullscreen; payment"
-            aria-hidden="false"
-          ></iframe>
-        </div>
         <AboutSection />
         <ScheduleSection />
-        <TalksSection />
         <LocationSection />
-        <div className="flex justify-center items-center w-full py-8 mb-8">
-          <a
-            href="https://luma.com/rm5v3k5r"
-            className="luma-checkout--button border border-border/50 rounded-2xl px-8 py-4 bg-background text-foreground text-xl font-bold"
-            data-luma-action="checkout"
-            data-luma-event-id="evt-aAtfxEgfRKNP3nz"
-          >
-            Inscribirse al evento
-          </a>
-          <Script
-            id="luma-checkout"
-            src="https://embed.lu.ma/checkout-button.js"
-            strategy="lazyOnload"
-          />
-        </div>
       </main>
       <Footer />
       <LoginModal

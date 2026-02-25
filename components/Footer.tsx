@@ -1,100 +1,90 @@
 "use client";
 
-import { useTranslation } from "../i18n/useTranslation";
-import { Separator } from "@/components/ui/separator";
 import pkg from "../package.json";
 const { version } = pkg;
 
 export function Footer() {
-  const { t } = useTranslation();
-
   return (
-    <footer className="bg-card border-t border-border pt-12 px-6 pb-6">
-      <div className="flex flex-col md:flex-row gap-8 md:gap-12 max-w-[1200px] mx-auto justify-between">
-        <div className="flex flex-col gap-2">
-          <h4 className="text-foreground text-base font-bold mb-1">🦞 OpenClaw</h4>
-          <a
-            href="https://github.com/openclaw/openclaw"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            GitHub
-          </a>
-          <a
-            href="https://openclaw.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            Website
-          </a>
-          <span className="text-muted-foreground/60 text-xs italic mt-1">
-            EXFOLIATE! EXFOLIATE!
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h4 className="text-foreground text-base font-bold mb-1">La Crypta</h4>
-          <a
-            href="https://lacrypta.ar"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            lacrypta.ar
-          </a>
-          <a
-            href="https://github.com/lacrypta"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            GitHub
-          </a>
-          <span className="text-muted-foreground/60 text-xs italic mt-1">
-            A revolution disguised as an investment
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h4 className="text-foreground text-base font-bold mb-1">Nostr</h4>
-          <a
-            href="https://nostr.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            What is Nostr?
-          </a>
-          <a
-            href="https://getalby.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground text-sm"
-          >
-            Get Alby
-          </a>
-        </div>
+    <footer className="bg-[#f5f5f5] pt-20 pb-10 px-6">
+      {/* Cross markers */}
+      <div className="cross-markers max-w-[1400px] mx-auto mb-16">
+        <span>+</span><span>+</span><span>+</span><span>+</span><span>+</span>
       </div>
 
-      <Separator className="my-8" />
+      <div className="max-w-[1400px] mx-auto">
+        {/* Three column footer */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+          {/* Email */}
+          <div>
+            <a
+              href="mailto:openclaw@lacrypta.ar"
+              className="text-[#171717] text-base font-bold underline underline-offset-4"
+            >
+              openclaw@lacrypta.ar
+            </a>
+          </div>
 
-      <div className="text-center">
-        <p className="text-muted-foreground/60 text-[13px] mb-1">
-          {t.footer.builtWith} 🦞⚡ &middot; {t.footer.rights} &middot;{" "}
-          {new Date().getFullYear()} &middot; v{version}
-        </p>
-        <p className="text-muted-foreground/60 text-[13px]">
-          <a
-            href="https://github.com/agustinkassis/nostr-lightning-boilerplate"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary"
-          >
-            {t.footer.openSource}
-          </a>
-        </p>
+          {/* Navigation */}
+          <div className="flex flex-col gap-3">
+            <a href="#" className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors">
+              Inicio
+            </a>
+            <a href="#about" className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors">
+              Nosotros
+            </a>
+            <a href="#experiencias" className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors">
+              Experiencias
+            </a>
+            <a href="#contacto" className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors">
+              Contacto
+            </a>
+          </div>
+
+          {/* Social */}
+          <div className="flex flex-col gap-3">
+            <a
+              href="https://github.com/lacrypta/openclaw-meetups"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors"
+            >
+              GitHub &#8599;
+            </a>
+            <a
+              href="https://github.com/openclaw/openclaw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors"
+            >
+              OpenClaw &#8599;
+            </a>
+            <a
+              href="https://lacrypta.ar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#171717] text-sm font-medium hover:text-[#737373] transition-colors"
+            >
+              La Crypta &#8599;
+            </a>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-[#e5e5e5] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <p className="text-[#737373] text-[13px]">
+            &copy; {new Date().getFullYear()} La Crypta &middot; OpenClaw Meetups &middot; v{version}
+          </p>
+          <p className="text-[#737373] text-[13px]">
+            Open-source &middot; Construido con Nostr
+          </p>
+        </div>
+
+        {/* Giant watermark */}
+        <div className="mt-12 overflow-hidden">
+          <p className="text-[#e5e5e5] font-bold text-[48px] sm:text-[72px] md:text-[120px] leading-none tracking-[-0.04em] text-right whitespace-nowrap select-none">
+            OpenClaw Meetups
+          </p>
+        </div>
       </div>
     </footer>
   );
