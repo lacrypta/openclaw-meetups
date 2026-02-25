@@ -3,9 +3,16 @@
 import { useState } from "react";
 import { useTranslation } from "../i18n/useTranslation";
 import type { Language } from "../i18n/context";
-import { useIsMobile } from "../hooks/useMediaQuery";
-import { theme } from "../lib/theme";
 import type { NostrProfile } from "../lib/nostr";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 interface Props {
   pubkey: string | null;
@@ -17,7 +24,6 @@ interface Props {
 
 export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref }: Props) {
   const { t, lang, setLang } = useTranslation();
-  const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = [
@@ -31,46 +37,52 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref 
   };
 
   return (
-    <nav style={styles.nav}>
-      <div style={{ ...styles.inner, maxWidth: theme.spacing.container }}>
-        <a href='#' style={styles.brand}>
-          <img src='/openclaw-logo.png' alt='OpenClaw' style={styles.navLogo} />
-          <span style={styles.brandAccent}>OpenClaw</span>
-          <span style={styles.brandDivider}>x</span>
-          <img
-            src='/lacrypta-logo.png'
-            alt='La Crypta'
-            style={styles.navLogo}
-          />
-          <span style={styles.brandText}>La Crypta</span>
+    <nav className="fixed top-0 left-0 right-0 h-16 bg-background/95 backdrop-blur-md border-b border-border z-[1000]">
+      <div className="flex items-center justify-between h-full max-w-[1200px] mx-auto px-6">
+        {/* Brand */}
+        <a href="#" className="flex items-center gap-2">
+          <img src="/openclaw-logo.png" alt="OpenClaw" className="w-6 h-6 object-contain" />
+          <span className="text-base font-semibold text-accent">OpenClaw</span>
+          <span className="text-muted-foreground/60 text-sm">x</span>
+          <img src="/lacrypta-logo.png" alt="La Crypta" className="w-6 h-6 object-contain" />
+          <span className="text-lg font-bold text-foreground hidden sm:inline">La Crypta</span>
         </a>
 
-        {!isMobile && (
-          <div style={styles.links}>
-            {navLinks.map((link) => (
-              <a key={link.href} href={link.href} style={styles.link}>
-                {link.label}
-              </a>
-            ))}
-          </div>
-        )}
+        {/* Desktop nav links */}
+        <div className="hidden md:flex gap-8">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-muted-foreground text-sm font-medium transition-colors hover:text-foreground"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
 
-        <div style={styles.actions}>
-          <div style={styles.langSwitch}>
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {/* Language switch */}
+          <div className="flex gap-0.5 bg-border rounded-md p-0.5">
             <button
-              style={{
-                ...styles.langBtn,
-                ...(lang === "es" ? styles.langBtnActive : {}),
-              }}
+              className={cn(
+                "px-2.5 py-1 border-none rounded text-xs font-semibold cursor-pointer transition-all",
+                lang === "es"
+                  ? "bg-accent text-foreground"
+                  : "bg-transparent text-muted-foreground"
+              )}
               onClick={() => toggleLang("es")}
             >
               ES
             </button>
             <button
-              style={{
-                ...styles.langBtn,
-                ...(lang === "en" ? styles.langBtnActive : {}),
-              }}
+              className={cn(
+                "px-2.5 py-1 border-none rounded text-xs font-semibold cursor-pointer transition-all",
+                lang === "en"
+                  ? "bg-accent text-foreground"
+                  : "bg-transparent text-muted-foreground"
+              )}
               onClick={() => toggleLang("en")}
             >
               EN
@@ -78,217 +90,57 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref 
           </div>
 
           {pubkey ? (
-            <div style={styles.profileArea}>
-              {profile?.picture ? (
-                <img src={profile.picture} alt='' style={styles.profilePic} />
-              ) : (
-                <div style={styles.profilePlaceholder}>👤</div>
-              )}
+            <div className="flex items-center gap-2">
+              <Avatar className="w-8 h-8">
+                {profile?.picture ? (
+                  <AvatarImage src={profile.picture} alt="" />
+                ) : null}
+                <AvatarFallback className="text-base">👤</AvatarFallback>
+              </Avatar>
               {dashboardHref && (
-                <a href={dashboardHref} style={styles.dashboardBtn}>
-                  Dashboard
+                <a href={dashboardHref}>
+                  <Button size="sm" variant="default" className="text-xs">
+                    Dashboard
+                  </Button>
                 </a>
               )}
-              <button style={styles.logoutBtn} onClick={onLogout}>
+              <Button size="sm" variant="outline" className="text-xs" onClick={onLogout}>
                 {t.nav.logout}
-              </button>
+              </Button>
             </div>
           ) : (
-            <button style={styles.connectBtn} onClick={onLoginClick}>
+            <Button size="sm" onClick={onLoginClick}>
               {t.nav.login}
-            </button>
+            </Button>
           )}
 
-          {isMobile && (
-            <button
-              style={styles.hamburger}
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label='Menu'
-            >
-              {menuOpen ? "✕" : "☰"}
-            </button>
-          )}
+          {/* Mobile menu */}
+          <div className="md:hidden">
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <button className="p-1 border-none bg-transparent text-foreground text-xl cursor-pointer">
+                  ☰
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-background border-border">
+                <SheetTitle className="sr-only">Navigation</SheetTitle>
+                <div className="flex flex-col gap-4 pt-8">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      className="text-muted-foreground text-base font-medium py-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
-
-      {isMobile && menuOpen && (
-        <div style={styles.mobileMenu}>
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              style={styles.mobileLink}
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-      )}
     </nav>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  nav: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: theme.spacing.navHeight,
-    background: "rgba(10, 15, 26, 0.95)",
-    backdropFilter: "blur(12px)",
-    borderBottom: `1px solid ${theme.colors.border}`,
-    zIndex: 1000,
-  },
-  inner: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    height: "100%",
-    margin: "0 auto",
-    padding: "0 24px",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    textDecoration: "none",
-    color: theme.colors.text,
-  },
-  navLogo: {
-    width: 24,
-    height: 24,
-    objectFit: "contain" as const,
-  },
-  brandText: {
-    fontSize: 18,
-    fontWeight: 700,
-  },
-  brandDivider: {
-    color: theme.colors.textDim,
-    fontSize: 14,
-  },
-  brandAccent: {
-    fontSize: 16,
-    fontWeight: 600,
-    color: theme.colors.secondary,
-  },
-  links: {
-    display: "flex",
-    gap: 32,
-  },
-  link: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-    fontWeight: 500,
-    textDecoration: "none",
-    transition: "color 0.2s",
-  },
-  actions: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  },
-  langSwitch: {
-    display: "flex",
-    gap: 2,
-    background: theme.colors.border,
-    borderRadius: 6,
-    padding: 2,
-  },
-  langBtn: {
-    padding: "4px 10px",
-    border: "none",
-    borderRadius: 4,
-    background: "transparent",
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "all 0.2s",
-  },
-  langBtnActive: {
-    background: theme.colors.secondary,
-    color: theme.colors.text,
-  },
-  connectBtn: {
-    padding: "8px 16px",
-    border: "none",
-    borderRadius: 8,
-    background: theme.colors.primary,
-    color: theme.colors.text,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-  profileArea: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-  },
-  profilePic: {
-    width: 32,
-    height: 32,
-    borderRadius: "50%",
-    objectFit: "cover" as const,
-  },
-  profilePlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: "50%",
-    background: theme.colors.border,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 16,
-  },
-  dashboardBtn: {
-    padding: "6px 12px",
-    border: "none",
-    borderRadius: 6,
-    background: theme.colors.primary,
-    color: theme.colors.text,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    textDecoration: "none",
-  },
-  logoutBtn: {
-    padding: "6px 12px",
-    border: `1px solid ${theme.colors.borderLight}`,
-    borderRadius: 6,
-    background: "transparent",
-    color: theme.colors.textMuted,
-    fontSize: 12,
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-  hamburger: {
-    padding: "4px 8px",
-    border: "none",
-    background: "transparent",
-    color: theme.colors.text,
-    fontSize: 20,
-    cursor: "pointer",
-  },
-  mobileMenu: {
-    position: "absolute" as const,
-    top: theme.spacing.navHeight,
-    left: 0,
-    right: 0,
-    background: "rgba(10, 15, 26, 0.98)",
-    borderBottom: `1px solid ${theme.colors.border}`,
-    padding: "16px 24px",
-    display: "flex",
-    flexDirection: "column" as const,
-    gap: 16,
-  },
-  mobileLink: {
-    color: theme.colors.textMuted,
-    fontSize: 16,
-    fontWeight: 500,
-    textDecoration: "none",
-    padding: "8px 0",
-  },
-};

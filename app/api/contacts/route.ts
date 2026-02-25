@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
-
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gpfoxevxvhltjzppeacr.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-function verifyToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-
-  const token = authHeader.substring(7);
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { pubkey: string };
-    return decoded.pubkey;
-  } catch {
-    return null;
-  }
-}
+import { supabase } from '@/lib/supabase';
+import { verifyToken } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
   const pubkey = verifyToken(request);

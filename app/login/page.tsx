@@ -5,7 +5,6 @@ import { useNostr } from "@/hooks/useNostr";
 import { useAuth } from "@/hooks/useAuth";
 import { LoginScreen } from "@/components/LoginScreen";
 import { login as authLogin } from "@/lib/auth";
-import { theme } from "@/lib/theme";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,16 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: theme.colors.background,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-      }}
-    >
+    <div className="min-h-screen bg-background flex items-center justify-center p-8">
       <LoginScreen
         loading={loading}
         error={error}

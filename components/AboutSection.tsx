@@ -1,40 +1,31 @@
 "use client";
 
-import { useTranslation } from '../i18n/useTranslation';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { theme } from '../lib/theme';
+import { useTranslation } from "../i18n/useTranslation";
+import { Card } from "@/components/ui/card";
 
 export function AboutSection() {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
 
   return (
-    <section id="about" style={styles.section}>
-      <div
-        style={{
-          ...styles.inner,
-          maxWidth: theme.spacing.container,
-          padding: isMobile ? '0 20px' : '0 40px',
-        }}
-      >
-        <h2 style={styles.sectionTitle}>{t.about.title}</h2>
+    <section id="about" className="py-20 bg-background">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10">
+        <h2 className="text-foreground text-[32px] font-extrabold text-center mb-12">
+          {t.about.title}
+        </h2>
 
-        <div
-          style={{
-            ...styles.grid,
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          }}
-        >
-          <div style={styles.card}>
-            <div style={styles.cardIcon}>🦞</div>
-            <h3 style={styles.cardTitle}>{t.about.openclawTitle}</h3>
-            <p style={styles.cardText}>{t.about.openclawDesc}</p>
-            <div style={styles.cardLinks}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card className="p-8">
+            <div className="text-4xl mb-3">🦞</div>
+            <h3 className="text-foreground text-xl font-bold mb-3">{t.about.openclawTitle}</h3>
+            <p className="text-muted-foreground text-[15px] leading-relaxed mb-4">
+              {t.about.openclawDesc}
+            </p>
+            <div className="flex gap-4">
               <a
                 href="https://github.com/openclaw/openclaw"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.cardLink}
+                className="text-primary text-sm font-semibold"
               >
                 GitHub →
               </a>
@@ -42,23 +33,25 @@ export function AboutSection() {
                 href="https://openclaw.ai"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.cardLink}
+                className="text-primary text-sm font-semibold"
               >
                 openclaw.ai →
               </a>
             </div>
-          </div>
+          </Card>
 
-          <div style={styles.card}>
-            <div style={styles.cardIcon}>⚡</div>
-            <h3 style={styles.cardTitle}>{t.about.lacryptaTitle}</h3>
-            <p style={styles.cardText}>{t.about.lacryptaDesc}</p>
-            <div style={styles.cardLinks}>
+          <Card className="p-8">
+            <div className="text-4xl mb-3">⚡</div>
+            <h3 className="text-foreground text-xl font-bold mb-3">{t.about.lacryptaTitle}</h3>
+            <p className="text-muted-foreground text-[15px] leading-relaxed mb-4">
+              {t.about.lacryptaDesc}
+            </p>
+            <div className="flex gap-4">
               <a
                 href="https://lacrypta.ar"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.cardLink}
+                className="text-primary text-sm font-semibold"
               >
                 lacrypta.ar →
               </a>
@@ -66,93 +59,21 @@ export function AboutSection() {
                 href="https://github.com/lacrypta"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.cardLink}
+                className="text-primary text-sm font-semibold"
               >
                 GitHub →
               </a>
             </div>
-          </div>
+          </Card>
         </div>
 
-        <div style={styles.whyCard}>
-          <h3 style={styles.whyTitle}>{t.about.whyTitle}</h3>
-          <p style={styles.whyText}>{t.about.whyDesc}</p>
-        </div>
+        <Card className="p-8 text-center">
+          <h3 className="text-accent text-xl font-bold mb-3">{t.about.whyTitle}</h3>
+          <p className="text-muted-foreground text-[15px] leading-relaxed max-w-[600px] mx-auto">
+            {t.about.whyDesc}
+          </p>
+        </Card>
       </div>
     </section>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  section: {
-    padding: `${theme.spacing.section}px 0`,
-    background: theme.colors.background,
-  },
-  inner: {
-    margin: '0 auto',
-  },
-  sectionTitle: {
-    color: theme.colors.text,
-    fontSize: 32,
-    fontWeight: 800,
-    textAlign: 'center' as const,
-    marginBottom: 48,
-  },
-  grid: {
-    display: 'grid',
-    gap: 24,
-    marginBottom: 32,
-  },
-  card: {
-    background: theme.colors.cardBg,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 16,
-    padding: 32,
-  },
-  cardIcon: {
-    fontSize: 36,
-    marginBottom: 12,
-  },
-  cardTitle: {
-    color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: 700,
-    marginBottom: 12,
-  },
-  cardText: {
-    color: theme.colors.textMuted,
-    fontSize: 15,
-    lineHeight: 1.7,
-    marginBottom: 16,
-  },
-  cardLinks: {
-    display: 'flex',
-    gap: 16,
-  },
-  cardLink: {
-    color: theme.colors.primary,
-    fontSize: 14,
-    fontWeight: 600,
-    textDecoration: 'none',
-  },
-  whyCard: {
-    background: theme.colors.cardBg,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 16,
-    padding: 32,
-    textAlign: 'center' as const,
-  },
-  whyTitle: {
-    color: theme.colors.secondary,
-    fontSize: 20,
-    fontWeight: 700,
-    marginBottom: 12,
-  },
-  whyText: {
-    color: theme.colors.textMuted,
-    fontSize: 15,
-    lineHeight: 1.7,
-    maxWidth: 600,
-    margin: '0 auto',
-  },
-};

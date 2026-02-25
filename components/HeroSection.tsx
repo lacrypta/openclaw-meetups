@@ -1,13 +1,11 @@
 "use client";
 
 import { useTranslation } from "../i18n/useTranslation";
-import { useIsMobile } from "../hooks/useMediaQuery";
-import { theme } from "../lib/theme";
+import { Card } from "@/components/ui/card";
 import meetupConfig from "../config/meetup.json";
 
 export function HeroSection() {
   const { t, lang } = useTranslation();
-  const isMobile = useIsMobile();
   const nextDate = new Date(meetupConfig.nextMeetupDate);
 
   const formattedDate = nextDate.toLocaleDateString(
@@ -17,150 +15,41 @@ export function HeroSection() {
       year: "numeric",
       month: "long",
       day: "numeric",
-    },
+    }
   );
 
   return (
-    <section
-      style={{
-        ...styles.hero,
-        paddingTop: theme.spacing.navHeight + (isMobile ? 40 : 80),
-        minHeight: "60vh",
-      }}
-    >
-      <div style={styles.bgGlow} />
-      <div
-        style={{ ...styles.content, padding: isMobile ? "0 20px" : "0 40px" }}
-      >
-        <div style={styles.logoRow}>
-          <img
-            src='/openclaw-logo.png'
-            alt='OpenClaw'
-            style={styles.heroLogo}
-          />
-          <span style={styles.logoX}>x</span>
-          <img
-            src='/lacrypta-logo.png'
-            alt='La Crypta'
-            style={styles.heroLogo}
-          />
+    <section className="relative flex items-center justify-center bg-background overflow-hidden pt-[144px] md:pt-[224px] min-h-[60vh]">
+      {/* Background glow */}
+      <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(124,58,237,0.15)_0%,rgba(232,121,168,0.05)_50%,transparent_70%)] pointer-events-none" />
+
+      <div className="relative z-10 text-center max-w-[800px] px-5 md:px-10">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <img src="/openclaw-logo.png" alt="OpenClaw" className="w-16 h-16 object-contain" />
+          <span className="text-2xl font-bold text-muted-foreground/60">x</span>
+          <img src="/lacrypta-logo.png" alt="La Crypta" className="w-16 h-16 object-contain" />
         </div>
-        <h1
-          style={{
-            ...styles.title,
-            fontSize: isMobile ? 36 : 56,
-          }}
-        >
+
+        <h1 className="text-foreground font-extrabold leading-tight mb-2 text-4xl md:text-[56px]">
           {t.hero.title}
         </h1>
-        <p
-          style={{
-            ...styles.subtitle,
-            fontSize: isMobile ? 18 : 24,
-          }}
-        >
+        <p className="text-muted-foreground font-normal mb-3 text-lg md:text-2xl">
           {t.hero.subtitle}
         </p>
-        <p style={styles.tagline}>{t.hero.tagline}</p>
+        <p className="text-accent text-sm font-semibold tracking-wide uppercase mb-10">
+          {t.hero.tagline}
+        </p>
 
-        <div style={styles.dateCard}>
-          <span style={styles.dateLabel}>{t.hero.nextMeetup}</span>
-          <span style={styles.dateValue}>{formattedDate}</span>
-          <span style={styles.dateTime}>19:00 hs (ART)</span>
-        </div>
+        <Card className="inline-flex flex-col gap-1 px-8 py-5 mb-8">
+          <span className="text-muted-foreground/60 text-xs font-semibold uppercase tracking-wide">
+            {t.hero.nextMeetup}
+          </span>
+          <span className="text-foreground text-xl font-bold capitalize">
+            {formattedDate}
+          </span>
+          <span className="text-accent text-sm font-semibold">19:00 hs (ART)</span>
+        </Card>
       </div>
     </section>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  hero: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: theme.colors.background,
-    overflow: "hidden",
-  },
-  bgGlow: {
-    position: "absolute",
-    top: "30%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 600,
-    height: 600,
-    borderRadius: "50%",
-    background: `radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, rgba(255, 140, 0, 0.05) 50%, transparent 70%)`,
-    pointerEvents: "none",
-  },
-  content: {
-    position: "relative",
-    zIndex: 1,
-    textAlign: "center" as const,
-    maxWidth: 800,
-  },
-  logoRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    marginBottom: 16,
-  },
-  heroLogo: {
-    width: 64,
-    height: 64,
-    objectFit: "contain" as const,
-  },
-  logoX: {
-    fontSize: 24,
-    fontWeight: 700,
-    color: theme.colors.textDim,
-  },
-  title: {
-    color: theme.colors.text,
-    fontWeight: 800,
-    lineHeight: 1.1,
-    margin: "0 0 8px",
-  },
-  subtitle: {
-    color: theme.colors.textMuted,
-    fontWeight: 400,
-    margin: "0 0 12px",
-  },
-  tagline: {
-    color: theme.colors.secondary,
-    fontSize: 14,
-    fontWeight: 600,
-    letterSpacing: 1,
-    textTransform: "uppercase" as const,
-    margin: "0 0 40px",
-  },
-  dateCard: {
-    display: "inline-flex",
-    flexDirection: "column" as const,
-    gap: 4,
-    background: theme.colors.cardBg,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 12,
-    padding: "20px 32px",
-    marginBottom: 32,
-  },
-  dateLabel: {
-    color: theme.colors.textDim,
-    fontSize: 12,
-    fontWeight: 600,
-    textTransform: "uppercase" as const,
-    letterSpacing: 1,
-  },
-  dateValue: {
-    color: theme.colors.text,
-    fontSize: 20,
-    fontWeight: 700,
-    textTransform: "capitalize" as const,
-  },
-  dateTime: {
-    color: theme.colors.secondary,
-    fontSize: 14,
-    fontWeight: 600,
-  },
-};

@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { checkNip07 } from '../lib/nostr';
-import { useTranslation } from '../i18n/useTranslation';
+import { useState, useEffect } from "react";
+import { checkNip07 } from "../lib/nostr";
+import { useTranslation } from "../i18n/useTranslation";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface Props {
   loading: boolean;
@@ -15,217 +21,96 @@ interface Props {
 export function LoginScreen({ loading, error, onNip07, onNsec, onBunker }: Props) {
   const { t } = useTranslation();
   const [hasExtension, setHasExtension] = useState(false);
-  const [nsec, setNsec] = useState('');
-  const [bunkerUrl, setBunkerUrl] = useState('');
-  const [tab, setTab] = useState<'nip07' | 'nsec' | 'bunker'>('nip07');
+  const [nsec, setNsec] = useState("");
+  const [bunkerUrl, setBunkerUrl] = useState("");
 
   useEffect(() => {
     checkNip07().then(setHasExtension);
   }, []);
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.logo}>⚡</div>
-        <h1 style={styles.title}>{t.login.title}</h1>
-        <p style={styles.subtitle}>{t.login.subtitle}</p>
+    <div className="flex items-center justify-center">
+      <Card className="p-10 max-w-[440px] w-full shadow-[0_0_40px_rgba(124,58,237,0.15)]">
+        <div className="text-5xl text-center mb-2">⚡</div>
+        <h1 className="text-foreground text-center text-[28px] font-bold m-0">
+          {t.login.title}
+        </h1>
+        <p className="text-muted-foreground text-center mt-1 mb-6">
+          {t.login.subtitle}
+        </p>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-        <div style={styles.tabs}>
-          <button
-            style={{ ...styles.tab, ...(tab === 'nip07' ? styles.tabActive : {}) }}
-            onClick={() => setTab('nip07')}
-          >
-            🔌 {t.login.extensionTab}
-          </button>
-          <button
-            style={{ ...styles.tab, ...(tab === 'bunker' ? styles.tabActive : {}) }}
-            onClick={() => setTab('bunker')}
-          >
-            🔐 {t.login.bunkerTab}
-          </button>
-          <button
-            style={{ ...styles.tab, ...(tab === 'nsec' ? styles.tabActive : {}) }}
-            onClick={() => setTab('nsec')}
-          >
-            🔑 {t.login.nsecTab}
-          </button>
-        </div>
+        <Tabs defaultValue="nip07" className="w-full">
+          <TabsList className="w-full mb-5">
+            <TabsTrigger value="nip07" className="flex-1 text-[13px]">
+              🔌 {t.login.extensionTab}
+            </TabsTrigger>
+            <TabsTrigger value="bunker" className="flex-1 text-[13px]">
+              🔐 {t.login.bunkerTab}
+            </TabsTrigger>
+            <TabsTrigger value="nsec" className="flex-1 text-[13px]">
+              🔑 {t.login.nsecTab}
+            </TabsTrigger>
+          </TabsList>
 
-        <div style={styles.tabContent}>
-          {tab === 'nip07' && (
-            <div>
-              <p style={styles.desc}>
-                {hasExtension ? t.login.extensionDetected : t.login.extensionNotFound}
-              </p>
-              <button
-                style={{ ...styles.btn, ...styles.btnPrimary, opacity: hasExtension ? 1 : 0.5 }}
-                onClick={onNip07}
-                disabled={loading || !hasExtension}
-              >
-                {loading ? t.login.connecting : t.login.connectExtension}
-              </button>
-            </div>
-          )}
+          <TabsContent value="nip07" className="min-h-[140px]">
+            <p className="text-muted-foreground text-sm mb-4">
+              {hasExtension ? t.login.extensionDetected : t.login.extensionNotFound}
+            </p>
+            <Button
+              className="w-full"
+              onClick={onNip07}
+              disabled={loading || !hasExtension}
+            >
+              {loading ? t.login.connecting : t.login.connectExtension}
+            </Button>
+          </TabsContent>
 
-          {tab === 'bunker' && (
-            <div>
-              <p style={styles.desc}>{t.login.bunkerDesc}</p>
-              <input
-                style={styles.input}
-                placeholder="bunker://pubkey?relay=wss://..."
-                value={bunkerUrl}
-                onChange={(e) => setBunkerUrl(e.target.value)}
-              />
-              <button
-                style={{ ...styles.btn, ...styles.btnElectric }}
-                onClick={() => onBunker(bunkerUrl)}
-                disabled={loading || !bunkerUrl}
-              >
-                {loading ? t.login.connecting : t.login.connectBunker}
-              </button>
-            </div>
-          )}
+          <TabsContent value="bunker" className="min-h-[140px]">
+            <p className="text-muted-foreground text-sm mb-4">{t.login.bunkerDesc}</p>
+            <Input
+              className="mb-3"
+              placeholder="bunker://pubkey?relay=wss://..."
+              value={bunkerUrl}
+              onChange={(e) => setBunkerUrl(e.target.value)}
+            />
+            <Button
+              className="w-full"
+              onClick={() => onBunker(bunkerUrl)}
+              disabled={loading || !bunkerUrl}
+            >
+              {loading ? t.login.connecting : t.login.connectBunker}
+            </Button>
+          </TabsContent>
 
-          {tab === 'nsec' && (
-            <div>
-              <div style={styles.warning}>
+          <TabsContent value="nsec" className="min-h-[140px]">
+            <Alert className="mb-4 bg-warning/20 border-warning/40 text-warning">
+              <AlertDescription className="text-[13px] font-medium">
                 ⚠️ {t.login.nsecWarning}
-              </div>
-              <input
-                style={styles.input}
-                type="password"
-                placeholder="nsec1..."
-                value={nsec}
-                onChange={(e) => setNsec(e.target.value)}
-              />
-              <button
-                style={{ ...styles.btn, ...styles.btnAmber }}
-                onClick={() => onNsec(nsec)}
-                disabled={loading || !nsec}
-              >
-                {loading ? t.login.connecting : t.login.loginNsec}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+              </AlertDescription>
+            </Alert>
+            <Input
+              className="mb-3"
+              type="password"
+              placeholder="nsec1..."
+              value={nsec}
+              onChange={(e) => setNsec(e.target.value)}
+            />
+            <Button
+              className="w-full bg-accent hover:bg-accent/80"
+              onClick={() => onNsec(nsec)}
+              disabled={loading || !nsec}
+            >
+              {loading ? t.login.connecting : t.login.loginNsec}
+            </Button>
+          </TabsContent>
+        </Tabs>
+      </Card>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 0,
-  },
-  card: {
-    background: '#111827',
-    borderRadius: 16,
-    padding: 40,
-    maxWidth: 440,
-    width: '100%',
-    boxShadow: '0 0 40px rgba(37, 99, 235, 0.15)',
-  },
-  logo: {
-    fontSize: 48,
-    textAlign: 'center' as const,
-    marginBottom: 8,
-  },
-  title: {
-    color: '#fff',
-    textAlign: 'center' as const,
-    margin: 0,
-    fontSize: 28,
-    fontWeight: 700,
-  },
-  subtitle: {
-    color: '#6b7280',
-    textAlign: 'center' as const,
-    marginTop: 4,
-    marginBottom: 24,
-  },
-  error: {
-    background: '#7f1d1d',
-    color: '#fca5a5',
-    padding: '10px 14px',
-    borderRadius: 8,
-    marginBottom: 16,
-    fontSize: 14,
-  },
-  tabs: {
-    display: 'flex',
-    gap: 4,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    padding: '10px 8px',
-    border: 'none',
-    borderRadius: 8,
-    background: '#1f2937',
-    color: '#9ca3af',
-    cursor: 'pointer',
-    fontSize: 13,
-    fontWeight: 600,
-    transition: 'all 0.2s',
-  },
-  tabActive: {
-    background: '#2563eb',
-    color: '#fff',
-  },
-  tabContent: {
-    minHeight: 140,
-  },
-  desc: {
-    color: '#9ca3af',
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  warning: {
-    background: '#78350f',
-    color: '#fbbf24',
-    padding: '10px 14px',
-    borderRadius: 8,
-    marginBottom: 16,
-    fontSize: 13,
-    fontWeight: 500,
-  },
-  input: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: 8,
-    border: '1px solid #374151',
-    background: '#1f2937',
-    color: '#fff',
-    fontSize: 14,
-    marginBottom: 12,
-    outline: 'none',
-    boxSizing: 'border-box' as const,
-  },
-  btn: {
-    width: '100%',
-    padding: '12px 20px',
-    borderRadius: 8,
-    border: 'none',
-    fontSize: 15,
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  btnPrimary: {
-    background: '#2563eb',
-    color: '#fff',
-  },
-  btnAmber: {
-    background: '#ff8c00',
-    color: '#fff',
-  },
-  btnElectric: {
-    background: '#2563eb',
-    color: '#fff',
-  },
-};
