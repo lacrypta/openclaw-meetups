@@ -1,3 +1,5 @@
+"use client";
+
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { theme } from "../lib/theme";
 

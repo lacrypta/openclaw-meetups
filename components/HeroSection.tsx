@@ -1,3 +1,5 @@
+"use client";
+
 import { useTranslation } from "../i18n/useTranslation";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { theme } from "../lib/theme";

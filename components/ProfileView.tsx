@@ -1,3 +1,5 @@
+"use client";
+
 import type { NostrProfile } from '../lib/nostr';
 import { npubEncode } from '../lib/nostr';
 

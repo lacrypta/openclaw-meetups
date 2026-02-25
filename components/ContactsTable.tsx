@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo } from 'react';
 import { theme } from '../lib/theme';
 import type { Contact } from '../hooks/useContacts';

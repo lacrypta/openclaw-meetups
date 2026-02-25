@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from 'react';
 import { LoginScreen } from './LoginScreen';
 import { theme } from '../lib/theme';

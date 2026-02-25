@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { theme } from '../lib/theme';

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { checkNip07 } from '../lib/nostr';
 import { useTranslation } from '../i18n/useTranslation';

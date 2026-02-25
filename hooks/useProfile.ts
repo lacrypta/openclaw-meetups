@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { fetchProfile } from '../lib/nostr';
 import type { NostrProfile } from '../lib/nostr';
