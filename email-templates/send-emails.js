@@ -16,22 +16,51 @@ const __dirname = path.dirname(__filename);
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gpfoxevxvhltjzppeacr.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-// SMTP Configuration
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465');
-const SMTP_SECURE = process.env.SMTP_SECURE !== 'false'; // true by default
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM || SMTP_USER;
-
 if (!SUPABASE_SERVICE_KEY) {
   console.error('❌ Missing SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
 
-if (!SMTP_USER || !SMTP_PASS) {
-  console.error('❌ Missing SMTP_USER or SMTP_PASS');
-  process.exit(1);
+// SMTP Configuration - Load from Supabase or fallback to env vars
+let SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, EMAIL_FROM;
+
+async function loadSmtpConfig() {
+  try {
+    const { data, error } = await supabase
+      .from('smtp_settings')
+      .select('*')
+      .eq('id', '00000000-0000-0000-0000-000000000000')
+      .single();
+
+    if (data && data.smtp_user && data.smtp_pass) {
+      console.log('✅ Loaded SMTP config from Supabase');
+      SMTP_HOST = data.smtp_host;
+      SMTP_PORT = data.smtp_port;
+      SMTP_SECURE = data.smtp_secure;
+      SMTP_USER = data.smtp_user;
+      SMTP_PASS = data.smtp_pass;
+      EMAIL_FROM = data.email_from;
+      return true;
+    }
+  } catch (err) {
+    console.warn('⚠️  Failed to load SMTP from Supabase, using env vars:', err.message);
+  }
+
+  // Fallback to environment variables
+  console.log('📋 Using SMTP config from environment variables');
+  SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+  SMTP_PORT = parseInt(process.env.SMTP_PORT || '465');
+  SMTP_SECURE = process.env.SMTP_SECURE !== 'false';
+  SMTP_USER = process.env.SMTP_USER;
+  SMTP_PASS = process.env.SMTP_PASS;
+  EMAIL_FROM = process.env.EMAIL_FROM || SMTP_USER;
+
+  if (!SMTP_USER || !SMTP_PASS) {
+    console.error('❌ Missing SMTP_USER or SMTP_PASS (not in Supabase or env vars)');
+    process.exit(1);
+  }
+  
+  return true;
 }
 
 // Parse args
@@ -44,15 +73,7 @@ const limit = limitIndex >= 0 ? parseInt(args[limitIndex + 1]) : null;
 // Setup
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_SECURE,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+// Transporter will be created in main() after loading SMTP config
 
 // Segment configs
 const SEGMENTS = {
@@ -79,6 +100,20 @@ const SEGMENTS = {
 const config = SEGMENTS[segment];
 
 async function main() {
+  // Load SMTP configuration from Supabase (or env vars)
+  await loadSmtpConfig();
+
+  // Create transporter with loaded config
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+
   console.log(`\n📧 OpenClaw Meetup Email Campaign`);
   console.log(`Segment: ${segment}`);
   console.log(`Template: ${config.template}`);

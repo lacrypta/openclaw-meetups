@@ -8,6 +8,7 @@ const navItems = [
   { label: "Overview", href: "/dashboard", icon: "📊" },
   { label: "Events", href: "/dashboard/events", icon: "📅" },
   { label: "Attendees", href: "/dashboard/attendees", icon: "👥" },
+  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
 ];
 
 export function Sidebar() {
