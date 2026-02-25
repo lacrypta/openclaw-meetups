@@ -1,48 +1,39 @@
 "use client";
 
-import { useTranslation } from '../i18n/useTranslation';
-import { useIsMobile } from '../hooks/useMediaQuery';
-import { theme } from '../lib/theme';
+import { useTranslation } from "../i18n/useTranslation";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export function LocationSection() {
   const { t, lang } = useTranslation();
-  const isMobile = useIsMobile();
-
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Villanueva+1367+Buenos+Aires+Argentina";
 
   return (
-    <section id="location" style={styles.section}>
-      <div
-        style={{
-          ...styles.inner,
-          maxWidth: theme.spacing.container,
-          padding: isMobile ? '0 20px' : '0 40px',
-        }}
-      >
-        <h2 style={styles.sectionTitle}>{t.location.title}</h2>
+    <section id="location" className="py-20 bg-background">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10">
+        <h2 className="text-foreground text-[32px] font-extrabold text-center mb-12">
+          {t.location.title}
+        </h2>
 
-        <div
-          style={{
-            ...styles.grid,
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          }}
-        >
-          <div style={styles.infoCard}>
-            <div style={styles.venueIcon}>⚡</div>
-            <h3 style={styles.venueName}>{t.location.name}</h3>
-            <p style={styles.address}>📍 Villanueva 1367</p>
-            <p style={styles.venueDetail}>{t.location.neighborhood}, {t.location.city}</p>
-            <p style={styles.venueDirections}>
-              {lang === "es" 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <Card className="p-8 flex flex-col gap-2">
+            <div className="text-4xl mb-2">⚡</div>
+            <h3 className="text-foreground text-2xl font-extrabold">{t.location.name}</h3>
+            <p className="text-primary text-lg font-bold my-2">📍 Villanueva 1367</p>
+            <p className="text-muted-foreground text-[15px]">
+              {t.location.neighborhood}, {t.location.city}
+            </p>
+            <p className="text-muted-foreground/60 text-sm my-2 leading-relaxed">
+              {lang === "es"
                 ? "Barrio Belgrano, a pasos de la estación Juramento (Línea D)"
                 : "Belgrano neighborhood, steps from Juramento station (Line D)"}
             </p>
-            <div style={styles.btnGroup}>
+            <div className="flex flex-col gap-3 mt-4">
               <a
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.mapsBtn}
+                className="inline-block px-5 py-3 bg-[#4285f4] rounded-lg text-white text-sm font-semibold text-center"
               >
                 🗺️ {lang === "es" ? "Abrir en Google Maps" : "Open in Google Maps"}
               </a>
@@ -50,140 +41,32 @@ export function LocationSection() {
                 href="https://lacrypta.ar"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.websiteBtn}
+                className="inline-block px-5 py-2.5 border border-primary rounded-lg text-primary text-sm font-semibold text-center"
               >
                 {t.location.visitWebsite} →
               </a>
             </div>
-          </div>
+          </Card>
 
-          <div style={styles.mapCard}>
+          <Card className="p-0 overflow-hidden">
             <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
-              <img 
-                src="https://files.catbox.moe/65txy5.jpg" 
+              <img
+                src="https://files.catbox.moe/65txy5.jpg"
                 alt="Mapa La Crypta Belgrano"
-                style={styles.mapImage}
+                className="w-full h-[300px] object-cover block cursor-pointer"
               />
             </a>
             <a
               href={googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={styles.mapLink}
+              className="block px-4 py-3 bg-card text-primary text-[13px] font-semibold text-center"
             >
               {lang === "es" ? "Ver en Google Maps" : "View on Google Maps"} →
             </a>
-          </div>
+          </Card>
         </div>
       </div>
     </section>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  section: {
-    padding: `${theme.spacing.section}px 0`,
-    background: theme.colors.background,
-  },
-  inner: {
-    margin: '0 auto',
-  },
-  sectionTitle: {
-    color: theme.colors.text,
-    fontSize: 32,
-    fontWeight: 800,
-    textAlign: 'center' as const,
-    marginBottom: 48,
-  },
-  grid: {
-    display: 'grid',
-    gap: 24,
-    alignItems: 'start',
-  },
-  infoCard: {
-    background: theme.colors.cardBg,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 16,
-    padding: 32,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 8,
-  },
-  venueIcon: {
-    fontSize: 36,
-    marginBottom: 8,
-  },
-  venueName: {
-    color: theme.colors.text,
-    fontSize: 24,
-    fontWeight: 800,
-    margin: 0,
-  },
-  address: {
-    color: theme.colors.primary,
-    fontSize: 18,
-    fontWeight: 700,
-    margin: '8px 0',
-  },
-  venueDetail: {
-    color: theme.colors.textMuted,
-    fontSize: 15,
-    margin: 0,
-  },
-  venueDirections: {
-    color: theme.colors.textDim,
-    fontSize: 14,
-    margin: '8px 0',
-    lineHeight: 1.6,
-  },
-  btnGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 12,
-    marginTop: 16,
-  },
-  mapsBtn: {
-    display: 'inline-block',
-    padding: '12px 20px',
-    background: '#4285f4',
-    borderRadius: 8,
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 600,
-    textDecoration: 'none',
-    textAlign: 'center' as const,
-  },
-  websiteBtn: {
-    display: 'inline-block',
-    padding: '10px 20px',
-    border: `1px solid ${theme.colors.primary}`,
-    borderRadius: 8,
-    color: theme.colors.primary,
-    fontSize: 14,
-    fontWeight: 600,
-    textDecoration: 'none',
-    textAlign: 'center' as const,
-  },
-  mapCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    border: `1px solid ${theme.colors.border}`,
-  },
-  mapImage: {
-    width: '100%',
-    height: 300,
-    objectFit: 'cover' as const,
-    display: 'block',
-    cursor: 'pointer',
-  },
-  mapLink: {
-    display: 'block',
-    padding: '12px 16px',
-    background: theme.colors.cardBg,
-    color: theme.colors.primary,
-    fontSize: 13,
-    fontWeight: 600,
-    textDecoration: 'none',
-    textAlign: 'center' as const,
-  },
-};

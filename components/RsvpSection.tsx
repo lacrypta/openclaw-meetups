@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslation } from "../i18n/useTranslation";
-import { useIsMobile } from "../hooks/useMediaQuery";
 import { useRsvp } from "../hooks/useRsvp";
-import { theme } from "../lib/theme";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { NostrProfile } from "../lib/nostr";
 
 interface Props {
@@ -14,199 +15,68 @@ interface Props {
 
 export function RsvpSection({ pubkey, profile, onLoginClick }: Props) {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
   const { isAttending, attendeeCount, toggleRsvp } = useRsvp(pubkey);
 
   return (
-    <section id='rsvp' style={styles.section}>
-      <div
-        style={{
-          ...styles.inner,
-          maxWidth: 600,
-          padding: isMobile ? "0 20px" : "0 40px",
-        }}
-      >
-        <h2 style={styles.sectionTitle}>{t.rsvp.title}</h2>
+    <section id="rsvp" className="py-20 bg-card">
+      <div className="max-w-[600px] mx-auto px-5 md:px-10">
+        <h2 className="text-foreground text-[32px] font-extrabold text-center mb-12">
+          {t.rsvp.title}
+        </h2>
 
         {!pubkey ? (
-          <div style={styles.loginPrompt}>
-            <div style={styles.lockIcon}>🔐</div>
-            <p style={styles.promptText}>{t.rsvp.loginPrompt}</p>
-            <p style={styles.promptDesc}>{t.rsvp.loginDesc}</p>
-            <button style={styles.loginBtn} onClick={onLoginClick}>
+          <Card className="bg-background p-10 text-center">
+            <div className="text-4xl mb-4">🔐</div>
+            <p className="text-foreground text-lg font-bold mb-2">{t.rsvp.loginPrompt}</p>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              {t.rsvp.loginDesc}
+            </p>
+            <Button size="lg" onClick={onLoginClick}>
               ⚡ {t.hero.ctaLogin}
-            </button>
-          </div>
+            </Button>
+          </Card>
         ) : (
-          <div style={styles.rsvpCard}>
-            <div style={styles.profileMini}>
-              {profile?.picture ? (
-                <img src={profile.picture} alt='' style={styles.profilePic} />
-              ) : (
-                <div style={styles.profilePlaceholder}>👤</div>
-              )}
-              <span style={styles.profileName}>
+          <Card className="bg-background p-8 text-center">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <Avatar className="w-10 h-10">
+                {profile?.picture ? (
+                  <AvatarImage src={profile.picture} alt="" />
+                ) : null}
+                <AvatarFallback>👤</AvatarFallback>
+              </Avatar>
+              <span className="text-foreground text-base font-semibold">
                 {profile?.display_name || profile?.name || "Anon"}
               </span>
             </div>
 
             {isAttending ? (
-              <div style={styles.attendingBlock}>
-                <div style={styles.checkmark}>✓</div>
-                <p style={styles.attendingText}>{t.rsvp.attending}</p>
-                <button style={styles.cancelBtn} onClick={toggleRsvp}>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-success/15 text-success flex items-center justify-center text-2xl font-bold">
+                  ✓
+                </div>
+                <p className="text-success text-lg font-bold">{t.rsvp.attending}</p>
+                <Button variant="outline" size="sm" onClick={toggleRsvp}>
                   {t.rsvp.cancelAttend}
-                </button>
+                </Button>
               </div>
             ) : (
-              <button style={styles.confirmBtn} onClick={toggleRsvp}>
+              <Button
+                className="w-full max-w-[300px] bg-accent hover:bg-accent/80"
+                size="lg"
+                onClick={toggleRsvp}
+              >
                 🦞 {t.rsvp.confirmAttend}
-              </button>
+              </Button>
             )}
 
             {attendeeCount > 0 && (
-              <p style={styles.attendeeCount}>
+              <p className="text-muted-foreground/60 text-[13px] mt-4">
                 {attendeeCount} {t.rsvp.confirmed.toLowerCase()}
               </p>
             )}
-          </div>
+          </Card>
         )}
       </div>
     </section>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  section: {
-    padding: `${theme.spacing.section}px 0`,
-    background: theme.colors.cardBg,
-  },
-  inner: {
-    margin: "0 auto",
-  },
-  sectionTitle: {
-    color: theme.colors.text,
-    fontSize: 32,
-    fontWeight: 800,
-    textAlign: "center" as const,
-    marginBottom: 48,
-  },
-  loginPrompt: {
-    background: theme.colors.background,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 16,
-    padding: 40,
-    textAlign: "center" as const,
-  },
-  lockIcon: {
-    fontSize: 36,
-    marginBottom: 16,
-  },
-  promptText: {
-    color: theme.colors.text,
-    fontSize: 18,
-    fontWeight: 700,
-    marginBottom: 8,
-  },
-  promptDesc: {
-    color: theme.colors.textMuted,
-    fontSize: 14,
-    lineHeight: 1.6,
-    marginBottom: 24,
-  },
-  loginBtn: {
-    padding: "14px 32px",
-    border: "none",
-    borderRadius: 10,
-    background: theme.colors.primary,
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  rsvpCard: {
-    background: theme.colors.background,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: 16,
-    padding: 32,
-    textAlign: "center" as const,
-  },
-  profileMini: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    marginBottom: 24,
-  },
-  profilePic: {
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    objectFit: "cover" as const,
-  },
-  profilePlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    background: theme.colors.border,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 20,
-  },
-  profileName: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: 600,
-  },
-  confirmBtn: {
-    padding: "14px 32px",
-    border: "none",
-    borderRadius: 10,
-    background: theme.colors.secondary,
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: 700,
-    cursor: "pointer",
-    width: "100%",
-    maxWidth: 300,
-  },
-  attendingBlock: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    gap: 12,
-  },
-  checkmark: {
-    width: 48,
-    height: 48,
-    borderRadius: "50%",
-    background: "rgba(52, 211, 153, 0.15)",
-    color: theme.colors.success,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 24,
-    fontWeight: 700,
-  },
-  attendingText: {
-    color: theme.colors.success,
-    fontSize: 18,
-    fontWeight: 700,
-  },
-  cancelBtn: {
-    padding: "8px 20px",
-    border: `1px solid ${theme.colors.borderLight}`,
-    borderRadius: 8,
-    background: "transparent",
-    color: theme.colors.textMuted,
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: "pointer",
-  },
-  attendeeCount: {
-    color: theme.colors.textDim,
-    fontSize: 13,
-    marginTop: 16,
-  },
-};

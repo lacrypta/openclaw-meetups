@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from 'react';
-import { useTranslation } from '../i18n/useTranslation';
-import { theme } from '../lib/theme';
+import { useState } from "react";
+import { useTranslation } from "../i18n/useTranslation";
+import { Button } from "@/components/ui/button";
 
-const LUMA_URL = 'https://luma.com/rm5v3k5r';
+const LUMA_URL = "https://luma.com/rm5v3k5r";
 
 export function EventBanner() {
   const { t } = useTranslation();
@@ -13,20 +13,20 @@ export function EventBanner() {
   if (dismissed) return null;
 
   return (
-    <div style={styles.banner}>
-      <div style={styles.inner}>
-        <span style={styles.emoji}>🦞🇦🇷</span>
-        <span style={styles.text}>{t.banner.text}</span>
+    <div className="fixed top-16 left-0 right-0 bg-gradient-to-r from-primary to-accent z-[999] px-6 py-2.5">
+      <div className="relative flex items-center justify-center gap-3 max-w-[1200px] mx-auto flex-wrap">
+        <span className="text-lg">🦞🇦🇷</span>
+        <span className="text-foreground text-sm font-bold">{t.banner.text}</span>
         <a
           href={LUMA_URL}
           target="_blank"
           rel="noopener noreferrer"
-          style={styles.cta}
+          className="text-foreground text-[13px] font-bold no-underline bg-white/20 px-3.5 py-1 rounded-full border border-white/30"
         >
           {t.banner.cta} →
         </a>
         <button
-          style={styles.close}
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-transparent border-none text-white/70 text-sm cursor-pointer p-1"
           onClick={() => setDismissed(true)}
           aria-label="Dismiss"
         >
@@ -36,54 +36,3 @@ export function EventBanner() {
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  banner: {
-    position: 'fixed',
-    top: theme.spacing.navHeight,
-    left: 0,
-    right: 0,
-    background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-    zIndex: 999,
-    padding: '10px 24px',
-  },
-  inner: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    maxWidth: theme.spacing.container,
-    margin: '0 auto',
-    flexWrap: 'wrap' as const,
-  },
-  emoji: {
-    fontSize: 18,
-  },
-  text: {
-    color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: 700,
-  },
-  cta: {
-    color: theme.colors.text,
-    fontSize: 13,
-    fontWeight: 700,
-    textDecoration: 'none',
-    background: 'rgba(255, 255, 255, 0.2)',
-    padding: '4px 14px',
-    borderRadius: 20,
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-  },
-  close: {
-    position: 'absolute' as const,
-    right: 12,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'transparent',
-    border: 'none',
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 14,
-    cursor: 'pointer',
-    padding: 4,
-  },
-};

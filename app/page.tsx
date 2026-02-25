@@ -16,7 +16,6 @@ import { Footer } from "@/components/Footer";
 import { LoginModal } from "@/components/LoginModal";
 import { EventBanner } from "@/components/EventBanner";
 import { login as authLogin } from "@/lib/auth";
-import { theme } from "@/lib/theme";
 
 export default function HomePage() {
   const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } =
@@ -53,7 +52,7 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.colors.background }}>
+    <div className="min-h-screen bg-background">
       <Navbar
         pubkey={pubkey}
         profile={profile}
@@ -64,21 +63,12 @@ export default function HomePage() {
       <EventBanner />
       <main>
         <HeroSection />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+        <div className="flex justify-center items-center">
           <iframe
             src="https://luma.com/embed/event/evt-aAtfxEgfRKNP3nz/simple"
             width="600"
             height="720"
-            style={{
-              border: "1px solid #666",
-              borderRadius: "20px",
-            }}
+            className="border border-border/50 rounded-2xl"
             allow="fullscreen; payment"
             aria-hidden="false"
           ></iframe>
@@ -87,30 +77,12 @@ export default function HomePage() {
         <ScheduleSection />
         <TalksSection />
         <LocationSection />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            padding: "2rem 0",
-            marginBottom: "2rem",
-          }}
-        >
+        <div className="flex justify-center items-center w-full py-8 mb-8">
           <a
             href="https://luma.com/rm5v3k5r"
-            className="luma-checkout--button"
+            className="luma-checkout--button border border-border/50 rounded-2xl px-8 py-4 bg-background text-foreground text-xl font-bold"
             data-luma-action="checkout"
             data-luma-event-id="evt-aAtfxEgfRKNP3nz"
-            style={{
-              border: "1px solid #666",
-              borderRadius: "20px",
-              padding: "1rem 2rem",
-              background: "#0a0f1a",
-              color: "#fff",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-            }}
           >
             Inscribirse al evento
           </a>
