@@ -3,6 +3,7 @@
 import { useTranslation } from "../i18n/useTranslation";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { theme } from "../lib/theme";
+import { version } from "../package.json";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -86,7 +87,7 @@ export function Footer() {
       <div style={styles.bottom}>
         <p style={styles.bottomText}>
           {t.footer.builtWith} 🦞⚡ &middot; {t.footer.rights} &middot;{" "}
-          {new Date().getFullYear()}
+          {new Date().getFullYear()} &middot; v{version}
         </p>
         <p style={styles.bottomText}>
           <a
