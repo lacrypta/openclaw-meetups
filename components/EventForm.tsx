@@ -1,8 +1,24 @@
 "use client";
 
-import { useState } from 'react';
-import { theme } from '../lib/theme';
-import type { EventStatus } from '../lib/types';
+import { useState } from "react";
+import type { EventStatus } from "../lib/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EventFormData {
   name: string;
@@ -27,14 +43,14 @@ interface EventFormProps {
   title?: string;
 }
 
-export function EventForm({ initial, onSubmit, onClose, title = 'Create Event' }: EventFormProps) {
+export function EventForm({ initial, onSubmit, onClose, title = "Create Event" }: EventFormProps) {
   const [form, setForm] = useState<EventFormData>({
-    name: initial?.name || '',
-    description: initial?.description || '',
-    date: initial?.date || '',
-    location: initial?.location || '',
-    capacity: initial?.capacity || '',
-    status: initial?.status || 'draft',
+    name: initial?.name || "",
+    description: initial?.description || "",
+    date: initial?.date || "",
+    location: initial?.location || "",
+    capacity: initial?.capacity || "",
+    status: initial?.status || "draft",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,157 +74,92 @@ export function EventForm({ initial, onSubmit, onClose, title = 'Create Event' }
     }
   };
 
-  const inputStyle = {
-    width: '100%',
-    padding: '0.75rem',
-    background: theme.colors.background,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
-    color: theme.colors.text,
-    fontSize: '0.9rem',
-  } as const;
-
-  const labelStyle = {
-    display: 'block',
-    color: theme.colors.textMuted,
-    fontSize: '0.8rem',
-    marginBottom: '0.35rem',
-    fontWeight: '500' as const,
-  };
-
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: theme.colors.overlay,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: theme.colors.cardBg,
-          borderRadius: '12px',
-          padding: '2rem',
-          width: '100%',
-          maxWidth: 520,
-          maxHeight: '90vh',
-          overflow: 'auto',
-          border: `1px solid ${theme.colors.border}`,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 style={{ color: theme.colors.text, margin: '0 0 1.5rem', fontSize: '1.25rem' }}>{title}</h2>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-[520px] max-h-[90vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={labelStyle}>Name *</label>
-            <input
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <Label>Name *</Label>
+            <Input
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              style={inputStyle}
               placeholder="Event name"
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Date & Time *</label>
-            <input
+          <div className="space-y-1.5">
+            <Label>Date & Time *</Label>
+            <Input
               required
               type="datetime-local"
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
-              style={inputStyle}
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Location</label>
-            <input
+          <div className="space-y-1.5">
+            <Label>Location</Label>
+            <Input
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
-              style={inputStyle}
               placeholder="Venue or address"
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Capacity</label>
-            <input
+          <div className="space-y-1.5">
+            <Label>Capacity</Label>
+            <Input
               type="number"
               min="1"
               value={form.capacity}
               onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-              style={inputStyle}
               placeholder="Max attendees"
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Status</label>
-            <select
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select
               value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value as EventStatus })}
-              style={inputStyle}
+              onValueChange={(value) => setForm({ ...form, status: value as EventStatus })}
             >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="completed">Completed</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label style={labelStyle}>Description</label>
-            <textarea
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              style={{ ...inputStyle, minHeight: 80, resize: 'vertical' as const }}
               placeholder="Event description"
+              className="min-h-[80px]"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                padding: '0.6rem 1.25rem',
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: '6px',
-                background: 'transparent',
-                color: theme.colors.textMuted,
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-              }}
-            >
+          <div className="flex gap-3 justify-end mt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{
-                padding: '0.6rem 1.25rem',
-                border: 'none',
-                borderRadius: '6px',
-                background: theme.colors.primary,
-                color: theme.colors.text,
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                opacity: submitting ? 0.7 : 1,
-              }}
-            >
-              {submitting ? 'Saving...' : title}
-            </button>
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving..." : title}
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

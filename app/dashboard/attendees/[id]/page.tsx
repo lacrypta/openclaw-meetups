@@ -1,9 +1,8 @@
 "use client";
 
-import { use } from 'react';
-import Link from 'next/link';
-import { AttendeeProfile } from '@/components/AttendeeProfile';
-import { theme } from '@/lib/theme';
+import { use } from "react";
+import Link from "next/link";
+import { AttendeeProfile } from "@/components/AttendeeProfile";
 
 export default function AttendeePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -12,13 +11,7 @@ export default function AttendeePage({ params }: { params: Promise<{ id: string 
     <div>
       <Link
         href="/dashboard/attendees"
-        style={{
-          color: theme.colors.textMuted,
-          textDecoration: 'none',
-          fontSize: '0.85rem',
-          display: 'inline-block',
-          marginBottom: '1rem',
-        }}
+        className="text-muted-foreground text-sm inline-block mb-4 hover:text-foreground transition-colors"
       >
         ← Back to Attendees
       </Link>
