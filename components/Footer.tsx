@@ -2,7 +2,8 @@
 
 import { useTranslation } from "../i18n/useTranslation";
 import { Separator } from "@/components/ui/separator";
-import { version } from "../package.json";
+import pkg from "../package.json";
+const { version } = pkg;
 
 export function Footer() {
   const { t } = useTranslation();
