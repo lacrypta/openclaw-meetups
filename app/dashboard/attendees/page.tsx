@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { useContacts } from '@/hooks/useContacts';
-import { ContactsTable } from '@/components/ContactsTable';
-import { StatsBar } from '@/components/StatsBar';
-import { theme } from '@/lib/theme';
+import { useState, useMemo } from "react";
+import { useContacts } from "@/hooks/useContacts";
+import { ContactsTable } from "@/components/ContactsTable";
+import { StatsBar } from "@/components/StatsBar";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-type FilterStatus = 'all' | 'approved' | 'waitlist' | 'checked_in';
+type FilterStatus = "all" | "approved" | "waitlist" | "checked_in";
 
 export default function AttendeesPage() {
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
 
   const filters = useMemo(() => {
-    if (filterStatus === 'all') return {};
-    if (filterStatus === 'checked_in') return { checked_in: true };
+    if (filterStatus === "all") return {};
+    if (filterStatus === "checked_in") return { checked_in: true };
     return { status: filterStatus };
   }, [filterStatus]);
 
@@ -21,87 +25,75 @@ export default function AttendeesPage() {
 
   const stats = useMemo(() => {
     const total = contacts.length;
-    const approved = contacts.filter((c) => c.status === 'approved').length;
-    const waitlist = contacts.filter((c) => c.status === 'waitlist').length;
+    const approved = contacts.filter((c) => c.status === "approved").length;
+    const waitlist = contacts.filter((c) => c.status === "waitlist").length;
     const checkedIn = contacts.filter((c) => c.checked_in).length;
     const emailsSent = contacts.filter((c) => c.email_sent).length;
 
     return [
-      { label: 'Total Contacts', value: total, color: theme.colors.primary },
-      { label: 'Approved', value: approved, color: theme.colors.success },
-      { label: 'Waitlist', value: waitlist, color: theme.colors.warningText },
-      { label: 'Checked In', value: checkedIn, color: theme.colors.secondary },
-      { label: 'Emails Sent', value: emailsSent, color: theme.colors.primary },
+      { label: "Total Contacts", value: total, color: "#7c3aed" },
+      { label: "Approved", value: approved, color: "#34d399" },
+      { label: "Waitlist", value: waitlist, color: "#fbbf24" },
+      { label: "Checked In", value: checkedIn, color: "#e879a8" },
+      { label: "Emails Sent", value: emailsSent, color: "#7c3aed" },
     ];
   }, [contacts]);
 
   const filterButtons: { label: string; value: FilterStatus }[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Approved', value: 'approved' },
-    { label: 'Waitlist', value: 'waitlist' },
-    { label: 'Checked In', value: 'checked_in' },
+    { label: "All", value: "all" },
+    { label: "Approved", value: "approved" },
+    { label: "Waitlist", value: "waitlist" },
+    { label: "Checked In", value: "checked_in" },
   ];
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Attendees</h1>
+      <h1 className="text-2xl font-bold mb-6">Attendees</h1>
 
-      <StatsBar stats={stats} />
+      <StatsBar stats={stats} loading={loading} />
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+      <div className="flex gap-2 flex-wrap mb-6">
         {filterButtons.map((btn) => (
-          <button
+          <Button
             key={btn.value}
+            variant={filterStatus === btn.value ? "default" : "secondary"}
+            size="sm"
             onClick={() => setFilterStatus(btn.value)}
-            style={{
-              padding: '0.4rem 0.85rem',
-              background: filterStatus === btn.value ? theme.colors.primary : theme.colors.cardBg,
-              color: theme.colors.text,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-            }}
           >
             {btn.label}
-          </button>
+          </Button>
         ))}
-        <button
-          onClick={() => refetch()}
-          style={{
-            padding: '0.4rem 0.85rem',
-            background: theme.colors.cardBg,
-            color: theme.colors.text,
-            border: `1px solid ${theme.colors.border}`,
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '0.8rem',
-            marginLeft: 'auto',
-          }}
-        >
+        <Button variant="secondary" size="sm" className="ml-auto" onClick={() => refetch()}>
           Refresh
-        </button>
+        </Button>
       </div>
 
       {/* Content */}
-      <div
-        style={{
-          background: theme.colors.cardBg,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius: '8px',
-          padding: '1.5rem',
-        }}
-      >
-        {loading && <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>}
-        {error && (
-          <div style={{ padding: '1rem', background: theme.colors.error, color: theme.colors.errorText, borderRadius: '6px' }}>
-            {error}
+      <Card className="p-6">
+        {loading && (
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full rounded-md" />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
           </div>
         )}
-        {!loading && !error && <ContactsTable contacts={contacts} onUpdateContact={updateContact} />}
-      </div>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {!loading && !error && (
+          <ContactsTable contacts={contacts} onUpdateContact={updateContact} />
+        )}
+      </Card>
     </div>
   );
 }

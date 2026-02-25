@@ -1,24 +1,29 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import { theme } from '../lib/theme';
-import { StatsBar } from './StatsBar';
-import { ContactsTable } from './ContactsTable';
-import { EventForm } from './EventForm';
-import { useEvent } from '../hooks/useEvent';
-import { useEventAttendees } from '../hooks/useEventAttendees';
-import type { EventWithCounts } from '../lib/types';
-import type { Contact } from '../hooks/useContacts';
+import { useState, useMemo } from "react";
+import { StatsBar } from "./StatsBar";
+import { ContactsTable } from "./ContactsTable";
+import { EventForm } from "./EventForm";
+import { useEvent } from "../hooks/useEvent";
+import { useEventAttendees } from "../hooks/useEventAttendees";
+import type { EventWithCounts } from "../lib/types";
+import type { Contact } from "../hooks/useContacts";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 interface EventDetailProps {
   eventId: string;
 }
 
-const statusColors: Record<string, string> = {
-  draft: theme.colors.textMuted,
-  published: theme.colors.success,
-  cancelled: theme.colors.errorText,
-  completed: theme.colors.primary,
+const statusVariant: Record<string, string> = {
+  draft: "bg-muted-foreground/20 text-muted-foreground",
+  published: "bg-success/20 text-success",
+  cancelled: "bg-destructive/20 text-destructive",
+  completed: "bg-primary/20 text-primary",
 };
 
 export function EventDetail({ eventId }: EventDetailProps) {
@@ -29,14 +34,17 @@ export function EventDetail({ eventId }: EventDetailProps) {
   const stats = useMemo(() => {
     if (!event) return [];
     return [
-      { label: 'Total Registered', value: event.attendee_count, color: theme.colors.primary },
-      { label: 'Approved', value: event.approved_count, color: theme.colors.success },
-      { label: 'Waitlist', value: event.attendee_count - event.approved_count - (attendees.filter(a => a.status === 'declined').length), color: theme.colors.warningText },
-      { label: 'Checked In', value: event.checked_in_count, color: theme.colors.secondary },
+      { label: "Total Registered", value: event.attendee_count, color: "#7c3aed" },
+      { label: "Approved", value: event.approved_count, color: "#34d399" },
+      {
+        label: "Waitlist",
+        value: event.attendee_count - event.approved_count - attendees.filter((a) => a.status === "declined").length,
+        color: "#fbbf24",
+      },
+      { label: "Checked In", value: event.checked_in_count, color: "#e879a8" },
     ];
   }, [event, attendees]);
 
-  // Map event attendees to Contact shape for ContactsTable reuse
   const contactsFromAttendees: Contact[] = useMemo(() => {
     return attendees.map((ea) => ({
       id: String(ea.attendee_id),
@@ -61,98 +69,135 @@ export function EventDetail({ eventId }: EventDetailProps) {
   };
 
   if (eventLoading) {
-    return <div style={{ textAlign: 'center', padding: '3rem', color: theme.colors.textMuted }}>Loading event...</div>;
+    return (
+      <div className="space-y-6">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" />
+            <div className="flex gap-4">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+        </div>
+        {/* Capacity card skeleton */}
+        <Card className="p-4 space-y-2">
+          <div className="flex justify-between">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-3 w-10" />
+          </div>
+          <Skeleton className="h-1.5 w-full" />
+        </Card>
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="p-4 space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-16" />
+            </Card>
+          ))}
+        </div>
+        {/* Attendees table skeleton */}
+        <Card className="p-6 space-y-4">
+          <Skeleton className="h-6 w-28" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex gap-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </Card>
+      </div>
+    );
   }
 
   if (!event) {
-    return <div style={{ textAlign: 'center', padding: '3rem', color: theme.colors.errorText }}>Event not found</div>;
+    return <div className="text-center py-12 text-destructive">Event not found</div>;
   }
 
-  const capacityPct = event.capacity ? Math.min((event.attendee_count / event.capacity) * 100, 100) : 0;
+  const capacityPct = event.capacity
+    ? Math.min((event.attendee_count / event.capacity) * 100, 100)
+    : 0;
 
   return (
     <div>
       {/* Event header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h1 style={{ margin: '0 0 0.5rem', fontSize: '1.75rem', fontWeight: 'bold' }}>{event.name}</h1>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', color: theme.colors.textMuted, fontSize: '0.9rem' }}>
+          <h1 className="text-[1.75rem] font-bold mb-2">{event.name}</h1>
+          <div className="flex gap-4 flex-wrap text-muted-foreground text-sm">
             <span>
-              {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-              {' '}
-              {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+              {new Date(event.date).toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              {new Date(event.date).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
             {event.location && <span>{event.location}</span>}
           </div>
           {event.description && (
-            <p style={{ color: theme.colors.textDim, marginTop: '0.75rem', fontSize: '0.9rem' }}>{event.description}</p>
+            <p className="text-muted-foreground/60 mt-3 text-sm">{event.description}</p>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-          <span
-            style={{
-              padding: '0.3rem 0.75rem',
-              borderRadius: '12px',
-              background: (statusColors[event.status] || theme.colors.textMuted) + '20',
-              color: statusColors[event.status] || theme.colors.textMuted,
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              textTransform: 'uppercase',
-            }}
+        <div className="flex gap-2 shrink-0">
+          <Badge
+            variant="secondary"
+            className={cn(
+              "text-xs font-semibold uppercase",
+              statusVariant[event.status]
+            )}
           >
             {event.status}
-          </span>
-          <button
-            onClick={() => setEditing(true)}
-            style={{
-              padding: '0.3rem 0.75rem',
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '6px',
-              background: 'transparent',
-              color: theme.colors.textMuted,
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-            }}
-          >
+          </Badge>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
             Edit
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Capacity bar */}
       {event.capacity && (
-        <div style={{ marginBottom: '1.5rem', background: theme.colors.cardBg, border: `1px solid ${theme.colors.border}`, borderRadius: '8px', padding: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: theme.colors.textMuted, marginBottom: '0.5rem' }}>
-            <span>Capacity: {event.attendee_count} / {event.capacity}</span>
+        <Card className="p-4 mb-6">
+          <div className="flex justify-between text-xs text-muted-foreground mb-2">
+            <span>
+              Capacity: {event.attendee_count} / {event.capacity}
+            </span>
             <span>{Math.round(capacityPct)}%</span>
           </div>
-          <div style={{ height: 6, background: theme.colors.border, borderRadius: 3 }}>
-            <div
-              style={{
-                height: '100%',
-                width: `${capacityPct}%`,
-                background: capacityPct >= 90 ? theme.colors.warningText : theme.colors.primary,
-                borderRadius: 3,
-              }}
-            />
-          </div>
-        </div>
+          <Progress value={capacityPct} className="h-1.5" />
+        </Card>
       )}
 
-      <StatsBar stats={stats} />
+      <StatsBar stats={stats} loading={attendeesLoading} />
 
       {/* Attendees table */}
-      <div
-        style={{
-          background: theme.colors.cardBg,
-          border: `1px solid ${theme.colors.border}`,
-          borderRadius: '8px',
-          padding: '1.5rem',
-        }}
-      >
-        <h2 style={{ margin: '0 0 1rem', fontSize: '1.1rem', fontWeight: '600' }}>Attendees</h2>
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">Attendees</h2>
         {attendeesLoading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: theme.colors.textMuted }}>Loading attendees...</div>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
         ) : (
           <ContactsTable
             contacts={contactsFromAttendees}
@@ -160,17 +205,17 @@ export function EventDetail({ eventId }: EventDetailProps) {
             eventId={eventId}
           />
         )}
-      </div>
+      </Card>
 
       {editing && (
         <EventForm
           title="Edit Event"
           initial={{
             name: event.name,
-            description: event.description || '',
+            description: event.description || "",
             date: event.date.slice(0, 16),
-            location: event.location || '',
-            capacity: event.capacity?.toString() || '',
+            location: event.location || "",
+            capacity: event.capacity?.toString() || "",
             status: event.status,
           }}
           onSubmit={async (data) => {
