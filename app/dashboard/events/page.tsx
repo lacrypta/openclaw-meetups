@@ -1,82 +1,82 @@
 "use client";
 
-import { useState } from 'react';
-import { useEvents } from '@/hooks/useEvents';
-import { EventCard } from '@/components/EventCard';
-import { EventForm } from '@/components/EventForm';
-import { theme } from '@/lib/theme';
-import type { EventStatus } from '@/lib/types';
+import { useState } from "react";
+import { useEvents } from "@/hooks/useEvents";
+import { EventCard } from "@/components/EventCard";
+import { EventForm } from "@/components/EventForm";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import type { EventStatus } from "@/lib/types";
 
-const statusFilters: { label: string; value: EventStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Published', value: 'published' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Cancelled', value: 'cancelled' },
+const statusFilters: { label: string; value: EventStatus | "all" }[] = [
+  { label: "All", value: "all" },
+  { label: "Published", value: "published" },
+  { label: "Draft", value: "draft" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
 ];
 
 export default function EventsPage() {
-  const [filter, setFilter] = useState<EventStatus | 'all'>('all');
+  const [filter, setFilter] = useState<EventStatus | "all">("all");
   const [showForm, setShowForm] = useState(false);
 
   const { events, loading, error, createEvent } = useEvents(
-    filter === 'all' ? undefined : { status: filter }
+    filter === "all" ? undefined : { status: filter }
   );
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 'bold' }}>Events</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          style={{
-            padding: '0.6rem 1.25rem',
-            background: theme.colors.primary,
-            color: theme.colors.text,
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-          }}
-        >
-          + Create Event
-        </button>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Events</h1>
+        <Button onClick={() => setShowForm(true)}>+ Create Event</Button>
       </div>
 
       {/* Status filters */}
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+      <div className="flex gap-2 flex-wrap mb-6">
         {statusFilters.map((sf) => (
-          <button
+          <Button
             key={sf.value}
+            variant={filter === sf.value ? "default" : "secondary"}
+            size="sm"
             onClick={() => setFilter(sf.value)}
-            style={{
-              padding: '0.4rem 0.85rem',
-              background: filter === sf.value ? theme.colors.primary : theme.colors.cardBg,
-              color: theme.colors.text,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '0.8rem',
-              fontWeight: '600',
-            }}
           >
             {sf.label}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {loading && <div style={{ textAlign: 'center', padding: '3rem', color: theme.colors.textMuted }}>Loading events...</div>}
-      {error && <div style={{ padding: '1rem', background: theme.colors.error, color: theme.colors.errorText, borderRadius: '6px' }}>{error}</div>}
+      {loading && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="p-4 space-y-3">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-2 w-full" />
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {!loading && !error && events.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '3rem', color: theme.colors.textMuted }}>
+        <div className="text-center py-12 text-muted-foreground">
           No events found. Create your first event!
         </div>
       )}
 
       {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

@@ -1,12 +1,29 @@
 "use client";
 
-import { useMemo } from 'react';
-import Link from 'next/link';
-import { useEvents } from '@/hooks/useEvents';
-import { useContacts } from '@/hooks/useContacts';
-import { EventCard } from '@/components/EventCard';
-import { StatsBar } from '@/components/StatsBar';
-import { theme } from '@/lib/theme';
+import { useMemo } from "react";
+import Link from "next/link";
+import { useEvents } from "@/hooks/useEvents";
+import { useContacts } from "@/hooks/useContacts";
+import { EventCard } from "@/components/EventCard";
+import { StatsBar } from "@/components/StatsBar";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+const statusVariant: Record<string, string> = {
+  approved: "bg-success/20 text-success",
+  waitlist: "bg-warning/20 text-warning",
+  declined: "bg-destructive/20 text-destructive",
+};
 
 export default function DashboardOverviewPage() {
   const { events, loading: eventsLoading } = useEvents();
@@ -15,17 +32,20 @@ export default function DashboardOverviewPage() {
   const upcomingEvents = useMemo(() => {
     const now = new Date();
     return events
-      .filter((e) => new Date(e.date) >= now && e.status !== 'cancelled')
+      .filter((e) => new Date(e.date) >= now && e.status !== "cancelled")
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 3);
   }, [events]);
 
-  const overallStats = useMemo(() => [
-    { label: 'Total Events', value: events.length, color: theme.colors.primary },
-    { label: 'Active Events', value: events.filter(e => e.status === 'published').length, color: theme.colors.success },
-    { label: 'Total Attendees', value: contacts.length, color: theme.colors.secondary },
-    { label: 'Total Check-ins', value: events.reduce((sum, e) => sum + e.checked_in_count, 0), color: theme.colors.warningText },
-  ], [events, contacts]);
+  const overallStats = useMemo(
+    () => [
+      { label: "Total Events", value: events.length, color: "#7c3aed" },
+      { label: "Active Events", value: events.filter((e) => e.status === "published").length, color: "#34d399" },
+      { label: "Total Attendees", value: contacts.length, color: "#e879a8" },
+      { label: "Total Check-ins", value: events.reduce((sum, e) => sum + e.checked_in_count, 0), color: "#fbbf24" },
+    ],
+    [events, contacts]
+  );
 
   const recentRegistrations = useMemo(() => {
     return [...contacts]
@@ -37,29 +57,74 @@ export default function DashboardOverviewPage() {
 
   return (
     <div>
-      <h1 style={{ margin: '0 0 1.5rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Overview</h1>
+      <h1 className="text-2xl font-bold mb-6">Overview</h1>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '3rem', color: theme.colors.textMuted }}>Loading...</div>
+        <div className="space-y-6">
+          {/* Stat cards skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-16" />
+              </Card>
+            ))}
+          </div>
+          {/* Upcoming events skeleton */}
+          <div>
+            <Skeleton className="h-6 w-40 mb-4" />
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-2 w-full" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+          {/* Recent registrations skeleton */}
+          <div>
+            <Skeleton className="h-6 w-48 mb-4" />
+            <Card className="p-0 overflow-hidden">
+              <div className="p-4 space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
       ) : (
         <>
           <StatsBar stats={overallStats} />
 
           {/* Upcoming events */}
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '600' }}>Upcoming Events</h2>
-              <Link href="/dashboard/events" style={{ color: theme.colors.primary, textDecoration: 'none', fontSize: '0.85rem' }}>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Upcoming Events</h2>
+              <Link href="/dashboard/events" className="text-primary text-sm">
                 View all →
               </Link>
             </div>
             {upcomingEvents.length === 0 ? (
-              <div style={{ color: theme.colors.textMuted, padding: '1.5rem', background: theme.colors.cardBg, border: `1px solid ${theme.colors.border}`, borderRadius: '8px' }}>
-                No upcoming events.{' '}
-                <Link href="/dashboard/events" style={{ color: theme.colors.primary, textDecoration: 'none' }}>Create one</Link>
-              </div>
+              <Card className="p-6 text-muted-foreground">
+                No upcoming events.{" "}
+                <Link href="/dashboard/events" className="text-primary">
+                  Create one
+                </Link>
+              </Card>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
                 {upcomingEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
@@ -69,62 +134,50 @@ export default function DashboardOverviewPage() {
 
           {/* Recent registrations */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '600' }}>Recent Registrations</h2>
-              <Link href="/dashboard/attendees" style={{ color: theme.colors.primary, textDecoration: 'none', fontSize: '0.85rem' }}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Recent Registrations</h2>
+              <Link href="/dashboard/attendees" className="text-primary text-sm">
                 View all →
               </Link>
             </div>
-            <div
-              style={{
-                background: theme.colors.cardBg,
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: '8px',
-                overflow: 'hidden',
-              }}
-            >
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
-                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: theme.colors.textMuted, fontWeight: '600' }}>Name</th>
-                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: theme.colors.textMuted, fontWeight: '600' }}>Email</th>
-                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: theme.colors.textMuted, fontWeight: '600' }}>Status</th>
-                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', color: theme.colors.textMuted, fontWeight: '600' }}>Registered</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Card className="p-0 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Registered</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {recentRegistrations.map((c) => (
-                    <tr key={c.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <Link href={`/dashboard/attendees/${c.id}`} style={{ color: theme.colors.text, textDecoration: 'none' }}>
+                    <TableRow key={c.id}>
+                      <TableCell>
+                        <Link href={`/dashboard/attendees/${c.id}`} className="text-foreground">
                           {c.name}
                         </Link>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: theme.colors.textMuted }}>{c.email}</td>
-                      <td style={{ padding: '0.75rem 1rem' }}>
-                        <span
-                          style={{
-                            padding: '0.2rem 0.6rem',
-                            borderRadius: '12px',
-                            background:
-                              (c.status === 'approved' ? theme.colors.success : c.status === 'waitlist' ? theme.colors.warningText : theme.colors.errorText) + '20',
-                            color:
-                              c.status === 'approved' ? theme.colors.success : c.status === 'waitlist' ? theme.colors.warningText : theme.colors.errorText,
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                          }}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{c.email}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "text-xs font-semibold",
+                            statusVariant[c.status] || "bg-muted text-muted-foreground"
+                          )}
                         >
                           {c.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem 1rem', color: theme.colors.textMuted }}>
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
                         {new Date(c.registered_at).toLocaleDateString()}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </Card>
           </div>
         </>
       )}
