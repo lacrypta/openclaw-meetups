@@ -2,6 +2,7 @@
 
 import { useTranslation } from "../i18n/useTranslation";
 import { Separator } from "@/components/ui/separator";
+import { version } from "../package.json";
 
 export function Footer() {
   const { t } = useTranslation();
@@ -81,7 +82,7 @@ export function Footer() {
       <div className="text-center">
         <p className="text-muted-foreground/60 text-[13px] mb-1">
           {t.footer.builtWith} 🦞⚡ &middot; {t.footer.rights} &middot;{" "}
-          {new Date().getFullYear()}
+          {new Date().getFullYear()} &middot; v{version}
         </p>
         <p className="text-muted-foreground/60 text-[13px]">
           <a
