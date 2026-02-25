@@ -19,18 +19,22 @@ interface SmtpSettings {
 }
 
 export default function SettingsPage() {
-  const { token } = useAuth();
+  const { token, ready } = useAuth();
   const [settings, setSettings] = useState<SmtpSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
+    if (!ready) return;
     loadSettings();
-  }, [token]);
+  }, [token, ready]);
 
   const loadSettings = async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/smtp-settings', {

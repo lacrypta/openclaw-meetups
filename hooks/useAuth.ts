@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { login as authLogin, logout as authLogout, isAuthenticated, getPubkeyFromToken } from '../lib/auth';
+import { login as authLogin, logout as authLogout, isAuthenticated, getPubkeyFromToken, getToken } from '../lib/auth';
 
 export function useAuth() {
   const [isAuth, setIsAuth] = useState(false);
   const [ready, setReady] = useState(false);
   const [pubkey, setPubkey] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +16,7 @@ export function useAuth() {
     setIsAuth(authenticated);
     if (authenticated) {
       setPubkey(getPubkeyFromToken());
+      setToken(getToken());
     }
     setReady(true);
   }, []);
@@ -26,6 +28,7 @@ export function useAuth() {
       const result = await authLogin();
       setIsAuth(true);
       setPubkey(result.pubkey);
+      setToken(result.token);
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -40,6 +43,7 @@ export function useAuth() {
     authLogout();
     setIsAuth(false);
     setPubkey(null);
+    setToken(null);
   };
 
   const recheckAuth = () => {
@@ -54,6 +58,7 @@ export function useAuth() {
     isAuthenticated: isAuth,
     ready,
     pubkey,
+    token,
     login,
     logout,
     recheckAuth,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth-server';
 
 // Force dynamic rendering (no static generation)
@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('smtp_settings')
       .select('*')
@@ -40,7 +39,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabaseClient();
     const body = await request.json();
     
     const { smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass, email_from } = body;
