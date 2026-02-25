@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyEvent } from 'nostr-tools';
 import jwt from 'jsonwebtoken';
 
@@ -15,55 +15,42 @@ interface Nip98Event {
   sig: string;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const event = req.body as Nip98Event;
+    const event = (await request.json()) as Nip98Event;
 
     // Verify it's a NIP-98 event (kind 27235)
     if (event.kind !== 27235) {
-      return res.status(400).json({ error: 'Invalid event kind. Expected NIP-98 (27235)' });
+      return NextResponse.json({ error: 'Invalid event kind. Expected NIP-98 (27235)' }, { status: 400 });
     }
 
     // Verify signature
     const isValid = verifyEvent(event);
     if (!isValid) {
-      return res.status(401).json({ error: 'Invalid signature' });
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     // Verify timestamp (must be within 60 seconds)
     const now = Math.floor(Date.now() / 1000);
     if (Math.abs(now - event.created_at) > 60) {
-      return res.status(401).json({ error: 'Event timestamp too old or in the future' });
+      return NextResponse.json({ error: 'Event timestamp too old or in the future' }, { status: 401 });
     }
 
     // Verify URL tag matches
     const urlTag = event.tags.find(t => t[0] === 'u');
     if (!urlTag || !urlTag[1]) {
-      return res.status(400).json({ error: 'Missing URL tag' });
+      return NextResponse.json({ error: 'Missing URL tag' }, { status: 400 });
     }
 
     // Verify method tag
     const methodTag = event.tags.find(t => t[0] === 'method');
     if (!methodTag || methodTag[1] !== 'POST') {
-      return res.status(400).json({ error: 'Invalid method tag' });
+      return NextResponse.json({ error: 'Invalid method tag' }, { status: 400 });
     }
 
     // Verify pubkey is in allowlist
     if (!ALLOWED_PUBKEYS.includes(event.pubkey)) {
-      return res.status(403).json({ error: 'Pubkey not authorized' });
+      return NextResponse.json({ error: 'Pubkey not authorized' }, { status: 403 });
     }
 
     // Generate JWT
@@ -73,9 +60,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       { expiresIn: '24h' }
     );
 
-    return res.status(200).json({ token, pubkey: event.pubkey });
+    return NextResponse.json({ token, pubkey: event.pubkey });
   } catch (error) {
     console.error('Auth error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
