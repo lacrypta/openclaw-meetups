@@ -4,9 +4,10 @@
   "version": "0.6.0",
   "scripts": {
     "setup": "node scripts/setup-env.mjs",
-    "predev": "npm run setup",
+    "migrate": "node scripts/migrate-db.mjs",
+    "predev": "npm run setup && npm run migrate",
     "dev": "next dev",
-    "prebuild": "npm run setup",
+    "prebuild": "npm run setup && npm run migrate",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

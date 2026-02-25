@@ -1,6 +1,8 @@
-# Environment Setup - Auto Migration
+# Environment & Database Setup - Auto Migration
 
-This project uses automated environment variable setup, similar to Prisma migrations.
+This project uses automated setup similar to Prisma migrations:
+- **Environment variables** → Automatic `.env.local` generation
+- **Database migrations** → Automatic Supabase migration execution
 
 ## How It Works
 
@@ -96,6 +98,93 @@ The build will validate that all required variables exist.
 1. Run `npx supabase start` (local), OR
 2. Copy `.env.example` to `.env.local` and fill values
 
+## Database Migrations
+
+### How It Works
+
+The `scripts/migrate-db.mjs` script runs automatically:
+- **Before `npm run dev`** (predev hook)
+- **Before `npm run build`** (prebuild hook)
+
+### Migration Flow
+
+**Local development:**
+1. Checks if local Supabase is running (`docker ps`)
+2. If running → applies migrations with `supabase db push`
+3. If not → checks for `DATABASE_URL` env var
+4. If found → applies to remote database
+5. If not → skips (safe, just warns)
+
+**Production (Vercel):**
+1. Reads `DATABASE_URL` from environment
+2. Applies migrations to remote Supabase
+3. Fails build if migrations fail (safe!)
+
+### Creating New Migrations
+
+**Option 1: Manual SQL file**
+```bash
+# Create new migration file
+touch supabase/migrations/$(date +%Y%m%d%H%M%S)_my_change.sql
+
+# Edit the file with your SQL
+nano supabase/migrations/*_my_change.sql
+
+# Run dev (migrations apply automatically)
+npm run dev
+```
+
+**Option 2: Generate from changes**
+```bash
+# Make changes in Supabase Studio (http://localhost:54323)
+# Then pull the changes as a migration
+npx supabase db diff -f my_change
+
+# Run dev (migrations apply automatically)
+npm run dev
+```
+
+### Manual Migration
+
+```bash
+# Run migrations manually
+npm run migrate
+
+# Or directly
+node scripts/migrate-db.mjs
+```
+
+### Production Setup
+
+For production migrations to work, you need `DATABASE_URL` in Vercel:
+
+1. Go to Supabase Dashboard → Settings → Database
+2. Copy **Connection string** (Transaction mode)
+3. Add to Vercel environment variables as `DATABASE_URL`
+
+Format: `postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres`
+
+⚠️ **Security**: Use **transaction pooler** URL (port 5432), not direct connection (6543)
+
+### Troubleshooting
+
+**"Local Supabase is not running"**
+
+**Solution**: Either:
+- Run `npx supabase start` (local database), OR
+- Set `DATABASE_URL` to use remote (production) database
+
+**"No such container: supabase_db"**
+
+**Solution**: Local Supabase not started. Run:
+```bash
+npx supabase start
+```
+
+**"Failed to apply migrations"**
+
+**Solution**: Check the migration SQL for errors. Migrations must be idempotent (safe to run multiple times).
+
 ## Why This Approach?
 
 ✅ **No hardcoded URLs** - Everything uses environment variables
@@ -103,6 +192,7 @@ The build will validate that all required variables exist.
 ✅ **Flexible** - Works with local Supabase or production
 ✅ **Safe** - `.env.local` is gitignored, secrets never committed
 ✅ **CI/CD friendly** - Works with Vercel, GitHub Actions, etc.
+✅ **Auto migrations** - Database schema always in sync
 
 ## Migrating from Hardcoded URLs
 
