@@ -11,6 +11,17 @@
 
 Nueva funcionalidad para configurar y previsualizar templates de emails desde el dashboard. Permite personalizar logos (light/dark mode), header, footer, y ver preview en tiempo real antes de enviar emails masivos.
 
+**Sistema de dos niveles:**
+1. **Layout** (Tab 1): Configuración global de logos, header, footer → tabla `email_layouts`
+2. **Content Templates** (Tab 2): Templates específicos por tipo de email → tabla `email_content_templates`
+
+**Templates existentes** (ya en codebase):
+- `email-templates/checked-in.html` → Asistió al evento
+- `email-templates/no-show.html` → Se registró pero no asistió
+- `email-templates/waitlist.html` → Quedó en lista de espera
+
+Estos 3 templates deben ser **migrados a la base de datos** como parte de la implementación.
+
 ---
 
 ## 🎯 Objetivos
@@ -51,45 +62,88 @@ Nueva funcionalidad para configurar y previsualizar templates de emails desde el
 
 **Ruta:** `/app/templates/page.tsx`
 
-**Layout:**
+**Layout con Tabs:**
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ [Navbar]                                                │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  Email Templates                                        │
-│  Configure email layouts for your campaigns            │
-│                                                         │
-│  ┌─────────────────────┐ ┌──────────────────────────┐ │
-│  │  Editor             │ │  Preview                 │ │
-│  │                     │ │                          │ │
-│  │  [Logo Light]       │ │  ┌────────────────────┐ │ │
-│  │  URL: [_________]   │ │  │ [Logo Preview]     │ │ │
-│  │                     │ │  │                    │ │ │
-│  │  [Logo Dark]        │ │  │ Subject: ...       │ │ │
-│  │  URL: [_________]   │ │  │                    │ │ │
-│  │                     │ │  │ Body content...    │ │ │
-│  │  [Header]           │ │  │                    │ │ │
-│  │  Text: [_________]  │ │  └────────────────────┘ │ │
-│  │                     │ │                          │ │
-│  │  [Footer]           │ │  [Light Mode] [Dark]    │ │
-│  │  Text: [_________]  │ │                          │ │
-│  │                     │ │                          │ │
-│  │  [Save Template]    │ │                          │ │
-│  └─────────────────────┘ └──────────────────────────┘ │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ [Navbar]                                                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Email Templates                                            │
+│  Configure layouts and content templates                    │
+│                                                             │
+│  ┌─ [Layout] ─┬─ [Templates] ───────────────────────────┐ │
+│  │                                                        │ │
+│  │  (TAB 1: Layout Configuration)                        │ │
+│  │                                                        │ │
+│  │  ┌──────────────────┐ ┌──────────────────────────┐  │ │
+│  │  │  Editor          │ │  Preview                 │  │ │
+│  │  │                  │ │                          │  │ │
+│  │  │  [Logo Light]    │ │  ┌────────────────────┐ │  │ │
+│  │  │  URL: [_______]  │ │  │ [Logo Preview]     │ │  │ │
+│  │  │                  │ │  │                    │ │  │ │
+│  │  │  [Logo Dark]     │ │  │ Subject: ...       │ │  │ │
+│  │  │  URL: [_______]  │ │  │                    │ │  │ │
+│  │  │                  │ │  │ Body content...    │ │  │ │
+│  │  │  [Header]        │ │  │                    │ │  │ │
+│  │  │  Text: [______]  │ │  └────────────────────┘ │  │ │
+│  │  │                  │ │                          │  │ │
+│  │  │  [Footer]        │ │  [Light] [Dark]         │  │ │
+│  │  │  Text: [______]  │ │                          │  │ │
+│  │  │                  │ │                          │  │ │
+│  │  │  [Save Layout]   │ │                          │  │ │
+│  │  └──────────────────┘ └──────────────────────────┘  │ │
+│  │                                                        │ │
+│  └────────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌─ Layout ─┬─ [Templates] ───────────────────────────┐   │
+│  │                                                      │   │
+│  │  (TAB 2: Content Templates)                         │   │
+│  │                                                      │   │
+│  │  ┌────────────────────────────────────────────────┐ │   │
+│  │  │  Template List                                 │ │   │
+│  │  │                                                 │ │   │
+│  │  │  ✓ Checked-in (Asistió)      [Edit] [Preview] │ │   │
+│  │  │  ✓ No-show (No asistió)      [Edit] [Preview] │ │   │
+│  │  │  ✓ Waitlist (Lista espera)   [Edit] [Preview] │ │   │
+│  │  │                                                 │ │   │
+│  │  │  [+ New Template]                              │ │   │
+│  │  └────────────────────────────────────────────────┘ │   │
+│  │                                                      │   │
+│  │  ┌──────────────────┐ ┌──────────────────────────┐ │   │
+│  │  │  Editor          │ │  Preview                 │ │   │
+│  │  │                  │ │                          │ │   │
+│  │  │  Name: [______]  │ │  ┌────────────────────┐ │ │   │
+│  │  │  Type: [v]       │ │  │ Full email render  │ │ │   │
+│  │  │                  │ │  │ (layout + content) │ │ │   │
+│  │  │  Subject:        │ │  │                    │ │ │   │
+│  │  │  [___________]   │ │  │ [Logo]             │ │ │   │
+│  │  │                  │ │  │                    │ │ │   │
+│  │  │  Content:        │ │  │ Subject: ...       │ │ │   │
+│  │  │  [Rich editor]   │ │  │                    │ │ │   │
+│  │  │  [___________]   │ │  │ Body content...    │ │ │   │
+│  │  │  [___________]   │ │  │                    │ │ │   │
+│  │  │                  │ │  │ [Footer]           │ │ │   │
+│  │  │  [Save Template] │ │  └────────────────────┘ │ │   │
+│  │  │                  │ │                          │ │   │
+│  │  └──────────────────┘ └──────────────────────────┘ │   │
+│  │                                                      │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+**Tab 1:** Layout (logos, header, footer) - configuración global  
+**Tab 2:** Templates (contenido específico por tipo de asistente)
 
 ---
 
 ## 🗃️ Database Schema
 
-**Nueva tabla:** `email_templates`
+### Tabla 1: `email_layouts` (Global Layout Config)
 
 ```sql
-CREATE TABLE email_templates (
+CREATE TABLE email_layouts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
@@ -112,35 +166,143 @@ CREATE TABLE email_templates (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   created_by TEXT,
-  is_default BOOLEAN DEFAULT false,
-  
-  -- Full HTML template (generated)
-  html_template TEXT
+  is_default BOOLEAN DEFAULT false
 );
 
--- Index para default template
-CREATE INDEX idx_email_templates_default ON email_templates (is_default) WHERE is_default = true;
+-- Solo un layout default a la vez
+CREATE UNIQUE INDEX idx_email_layouts_default ON email_layouts (is_default) WHERE is_default = true;
 
 -- RLS Policies
-ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE email_layouts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow authenticated reads" ON email_templates
+CREATE POLICY "Allow authenticated reads" ON email_layouts
   FOR SELECT USING (true);
 
-CREATE POLICY "Allow authenticated updates" ON email_templates
+CREATE POLICY "Allow authenticated updates" ON email_layouts
   FOR UPDATE USING (true) WITH CHECK (true);
 
-CREATE POLICY "Allow authenticated inserts" ON email_templates
+CREATE POLICY "Allow authenticated inserts" ON email_layouts
   FOR INSERT WITH CHECK (true);
+```
+
+### Tabla 2: `email_content_templates` (Content Templates)
+
+```sql
+CREATE TABLE email_content_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  
+  -- Template type (para categorizar)
+  type TEXT NOT NULL CHECK (type IN ('checked-in', 'no-show', 'waitlist', 'custom')),
+  
+  -- Email content
+  subject TEXT NOT NULL,
+  body_html TEXT NOT NULL, -- HTML content (sin layout)
+  
+  -- Variables disponibles
+  available_variables JSONB DEFAULT '["first_name", "email", "event_name", "event_date"]'::jsonb,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by TEXT,
+  is_active BOOLEAN DEFAULT true
+);
+
+-- Index por tipo
+CREATE INDEX idx_email_content_templates_type ON email_content_templates (type);
+CREATE INDEX idx_email_content_templates_active ON email_content_templates (is_active) WHERE is_active = true;
+
+-- RLS Policies
+ALTER TABLE email_content_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow authenticated reads" ON email_content_templates
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow authenticated updates" ON email_content_templates
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow authenticated inserts" ON email_content_templates
+  FOR INSERT WITH CHECK (true);
+```
+
+### Initial Data (Seed)
+
+```sql
+-- Insertar layout default (logo actual de La Crypta)
+INSERT INTO email_layouts (
+  name,
+  description,
+  logo_light_url,
+  logo_dark_url,
+  logo_width,
+  header_text,
+  footer_text,
+  footer_links,
+  is_default
+) VALUES (
+  'Default Layout',
+  'Layout por defecto con branding de La Crypta',
+  'https://raw.githubusercontent.com/lacrypta/branding/main/title/512-black.png',
+  'https://raw.githubusercontent.com/lacrypta/branding/main/title/512-white.png',
+  200,
+  NULL,
+  '© 2026 OpenClaw Meetups',
+  '[
+    {"text":"Web","url":"https://lacrypta.ar"},
+    {"text":"Instagram","url":"https://instagram.com/lacrypta"},
+    {"text":"Twitter","url":"https://x.com/lacryptaBsAs"}
+  ]'::jsonb,
+  true
+);
+
+-- Insertar los 3 templates existentes (checked-in.html, no-show.html, waitlist.html)
+-- Estos se migrarán desde los archivos actuales
 ```
 
 ---
 
 ## 🔌 API Routes
 
-### 1. GET `/api/templates`
+### Layout Routes
 
-**Descripción:** Listar todos los templates
+#### 1. GET `/api/layouts`
+
+**Descripción:** Listar todos los layouts
+
+**Response:**
+```json
+{
+  "layouts": [
+    {
+      "id": "uuid",
+      "name": "Default Layout",
+      "description": "Layout por defecto",
+      "logo_light_url": "https://...",
+      "logo_dark_url": "https://...",
+      "is_default": true,
+      "created_at": "2026-02-25T..."
+    }
+  ]
+}
+```
+
+#### 2. GET `/api/layouts/default`
+
+**Descripción:** Obtener layout por defecto
+
+**Response:** (igual que GET by ID)
+
+### Content Template Routes
+
+#### 1. GET `/api/templates`
+
+**Descripción:** Listar todos los templates de contenido
+
+**Query params:**
+- `type` (optional): filtrar por tipo (checked-in, no-show, waitlist, custom)
+- `active` (optional): true/false
 
 **Response:**
 ```json
@@ -148,11 +310,10 @@ CREATE POLICY "Allow authenticated inserts" ON email_templates
   "templates": [
     {
       "id": "uuid",
-      "name": "Default Template",
-      "description": "Template por defecto",
-      "logo_light_url": "https://...",
-      "logo_dark_url": "https://...",
-      "is_default": true,
+      "name": "Checked-in (Asistió)",
+      "type": "checked-in",
+      "subject": "¡Gracias por venir!",
+      "is_active": true,
       "created_at": "2026-02-25T..."
     }
   ]
@@ -359,15 +520,85 @@ const darkModeStyles = `
 
 1. Crear migration en `supabase/migrations/`:
    ```bash
-   supabase migration new email_templates
+   supabase migration new email_layouts_and_templates
    ```
 
-2. Agregar SQL de la tabla `email_templates`
+2. Agregar SQL de ambas tablas: `email_layouts` y `email_content_templates`
 
 3. Aplicar migration:
    ```bash
    npm run migrate
    ```
+
+4. Seed initial data (layout default + 3 templates existentes)
+
+---
+
+### Step 1.5: Migrate Existing Templates
+
+**Script:** `scripts/migrate-templates-to-db.mjs`
+
+```javascript
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+
+async function migrateTemplates() {
+  const templates = [
+    {
+      name: 'Checked-in (Asistió)',
+      type: 'checked-in',
+      subject: '¡Gracias por venir al OpenClaw Meetup! 🚀',
+      file: 'email-templates/checked-in.html'
+    },
+    {
+      name: 'No-show (No asistió)',
+      type: 'no-show',
+      subject: 'Te perdiste el OpenClaw Meetup — próxima oportunidad 🔥',
+      file: 'email-templates/no-show.html'
+    },
+    {
+      name: 'Waitlist (Lista de espera)',
+      type: 'waitlist',
+      subject: 'Lista de espera — OpenClaw Meetup ⏳',
+      file: 'email-templates/waitlist.html'
+    }
+  ];
+
+  for (const template of templates) {
+    const html = fs.readFileSync(template.file, 'utf-8');
+    
+    // Extraer solo el body (sin logos, header, footer)
+    const bodyMatch = html.match(/<body[^>]*>(.*)<\/body>/s);
+    const bodyHtml = bodyMatch ? bodyMatch[1] : html;
+    
+    const { data, error } = await supabase
+      .from('email_content_templates')
+      .insert({
+        name: template.name,
+        type: template.type,
+        subject: template.subject,
+        body_html: bodyHtml,
+        is_active: true
+      });
+    
+    if (error) {
+      console.error(`❌ Error migrating ${template.name}:`, error);
+    } else {
+      console.log(`✅ Migrated ${template.name}`);
+    }
+  }
+}
+
+migrateTemplates();
+```
+
+**Run:**
+```bash
+node scripts/migrate-templates-to-db.mjs
+```
 
 ---
 
@@ -436,26 +667,133 @@ export function generateEmailHTML(config: EmailTemplateConfig): string {
 
 ---
 
-### Step 4: Integration with Email Sending
+### Step 4: Email Composition System
+
+**Cómo se combinan Layout + Content Template:**
+
+```typescript
+// lib/email-composer.ts
+
+export async function composeEmail(
+  contentTemplateType: 'checked-in' | 'no-show' | 'waitlist',
+  userData: { first_name: string; email: string }
+): Promise<string> {
+  
+  // 1. Obtener layout default
+  const layout = await supabase
+    .from('email_layouts')
+    .select('*')
+    .eq('is_default', true)
+    .single();
+  
+  // 2. Obtener content template por tipo
+  const template = await supabase
+    .from('email_content_templates')
+    .select('*')
+    .eq('type', contentTemplateType)
+    .eq('is_active', true)
+    .single();
+  
+  // 3. Generar HTML base del layout
+  const layoutHtml = generateLayoutHTML(layout.data);
+  
+  // 4. Procesar variables del content template
+  let content = template.data.body_html
+    .replace(/\{\{first_name\}\}/g, userData.first_name)
+    .replace(/\{\{email\}\}/g, userData.email);
+  
+  // 5. Inyectar content en layout
+  const finalHtml = layoutHtml.replace('{{CONTENT}}', content);
+  
+  return finalHtml;
+}
+
+// Función para generar HTML del layout
+function generateLayoutHTML(layout: EmailLayout): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        .logo-light { display: block !important; }
+        .logo-dark { display: none !important; }
+        
+        @media (prefers-color-scheme: dark) {
+          .logo-light { display: none !important; }
+          .logo-dark { display: block !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f5f5f5;">
+      <table width="600" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+        <!-- Header with logos -->
+        <tr>
+          <td align="center" style="padding: 40px 0 20px;">
+            <img src="${layout.logo_light_url}" 
+                 class="logo-light" 
+                 width="${layout.logo_width}" 
+                 alt="Logo">
+            <img src="${layout.logo_dark_url}" 
+                 class="logo-dark" 
+                 width="${layout.logo_width}" 
+                 alt="Logo">
+          </td>
+        </tr>
+        
+        <!-- Content injection point -->
+        <tr>
+          <td>{{CONTENT}}</td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 40px; color: ${layout.footer_color}; text-align: center;">
+            <p>${layout.footer_text}</p>
+            ${layout.footer_links?.map(link => 
+              `<a href="${link.url}" style="color: #ff8c00; margin: 0 10px;">${link.text}</a>`
+            ).join('')}
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+}
+```
+
+---
+
+### Step 5: Integration with Email Sending
 
 **Modificar scripts de envío de emails:**
 
 ```typescript
 // email-templates/send-emails.js
-import { getDefaultTemplate } from '@/lib/supabase';
+import { composeEmail } from '@/lib/email-composer';
 
-async function sendEmail(user, templateId = 'default') {
-  // 1. Obtener template de DB
-  const template = await getDefaultTemplate();
+async function sendEmailsToAttendees(eventId: string) {
+  // Obtener attendees por tipo
+  const checkedIn = await getAttendees(eventId, 'checked-in');
+  const noShow = await getAttendees(eventId, 'no-show');
+  const waitlist = await getAttendees(eventId, 'waitlist');
   
-  // 2. Generar HTML con template
-  const html = generateEmailHTML(template)
-    .replace('{{CONTENT}}', getUserSpecificContent(user))
-    .replace('{{first_name}}', user.first_name)
-    .replace('{{email}}', user.email);
+  // Enviar a cada grupo con su template correspondiente
+  for (const user of checkedIn) {
+    const html = await composeEmail('checked-in', user);
+    await sendEmail(user.email, html);
+  }
   
-  // 3. Enviar
-  await transporter.sendMail({ html });
+  for (const user of noShow) {
+    const html = await composeEmail('no-show', user);
+    await sendEmail(user.email, html);
+  }
+  
+  for (const user of waitlist) {
+    const html = await composeEmail('waitlist', user);
+    await sendEmail(user.email, html);
+  }
 }
 ```
 
@@ -464,24 +802,31 @@ async function sendEmail(user, templateId = 'default') {
 ## 🎯 Features Checklist
 
 ### Phase 1: Core Functionality
-- [ ] Database schema & migrations
-- [ ] API routes (CRUD templates)
-- [ ] Basic editor UI
-- [ ] Preview functionality
-- [ ] Save/Load templates
+- [ ] Database schema & migrations (2 tables)
+- [ ] Migrate existing 3 templates to DB (checked-in, no-show, waitlist)
+- [ ] API routes for layouts (CRUD)
+- [ ] API routes for content templates (CRUD)
+- [ ] Tab system (Layout vs Templates)
+- [ ] Basic editor UI (both tabs)
+- [ ] Preview functionality (layout + content combined)
+- [ ] Save/Load functionality
 
 ### Phase 2: Enhanced Editor
 - [ ] Color picker integration
 - [ ] Image URL validation
 - [ ] Responsive preview (mobile/desktop toggle)
 - [ ] Dark mode accurate preview
+- [ ] Rich text editor for content
+- [ ] Variable insertion UI ({{first_name}}, etc)
 
 ### Phase 3: Advanced Features
-- [ ] Multiple templates support
+- [ ] Multiple layouts support
+- [ ] Custom content templates (beyond 3 default)
 - [ ] Template versioning
 - [ ] Template duplication
 - [ ] A/B testing templates
 - [ ] Analytics (open rates per template)
+- [ ] Event-specific template override
 
 ---
 
