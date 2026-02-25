@@ -1,54 +1,99 @@
 "use client";
 
-import { useTranslation } from "../i18n/useTranslation";
-import { Card } from "@/components/ui/card";
 import meetupConfig from "../config/meetup.json";
 
 export function HeroSection() {
-  const { t, lang } = useTranslation();
   const nextDate = new Date(meetupConfig.nextMeetupDate);
 
-  const formattedDate = nextDate.toLocaleDateString(
-    lang === "es" ? "es-AR" : "en-US",
-    {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  );
+  const formattedDate = nextDate.toLocaleDateString("es-AR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <section className="relative flex items-center justify-center bg-background overflow-hidden pt-[144px] md:pt-[224px] min-h-[60vh]">
-      {/* Background glow */}
-      <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(124,58,237,0.15)_0%,rgba(232,121,168,0.05)_50%,transparent_70%)] pointer-events-none" />
+    <section className="relative min-h-screen bg-[#121212] overflow-hidden pt-16 flex flex-col justify-between">
+      {/* Background halftone atmosphere */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-[radial-gradient(circle_at_70%_30%,#333_0%,transparent_70%)]" />
+        <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-[radial-gradient(circle_at_30%_70%,#222_0%,transparent_60%)]" />
+      </div>
 
-      <div className="relative z-10 text-center max-w-[800px] px-5 md:px-10">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <img src="/openclaw-logo.png" alt="OpenClaw" className="w-16 h-16 object-contain" />
-          <span className="text-2xl font-bold text-muted-foreground/60">x</span>
-          <img src="/lacrypta-logo.png" alt="La Crypta" className="w-16 h-16 object-contain" />
+      {/* Cross markers top */}
+      <div className="cross-markers pt-8 px-8">
+        <span>+</span><span>+</span><span>+</span><span>+</span>
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-between max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 gap-12">
+        {/* Left side - Brand */}
+        <div className="flex-1">
+          <h1 className="text-white font-bold leading-[0.95] tracking-[-0.04em] text-[64px] sm:text-[100px] md:text-[140px] lg:text-[180px]">
+            OpenClaw
+            <br />
+            <span className="text-[0.55em] font-bold text-white/80">Meetups.</span>
+          </h1>
+
+          <p className="mt-8 md:mt-12 text-white/60 text-base md:text-lg max-w-md leading-relaxed">
+            Tu propio asistente de IA personal,{" "}
+            <span className="text-white font-semibold italic">
+              open-source y corriendo en tu maquina.
+            </span>
+          </p>
+
+          <div className="mt-6">
+            <span className="text-white/40 text-[13px]">
+              &copy; {new Date().getFullYear()} La Crypta
+            </span>
+          </div>
         </div>
 
-        <h1 className="text-foreground font-extrabold leading-tight mb-2 text-4xl md:text-[56px]">
-          {t.hero.title}
-        </h1>
-        <p className="text-muted-foreground font-normal mb-3 text-lg md:text-2xl">
-          {t.hero.subtitle}
-        </p>
-        <p className="text-accent text-sm font-semibold tracking-wide uppercase mb-10">
-          {t.hero.tagline}
-        </p>
+        {/* Right side - Services + info */}
+        <div className="flex flex-col gap-8 md:items-end md:text-right">
+          <div className="flex flex-col gap-3">
+            <span className="text-white text-base font-medium">Experiencias IRL</span>
+            <span className="text-white text-base font-medium">Open Source AI</span>
+            <span className="text-white text-base font-medium">Comunidad</span>
+            <span className="text-white text-base font-medium">Bitcoin & Nostr</span>
+          </div>
 
-        <Card className="inline-flex flex-col gap-1 px-8 py-5 mb-8">
-          <span className="text-muted-foreground/60 text-xs font-semibold uppercase tracking-wide">
-            {t.hero.nextMeetup}
-          </span>
-          <span className="text-foreground text-xl font-bold capitalize">
-            {formattedDate}
-          </span>
-          <span className="text-accent text-sm font-semibold">19:00 hs (ART)</span>
-        </Card>
+          {/* Next event card */}
+          <div className="bg-white rounded-2xl p-6 max-w-xs">
+            <div className="flex items-start gap-4">
+              <img
+                src="/lacrypta-logo.png"
+                alt="La Crypta"
+                className="w-16 h-16 rounded-xl object-contain halftone"
+              />
+              <div className="flex flex-col gap-1">
+                <span className="text-[#737373] text-[13px] font-medium">Organizador</span>
+                <span className="text-[#171717] text-sm font-bold">La Crypta</span>
+                <span className="text-[#737373] text-[13px]">Buenos Aires</span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-[#e5e5e5]">
+              <span className="text-[#737373] text-xs font-medium uppercase tracking-wide">
+                Proximo meetup
+              </span>
+              <p className="text-[#171717] text-sm font-bold capitalize mt-1">
+                {formattedDate}
+              </p>
+              <p className="text-[#737373] text-sm mt-0.5">19:00 hs (ART)</p>
+            </div>
+            <a
+              href="#contacto"
+              className="btn-pill mt-4 w-full justify-center text-sm"
+            >
+              Quiero participar <span className="dot" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Cross markers bottom */}
+      <div className="cross-markers pb-8 px-8">
+        <span>+</span><span>+</span><span>+</span><span>+</span>
       </div>
     </section>
   );
