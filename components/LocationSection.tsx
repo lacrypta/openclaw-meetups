@@ -1,70 +1,62 @@
 "use client";
 
-import { useTranslation } from "../i18n/useTranslation";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+const googleMapsUrl =
+  "https://www.google.com/maps/search/?api=1&query=Villanueva+1367+Buenos+Aires+Argentina";
 
 export function LocationSection() {
-  const { t, lang } = useTranslation();
-  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Villanueva+1367+Buenos+Aires+Argentina";
-
   return (
-    <section id="location" className="py-20 bg-background">
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10">
-        <h2 className="text-foreground text-[32px] font-extrabold text-center mb-12">
-          {t.location.title}
+    <section id="contacto" className="py-24 md:py-32 bg-[#f5f5f5]">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+        {/* Section label */}
+        <div className="section-label mb-8">Ubicacion</div>
+
+        {/* Heading */}
+        <h2 className="text-[#171717] font-bold text-[48px] sm:text-[72px] md:text-[96px] leading-[0.95] tracking-[-0.04em] mb-16">
+          Donde<br className="hidden md:block" /> encontrarnos.
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          <Card className="p-8 flex flex-col gap-2">
-            <div className="text-4xl mb-2">⚡</div>
-            <h3 className="text-foreground text-2xl font-extrabold">{t.location.name}</h3>
-            <p className="text-primary text-lg font-bold my-2">📍 Villanueva 1367</p>
-            <p className="text-muted-foreground text-[15px]">
-              {t.location.neighborhood}, {t.location.city}
-            </p>
-            <p className="text-muted-foreground/60 text-sm my-2 leading-relaxed">
-              {lang === "es"
-                ? "Barrio Belgrano, a pasos de la estación Juramento (Línea D)"
-                : "Belgrano neighborhood, steps from Juramento station (Line D)"}
-            </p>
-            <div className="flex flex-col gap-3 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          {/* Left - Info */}
+          <div className="flex flex-col gap-8">
+            <div>
+              <h3 className="text-[#171717] text-2xl font-bold mb-2">La Crypta</h3>
+              <p className="text-[#171717] text-lg font-semibold mb-1">Villanueva 1367</p>
+              <p className="text-[#737373] text-base">Belgrano, Buenos Aires</p>
+              <p className="text-[#737373] text-sm mt-2">
+                A pasos de la estacion Juramento (Linea D)
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
               <a
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-5 py-3 bg-[#4285f4] rounded-lg text-white text-sm font-semibold text-center"
+                className="btn-pill w-fit"
               >
-                🗺️ {lang === "es" ? "Abrir en Google Maps" : "Open in Google Maps"}
+                Abrir en Google Maps <span className="dot" />
               </a>
               <a
                 href="https://lacrypta.ar"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block px-5 py-2.5 border border-primary rounded-lg text-primary text-sm font-semibold text-center"
+                className="btn-pill !bg-white !text-[#0a0a0a] !border !border-[#e5e5e5] w-fit"
               >
-                {t.location.visitWebsite} →
+                Visitar lacrypta.ar <span className="dot !bg-[#0a0a0a]" />
               </a>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-0 overflow-hidden">
+          {/* Right - Map image */}
+          <div className="rounded-2xl overflow-hidden">
             <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
               <img
                 src="https://files.catbox.moe/65txy5.jpg"
                 alt="Mapa La Crypta Belgrano"
-                className="w-full h-[300px] object-cover block cursor-pointer"
+                className="w-full h-[320px] object-cover block halftone hover:filter-none transition-all duration-500 cursor-pointer"
               />
             </a>
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-3 bg-card text-primary text-[13px] font-semibold text-center"
-            >
-              {lang === "es" ? "Ver en Google Maps" : "View on Google Maps"} →
-            </a>
-          </Card>
+          </div>
         </div>
       </div>
     </section>
