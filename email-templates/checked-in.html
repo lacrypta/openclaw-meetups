@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gracias por venir al OpenClaw Meetup</title>
+  <style>
+    /* Dark mode adaptive logo */
+    .logo-light { display: block !important; }
+    .logo-dark { display: none !important; }
+    
+    @media (prefers-color-scheme: dark) {
+      .logo-light { display: none !important; }
+      .logo-dark { display: block !important; }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
@@ -13,7 +23,19 @@
           <!-- Header -->
           <tr>
             <td align="center" style="padding: 40px 40px 20px;">
-              <img src="https://files.catbox.moe/van66z.jpg" alt="La Crypta" width="180" style="display: block;">
+              <!-- Logo Light (for light backgrounds) -->
+              <img src="https://files.catbox.moe/van66z.jpg" 
+                   alt="La Crypta" 
+                   width="180" 
+                   class="logo-light"
+                   style="display: block; margin: 0 auto;">
+              
+              <!-- Logo Dark (for dark backgrounds) -->
+              <img src="https://files.catbox.moe/aoiori.png" 
+                   alt="La Crypta" 
+                   width="180" 
+                   class="logo-dark"
+                   style="display: none; margin: 0 auto;">
             </td>
           </tr>
           
