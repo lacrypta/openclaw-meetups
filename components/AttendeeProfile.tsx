@@ -43,7 +43,7 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
         });
         if (contactsRes.ok) {
           const { contacts } = await contactsRes.json();
-          const found = contacts.find((c: any) => c.id === attendeeId);
+          const found = contacts.find((c: any) => String(c.id) === String(attendeeId));
           if (found) {
             setAttendee({
               id: found.id,
