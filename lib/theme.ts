@@ -25,6 +25,7 @@ export const theme = {
   },
   spacing: {
     navHeight: 64,
+    sidebarWidth: 220,
     section: 80,
     sectionMobile: 48,
     container: 1200,
