@@ -16,9 +16,17 @@ cd /home/agustin/clawd/projects/openclaw-meetups/email-templates
 # Install dependencies (if not already)
 npm install nodemailer @supabase/supabase-js
 
-# Load env vars
-source /home/agustin/clawd/.env.email
-export SUPABASE_URL="https://gpfoxevxvhltjzppeacr.supabase.co"
+# Configure SMTP credentials
+cp .env.example .env
+nano .env  # Edit with your actual SMTP credentials
+
+# Or export environment variables manually:
+export SMTP_HOST="smtp.example.com"
+export SMTP_PORT="587"
+export SMTP_SECURE="false"
+export SMTP_USER="your-username"
+export SMTP_PASS="your-password"
+export EMAIL_FROM="noreply@example.com"
 export SUPABASE_SERVICE_KEY="<service_key>"
 ```
 
@@ -61,12 +69,16 @@ node send-emails.js waitlist
 
 ## Variables
 
-| Variable | Valor |
-|----------|-------|
-| `GMAIL_USER` | claudiomoltbot@gmail.com |
-| `GMAIL_APP_PASSWORD` | (en .env.email) |
-| `SUPABASE_URL` | https://gpfoxevxvhltjzppeacr.supabase.co |
-| `SUPABASE_SERVICE_KEY` | (service role key) |
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `SMTP_HOST` | SMTP server hostname | smtp.gmail.com |
+| `SMTP_PORT` | SMTP port (587 or 465) | 587 |
+| `SMTP_SECURE` | Use TLS (false for 587, true for 465) | false |
+| `SMTP_USER` | SMTP username | user@example.com |
+| `SMTP_PASS` | SMTP password | your-password |
+| `EMAIL_FROM` | From email address | noreply@example.com |
+| `SUPABASE_URL` | Supabase project URL | https://xxx.supabase.co |
+| `SUPABASE_SERVICE_KEY` | Supabase service role key | eyJhbGci... |
 
 ## Tracking
 

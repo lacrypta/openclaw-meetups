@@ -15,16 +15,22 @@ const __dirname = path.dirname(__filename);
 // Environment
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://gpfoxevxvhltjzppeacr.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const GMAIL_USER = process.env.GMAIL_USER || 'claudiomoltbot@gmail.com';
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+
+// SMTP Configuration
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465');
+const SMTP_SECURE = process.env.SMTP_SECURE !== 'false'; // true by default
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const EMAIL_FROM = process.env.EMAIL_FROM || SMTP_USER;
 
 if (!SUPABASE_SERVICE_KEY) {
   console.error('❌ Missing SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
 
-if (!GMAIL_APP_PASSWORD) {
-  console.error('❌ Missing GMAIL_APP_PASSWORD');
+if (!SMTP_USER || !SMTP_PASS) {
+  console.error('❌ Missing SMTP_USER or SMTP_PASS');
   process.exit(1);
 }
 
@@ -39,12 +45,12 @@ const limit = limitIndex >= 0 ? parseInt(args[limitIndex + 1]) : null;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_SECURE,
   auth: {
-    user: GMAIL_USER,
-    pass: GMAIL_APP_PASSWORD,
+    user: SMTP_USER,
+    pass: SMTP_PASS,
   },
 });
 
@@ -124,7 +130,7 @@ async function main() {
 
     try {
       await transporter.sendMail({
-        from: `"Claudio — OpenClaw" <${GMAIL_USER}>`,
+        from: `"Claudio — OpenClaw" <${EMAIL_FROM}>`,
         to: contact.email,
         subject: config.subject,
         html: html,
