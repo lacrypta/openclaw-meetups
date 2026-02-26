@@ -56,3 +56,38 @@ export interface AttendeeWithEvents extends Attendee {
     registered_at: string;
   }[];
 }
+
+// Email integrations
+
+export type EmailIntegrationType = 'smtp' | 'aws_ses' | 'resend';
+
+export interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password: string;
+  from_email: string;
+}
+
+export interface AwsSesConfig {
+  region: string;
+  access_key_id: string;
+  secret_access_key: string;
+  from_email: string;
+}
+
+export interface ResendConfig {
+  api_key: string;
+  from_email: string;
+}
+
+export interface EmailIntegration {
+  id: string;
+  name: string;
+  type: EmailIntegrationType;
+  config: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
