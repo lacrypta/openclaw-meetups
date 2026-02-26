@@ -3,31 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Te perdiste el OpenClaw Meetup</title>
+  <title>Te esperábamos en el OpenClaw Meetup</title>
+  <style>
+    /* Dark mode adaptive logo */
+    .logo-light { display: block !important; }
+    .logo-dark { display: none !important; }
+    
+    @media (prefers-color-scheme: dark) {
+      .logo-light { display: none !important; }
+      .logo-dark { display: block !important; }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
     <tr>
-      <td align="center" style="padding: 0;">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; margin: 0;">
-          
-          <!-- Header: Full-width with logo -->
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <!-- Header -->
           <tr>
-            <td align="center" bgcolor="#d0d0d0" style="background-color: #d0d0d0 !important; background: #d0d0d0; padding: 60px 0;">
-              <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-white-transparent.png" 
+            <td align="center" style="padding: 40px 40px 20px;">
+              <!-- Logo Light (for light backgrounds) -->
+              <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-black.png" 
                    alt="La Crypta" 
                    width="200" 
-                   style="display: block; margin: 0 auto;" 
-                   border="0" />
+                   class="logo-light"
+                   style="display: block; margin: 0 auto;">
+              
+              <!-- Logo Dark (for dark backgrounds) -->
+              <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-white.png" 
+                   alt="La Crypta" 
+                   width="200" 
+                   class="logo-dark"
+                   style="display: none; margin: 0 auto;">
             </td>
           </tr>
           
           <!-- Content -->
           <tr>
-            <td style="padding: 0;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding: 40px 40px;">
+            <td style="padding: 0 40px 40px;">
               <h1 style="color: #1a1a1a; font-size: 24px; font-weight: 600; margin: 0 0 20px; text-align: center;">
                 {{first_name}}, te perdiste un buen meetup
               </h1>
@@ -37,7 +51,7 @@
               </p>
               
               <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 0 0 10px; font-weight: 600;">
-                Armamos un resumen rápido de lo que pasó:
+                Armamos un resumen rápido de lo que viste:
               </p>
               
               <ul style="color: #4a4a4a; font-size: 15px; line-height: 1.8; margin: 0 0 30px; padding-left: 20px;">
@@ -99,12 +113,9 @@
               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0 0;">
                 <tr>
                   <td align="center">
-                    <a href="https://wa.me/5491166094742?text=Hola!%20Vengo%20del%20OpenClaw%20Meetup%20y%20me%20interesa%20saber%20más%20sobre%20IA%20para%20mi%20proyecto" style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                    <a href="https://wa.me/5491166094742?text=Hola!%20Me%20registré%20para%20el%20OpenClaw%20Meetup%20y%20me%20interesa%20saber%20más%20sobre%20IA%20para%20mi%20proyecto" style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
                       💬 Hablá con Cami
                     </a>
-                  </td>
-                </tr>
-              </table>
                   </td>
                 </tr>
               </table>
@@ -113,10 +124,7 @@
           
           <!-- Footer -->
           <tr>
-            <td style="padding: 0;">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="background-color: #f9f9f9; padding: 30px 40px; border-top: 1px solid #e5e5e5;">
+            <td style="background-color: #f9f9f9; padding: 30px 40px; border-top: 1px solid #e5e5e5;">
               <p style="margin: 0 0 10px; color: #1a1a1a; font-weight: 600; font-size: 14px;">
                 OpenClaw Meetups
               </p>
@@ -126,12 +134,8 @@
               <p style="margin: 20px 0 0; color: #aaa; font-size: 12px;">
                 Si no querés recibir más emails, ignorá este mensaje. Es el único follow-up que mandamos.
               </p>
-                  </td>
-                </tr>
-              </table>
             </td>
           </tr>
-          
         </table>
       </td>
     </tr>

@@ -3,39 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
   <title>Gracias por venir al OpenClaw Meetup</title>
   <style>
-    /* Base: light mode */
-    .logo-light { display: block !important; max-height: none !important; overflow: visible !important; }
-    .logo-dark { display: none !important; max-height: 0 !important; overflow: hidden !important; }
+    /* Dark mode adaptive logo */
+    .logo-light { display: block !important; }
+    .logo-dark { display: none !important; }
     
-    /* Dark mode: Apple Mail, iOS Mail, Outlook Mac */
     @media (prefers-color-scheme: dark) {
-      .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-      .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
+      .logo-light { display: none !important; }
+      .logo-dark { display: block !important; }
     }
-    
-    /* Dark mode: Outlook App (Android/iOS) */
-    [data-ogsc] .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    [data-ogsc] .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
-    /* Dark mode: Outlook.com webmail */
-    [data-ogsb] .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    [data-ogsb] .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
-    /* iPhone 12 iOS 14 force dark */
-    .apple-mail-implicit-dark-support .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    .apple-mail-implicit-dark-support .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
-    /* Gmail dark mode fix: CSS blend modes (by Rémi Parmentier) */
-    /* This prevents Gmail from inverting the logo colors */
-    u + .body .gmail-blend-screen { background: #000; mix-blend-mode: screen; }
-    u + .body .gmail-blend-difference { background: #000; mix-blend-mode: difference; }
   </style>
 </head>
-<body class="body" style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
     <tr>
       <td align="center">
@@ -43,26 +23,19 @@
           <!-- Header -->
           <tr>
             <td align="center" style="padding: 40px 40px 20px;">
-              <!-- Logo Light (black transparent, for light mode) — visible by default -->
-              <!-- Wrapped in blend mode div for Gmail dark mode fix -->
-              <div class="logo-light gmail-blend-screen" style="background: #000; mix-blend-mode: screen; display: inline-block;">
-                <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-transparent.png" 
-                     alt="La Crypta" 
-                     width="200" 
-                     style="display: block; margin: 0 auto;" 
-                     border="0" />
-              </div>
+              <!-- Logo Light (for light backgrounds) -->
+              <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-black.png" 
+                   alt="La Crypta" 
+                   width="200" 
+                   class="logo-light"
+                   style="display: block; margin: 0 auto;">
               
-              <!-- Logo Dark (white transparent, for dark mode) — hidden by default -->
-              <!--[if !mso]><!-->
-              <div class="logo-dark" style="display:none; overflow:hidden; float:left; width:0px; max-height:0px; max-width:0px; line-height:0px; visibility:hidden;" align="center">
-                <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-white-transparent.png" 
-                     alt="La Crypta" 
-                     width="200" 
-                     style="margin: 0 auto;" 
-                     border="0" />
-              </div>
-              <!--<![endif]-->
+              <!-- Logo Dark (for dark backgrounds) -->
+              <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-white.png" 
+                   alt="La Crypta" 
+                   width="200" 
+                   class="logo-dark"
+                   style="display: none; margin: 0 auto;">
             </td>
           </tr>
           
