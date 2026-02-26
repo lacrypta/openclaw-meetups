@@ -23,3 +23,10 @@ node_modules
 *.sw?
 .vercel
 data/
+
+# Email send logs & temp files
+email-templates/send-log*.txt
+email-templates/send-failed.json
+email-templates/send-v*-test.mjs
+email-templates/send-corrected.mjs
+email-templates/*.bak

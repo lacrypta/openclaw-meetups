@@ -1,6 +1,13 @@
 /**
  * Send personalized follow-up emails to OpenClaw Meetup attendees
- * Usage: node send-emails.js [--segment checked-in|no-show|waitlist] [--dry-run] [--limit N]
+ * Usage: node send-emails.js [checked-in|no-show|waitlist] [--dry-run] [--limit N] [--concurrency N] [--retries N]
+ * 
+ * Optimizations:
+ * - Connection pooling (reuses SMTP connections)
+ * - Auto-retry on transient failures (default: 3 retries with exponential backoff)
+ * - Configurable concurrency (default: 3 parallel sends)
+ * - Timestamped logging with per-email timing
+ * - Failed emails logged to send-failed.json for easy retry
  */
 
 import fs from 'fs';
@@ -21,33 +28,34 @@ if (!SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
-// SMTP Configuration - Load from Supabase or fallback to env vars
+// SMTP Configuration
 let SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, EMAIL_FROM;
 
 async function loadSmtpConfig() {
   try {
     const { data, error } = await supabase
-      .from('smtp_settings')
+      .from('email_integrations')
       .select('*')
-      .eq('id', '00000000-0000-0000-0000-000000000000')
+      .eq('is_default', true)
       .single();
 
-    if (data && data.smtp_user && data.smtp_pass) {
-      console.log('✅ Loaded SMTP config from Supabase');
-      SMTP_HOST = data.smtp_host;
-      SMTP_PORT = data.smtp_port;
-      SMTP_SECURE = data.smtp_secure;
-      SMTP_USER = data.smtp_user;
-      SMTP_PASS = data.smtp_pass;
-      EMAIL_FROM = data.email_from;
+    if (data && data.config) {
+      const config = JSON.parse(data.config);
+      log(`✅ Loaded SMTP config from email_integrations (${data.name})`);
+      SMTP_HOST = config.host;
+      SMTP_PORT = config.port;
+      SMTP_SECURE = config.secure;
+      SMTP_USER = config.username;
+      SMTP_PASS = config.password;
+      EMAIL_FROM = config.from_email;
       return true;
     }
   } catch (err) {
-    console.warn('⚠️  Failed to load SMTP from Supabase, using env vars:', err.message);
+    log(`⚠️  Failed to load SMTP from Supabase: ${err.message}`);
   }
 
   // Fallback to environment variables
-  console.log('📋 Using SMTP config from environment variables');
+  log('📋 Fallback: using SMTP config from environment variables');
   SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
   SMTP_PORT = parseInt(process.env.SMTP_PORT || '465');
   SMTP_SECURE = process.env.SMTP_SECURE !== 'false';
@@ -56,7 +64,7 @@ async function loadSmtpConfig() {
   EMAIL_FROM = process.env.EMAIL_FROM || SMTP_USER;
 
   if (!SMTP_USER || !SMTP_PASS) {
-    console.error('❌ Missing SMTP_USER or SMTP_PASS (not in Supabase or env vars)');
+    console.error('❌ Missing SMTP credentials (not in Supabase or env vars)');
     process.exit(1);
   }
   
@@ -67,13 +75,24 @@ async function loadSmtpConfig() {
 const args = process.argv.slice(2);
 const segment = args.find(a => ['checked-in', 'no-show', 'waitlist'].includes(a)) || 'checked-in';
 const dryRun = args.includes('--dry-run');
-const limitIndex = args.indexOf('--limit');
-const limit = limitIndex >= 0 ? parseInt(args[limitIndex + 1]) : null;
+
+function getArgValue(flag, defaultVal) {
+  const idx = args.indexOf(flag);
+  return idx >= 0 ? parseInt(args[idx + 1]) : defaultVal;
+}
+
+const limit = getArgValue('--limit', null);
+const concurrency = getArgValue('--concurrency', 3);
+const maxRetries = getArgValue('--retries', 3);
 
 // Setup
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-// Transporter will be created in main() after loading SMTP config
+// Timestamped logging
+function log(msg) {
+  const ts = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  console.log(`[${ts}] ${msg}`);
+}
 
 // Segment configs
 const SEGMENTS = {
@@ -99,28 +118,141 @@ const SEGMENTS = {
 
 const config = SEGMENTS[segment];
 
+// Retry with exponential backoff
+async function sendWithRetry(transporter, mailOptions, retries) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await transporter.sendMail(mailOptions);
+      return { success: true, attempts: attempt };
+    } catch (err) {
+      if (attempt === retries) {
+        return { success: false, attempts: attempt, error: err.message };
+      }
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, max 8s
+      log(`  ⚠️  Attempt ${attempt}/${retries} failed: ${err.message}. Retrying in ${delay}ms...`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+// Process a single contact
+async function processContact(transporter, contact, template, stats) {
+  const start = Date.now();
+  const firstName = contact.first_name || contact.name.split(' ')[0];
+  const fullName = contact.name || `${contact.first_name} ${contact.last_name}`.trim();
+  const html = template
+    .replace(/\{\{first_name\}\}/g, firstName)
+    .replace(/\{\{name\}\}/g, encodeURIComponent(fullName))
+    .replace(/\{\{email\}\}/g, encodeURIComponent(contact.email));
+
+  if (dryRun) {
+    log(`→ ${contact.email} (${firstName}) [DRY RUN]`);
+    return;
+  }
+
+  const result = await sendWithRetry(transporter, {
+    from: `"Claudio — OpenClaw" <${EMAIL_FROM}>`,
+    to: contact.email,
+    subject: config.subject,
+    html: html,
+  }, maxRetries);
+
+  const elapsed = Date.now() - start;
+
+  if (result.success) {
+    // Mark as sent
+    await supabase
+      .from('attendees')
+      .update({
+        email_sent: true,
+        email_sent_at: new Date().toISOString(),
+        email_type: config.emailType,
+      })
+      .eq('id', contact.id);
+
+    log(`✅ ${contact.email} (${firstName}) — ${elapsed}ms${result.attempts > 1 ? ` (${result.attempts} attempts)` : ''}`);
+    stats.sent++;
+    stats.totalTime += elapsed;
+  } else {
+    log(`❌ ${contact.email} (${firstName}) — FAILED after ${result.attempts} attempts: ${result.error} (${elapsed}ms)`);
+    stats.failed++;
+    stats.failures.push({
+      id: contact.id,
+      email: contact.email,
+      name: contact.name,
+      error: result.error,
+      attempts: result.attempts,
+      elapsed_ms: elapsed,
+    });
+  }
+}
+
+// Chunked parallel execution
+async function processInBatches(transporter, contacts, template, stats) {
+  for (let i = 0; i < contacts.length; i += concurrency) {
+    const batch = contacts.slice(i, i + concurrency);
+    const batchNum = Math.floor(i / concurrency) + 1;
+    const totalBatches = Math.ceil(contacts.length / concurrency);
+    
+    log(`📦 Batch ${batchNum}/${totalBatches} (${batch.length} emails)`);
+    
+    await Promise.all(
+      batch.map(contact => processContact(transporter, contact, template, stats))
+    );
+
+    // Small delay between batches to avoid hammering SMTP
+    if (i + concurrency < contacts.length) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+}
+
 async function main() {
-  // Load SMTP configuration from Supabase (or env vars)
+  const globalStart = Date.now();
+
   await loadSmtpConfig();
 
-  // Create transporter with loaded config
+  // Resolve SMTP host to IPv4
+  const dns = await import('node:dns');
+  let smtpIp = SMTP_HOST;
+  try {
+    const { address } = await dns.promises.lookup(SMTP_HOST, { family: 4 });
+    smtpIp = address;
+    log(`📡 Resolved ${SMTP_HOST} → ${smtpIp} (IPv4)`);
+  } catch (e) {
+    log(`⚠️  DNS lookup failed, using hostname: ${e.message}`);
+  }
+
+  const useSecure = SMTP_PORT === 465;
+
+  // Connection pooling: reuses connections across sends
   const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
+    host: smtpIp,
     port: SMTP_PORT,
-    secure: SMTP_SECURE,
+    secure: useSecure,
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
+    tls: {
+      servername: SMTP_HOST,
+    },
+    pool: true,           // Enable connection pooling
+    maxConnections: concurrency,  // Match concurrency
+    maxMessages: 100,     // Messages per connection before reconnect
+    rateDelta: 1000,      // 1 second window
+    rateLimit: 5,         // Max 5 messages per second
   });
 
-  console.log(`\n📧 OpenClaw Meetup Email Campaign`);
-  console.log(`Segment: ${segment}`);
-  console.log(`Template: ${config.template}`);
-  console.log(`Subject: ${config.subject}`);
-  console.log(`Dry run: ${dryRun ? 'YES' : 'NO'}`);
-  if (limit) console.log(`Limit: ${limit}`);
-  console.log('');
+  log(`\n📧 OpenClaw Meetup Email Campaign`);
+  log(`Segment: ${segment}`);
+  log(`Template: ${config.template}`);
+  log(`Subject: ${config.subject}`);
+  log(`Dry run: ${dryRun ? 'YES' : 'NO'}`);
+  log(`Concurrency: ${concurrency}`);
+  log(`Max retries: ${maxRetries}`);
+  if (limit) log(`Limit: ${limit}`);
+  log('');
 
   // Load template
   const templatePath = path.join(__dirname, config.template);
@@ -131,7 +263,8 @@ async function main() {
     .from('attendees')
     .select('*')
     .match(config.filter)
-    .eq('email_sent', false); // Only unsent
+    .eq('email_sent', false)
+    .order('registered_at', { ascending: false, nullsFirst: false });
 
   if (limit) query = query.limit(limit);
 
@@ -143,59 +276,38 @@ async function main() {
   }
 
   if (!contacts || contacts.length === 0) {
-    console.log('✅ No contacts to send (all already sent or empty segment)');
+    log('✅ No contacts to send (all already sent or empty segment)');
     return;
   }
 
-  console.log(`📋 Found ${contacts.length} contacts to send\n`);
+  log(`📋 Found ${contacts.length} contacts to send\n`);
 
-  let sent = 0;
-  let failed = 0;
+  const stats = { sent: 0, failed: 0, totalTime: 0, failures: [] };
 
-  for (const contact of contacts) {
-    const firstName = contact.first_name || contact.name.split(' ')[0];
-    const html = template.replace(/\{\{first_name\}\}/g, firstName);
+  // Send in parallel batches
+  await processInBatches(transporter, contacts, template, stats);
 
-    console.log(`→ ${contact.email} (${firstName})`);
+  // Close pool
+  transporter.close();
 
-    if (dryRun) {
-      console.log('  [DRY RUN] Would send email');
-      continue;
-    }
+  const totalElapsed = Date.now() - globalStart;
+  const avgTime = stats.sent > 0 ? Math.round(stats.totalTime / stats.sent) : 0;
 
-    try {
-      await transporter.sendMail({
-        from: `"Claudio — OpenClaw" <${EMAIL_FROM}>`,
-        to: contact.email,
-        subject: config.subject,
-        html: html,
-      });
+  log(`\n📊 Summary:`);
+  log(`  ✅ Sent: ${stats.sent}`);
+  log(`  ❌ Failed: ${stats.failed}`);
+  log(`  📋 Total: ${contacts.length}`);
+  log(`  ⏱️  Total time: ${(totalElapsed / 1000).toFixed(1)}s`);
+  log(`  ⚡ Avg per email: ${avgTime}ms`);
+  log(`  🚀 Throughput: ${(stats.sent / (totalElapsed / 1000) * 60).toFixed(1)} emails/min`);
 
-      // Mark as sent in Supabase
-      await supabase
-        .from('attendees')
-        .update({
-          email_sent: true,
-          email_sent_at: new Date().toISOString(),
-          email_type: config.emailType,
-        })
-        .eq('luma_id', contact.luma_id);
-
-      console.log('  ✅ Sent');
-      sent++;
-
-      // Rate limit: 2 seconds between sends
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    } catch (error) {
-      console.error('  ❌ Failed:', error.message);
-      failed++;
-    }
+  // Save failures to file for easy retry
+  if (stats.failures.length > 0) {
+    const failPath = path.join(__dirname, 'send-failed.json');
+    fs.writeFileSync(failPath, JSON.stringify(stats.failures, null, 2));
+    log(`\n💾 Failed emails saved to: ${failPath}`);
+    log(`   Retry with: node send-emails.js ${segment} --limit ${stats.failures.length}`);
   }
-
-  console.log(`\n📊 Summary:`);
-  console.log(`  Sent: ${sent}`);
-  console.log(`  Failed: ${failed}`);
-  console.log(`  Total: ${contacts.length}`);
 }
 
 main().catch(console.error);
