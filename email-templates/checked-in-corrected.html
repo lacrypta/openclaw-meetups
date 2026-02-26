@@ -8,31 +8,58 @@
   <title>Gracias por venir al OpenClaw Meetup</title>
   <style>
     /* Base: light mode */
-    .logo-light { display: block !important; max-height: none !important; overflow: visible !important; }
+    .logo-light { display: block !important; }
     .logo-dark { display: none !important; max-height: 0 !important; overflow: hidden !important; }
-    
+
     /* Dark mode: Apple Mail, iOS Mail, Outlook Mac */
     @media (prefers-color-scheme: dark) {
-      .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-      .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
+      .logo-light { display: none !important; }
+      .logo-dark {
+        display: block !important;
+        overflow: visible !important;
+        float: none !important;
+        width: auto !important;
+        max-height: none !important;
+        max-width: none !important;
+        line-height: normal !important;
+        text-align: center !important;
+      }
+      .dark-text { color: #ffffff !important; }
+      .dark-text-secondary { color: #cccccc !important; }
+      .dark-bg { background-color: #1a1a1a !important; }
+      .dark-bg-card { background-color: #222222 !important; }
+      .dark-border { border-color: #444444 !important; }
     }
-    
+
     /* Dark mode: Outlook App (Android/iOS) */
-    [data-ogsc] .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    [data-ogsc] .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
+    [data-ogsc] .logo-light { display: none !important; }
+    [data-ogsc] .logo-dark {
+      display: block !important;
+      overflow: visible !important;
+      float: none !important;
+      width: auto !important;
+      max-height: none !important;
+      max-width: none !important;
+      line-height: normal !important;
+      text-align: center !important;
+    }
+    [data-ogsc] .dark-text { color: #ffffff !important; }
+    [data-ogsc] .dark-text-secondary { color: #cccccc !important; }
+
     /* Dark mode: Outlook.com webmail */
-    [data-ogsb] .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    [data-ogsb] .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
-    /* iPhone 12 iOS 14 force dark */
-    .apple-mail-implicit-dark-support .logo-light { display: none !important; max-height: 0 !important; overflow: hidden !important; visibility: hidden !important; }
-    .apple-mail-implicit-dark-support .logo-dark { display: block !important; max-height: none !important; overflow: visible !important; visibility: visible !important; }
-    
-    /* Gmail dark mode fix: CSS blend modes (by Rémi Parmentier) */
-    /* This prevents Gmail from inverting the logo colors */
-    u + .body .gmail-blend-screen { background: #000; mix-blend-mode: screen; }
-    u + .body .gmail-blend-difference { background: #000; mix-blend-mode: difference; }
+    [data-ogsb] .logo-light { display: none !important; }
+    [data-ogsb] .logo-dark {
+      display: block !important;
+      overflow: visible !important;
+      float: none !important;
+      width: auto !important;
+      max-height: none !important;
+      max-width: none !important;
+      line-height: normal !important;
+      text-align: center !important;
+    }
+    [data-ogsb] .dark-text { color: #ffffff !important; }
+    [data-ogsb] .dark-text-secondary { color: #cccccc !important; }
   </style>
 </head>
 <body class="body" style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f5f5;">
@@ -44,14 +71,12 @@
           <tr>
             <td align="center" style="padding: 40px 40px 20px;">
               <!-- Logo Light (black transparent, for light mode) — visible by default -->
-              <!-- Wrapped in blend mode div for Gmail dark mode fix -->
-              <div class="logo-light gmail-blend-screen" style="background: #000; mix-blend-mode: screen; display: inline-block;">
-                <img src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-transparent.png" 
-                     alt="La Crypta" 
-                     width="200" 
-                     style="display: block; margin: 0 auto;" 
-                     border="0" />
-              </div>
+              <img class="logo-light" 
+                   src="https://raw.githubusercontent.com/lacrypta/branding/main/title/512-transparent.png" 
+                   alt="La Crypta" 
+                   width="200" 
+                   style="display: block; margin: 0 auto;" 
+                   border="0" />
               
               <!-- Logo Dark (white transparent, for dark mode) — hidden by default -->
               <!--[if !mso]><!-->
