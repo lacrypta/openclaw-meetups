@@ -17,17 +17,28 @@ Landing page for monthly OpenClaw meetups hosted at [La Crypta](https://lacrypta
 - **Responsive** — mobile-first with hamburger menu
 - **La Crypta branding** — dark theme with blue/amber accents
 
-## Setup
+## Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flacrypta%2Fopenclaw-meetups&env=JWT_SECRET,ALLOWED_PUBKEYS&envDescription=JWT_SECRET%3A%20random%20string%20for%20signing%20tokens.%20ALLOWED_PUBKEYS%3A%20comma-separated%20Nostr%20hex%20pubkeys%20for%20admin%20access.&project-name=openclaw-meetups&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6&skippable-integrations=1)
+
+The Supabase integration will automatically provide `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `POSTGRES_URL`. You will be prompted for:
+
+| Variable | Description |
+|---|---|
+| `JWT_SECRET` | Random string used to sign auth tokens |
+| `ALLOWED_PUBKEYS` | Comma-separated Nostr hex pubkeys allowed to access the dashboard |
+
+## Setup (local development)
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## Build
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## Project Structure

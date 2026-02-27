@@ -19,10 +19,15 @@ const ENV_EXAMPLE_PATH = '.env.example';
 
 const REQUIRED_VARS = [
   'SUPABASE_URL',
-  'SUPABASE_SERVICE_KEY',
+  'SUPABASE_SERVICE_KEY', // also accepts SUPABASE_SERVICE_ROLE_KEY (Vercel integration)
   'JWT_SECRET',
   'ALLOWED_PUBKEYS'
 ];
+
+// Vercel Supabase integration uses SUPABASE_SERVICE_ROLE_KEY
+const ENV_ALIASES = {
+  'SUPABASE_SERVICE_KEY': 'SUPABASE_SERVICE_ROLE_KEY',
+};
 
 /**
  * Check if .env.local exists and has all required variables
@@ -105,8 +110,8 @@ function setup() {
     console.log('🚀 Production environment detected');
     console.log('✅ Using Vercel environment variables');
     
-    // Validate that required vars exist in process.env
-    const missing = REQUIRED_VARS.filter(v => !process.env[v]);
+    // Validate that required vars exist in process.env (check aliases too)
+    const missing = REQUIRED_VARS.filter(v => !process.env[v] && !(ENV_ALIASES[v] && process.env[ENV_ALIASES[v]]));
     if (missing.length > 0) {
       console.error('❌ Missing required environment variables:', missing.join(', '));
       console.error('   Configure them in Vercel dashboard');

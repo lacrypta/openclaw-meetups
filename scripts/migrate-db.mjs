@@ -122,7 +122,7 @@ function getDatabaseUrl() {
   }
   
   // Construct from SUPABASE_URL if available
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+  if (process.env.SUPABASE_URL && (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     console.log('⚠️  No DATABASE_URL found - you need to set it for production migrations');
     console.log('   Get it from Supabase Dashboard → Settings → Database → Connection string');
     return null;
