@@ -4,7 +4,7 @@
 -- email_events: open/click/bounce tracking
 
 -- Campaign jobs
-CREATE TABLE email_jobs (
+CREATE TABLE IF NOT EXISTS email_jobs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE,
   segment TEXT NOT NULL CHECK (segment IN ('checked-in', 'no-show', 'waitlist', 'custom')),
@@ -25,11 +25,11 @@ CREATE TABLE email_jobs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_email_jobs_status ON email_jobs(status);
-CREATE INDEX idx_email_jobs_event ON email_jobs(event_id);
+CREATE INDEX IF NOT EXISTS idx_email_jobs_status ON email_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_email_jobs_event ON email_jobs(event_id);
 
 -- Per-recipient send records
-CREATE TABLE email_sends (
+CREATE TABLE IF NOT EXISTS email_sends (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   job_id UUID NOT NULL REFERENCES email_jobs(id) ON DELETE CASCADE,
   attendee_id INTEGER NOT NULL REFERENCES attendees(id) ON DELETE CASCADE,
@@ -43,12 +43,12 @@ CREATE TABLE email_sends (
   UNIQUE(job_id, attendee_id)
 );
 
-CREATE INDEX idx_email_sends_job ON email_sends(job_id);
-CREATE INDEX idx_email_sends_attendee ON email_sends(attendee_id);
-CREATE INDEX idx_email_sends_status ON email_sends(status);
+CREATE INDEX IF NOT EXISTS idx_email_sends_job ON email_sends(job_id);
+CREATE INDEX IF NOT EXISTS idx_email_sends_attendee ON email_sends(attendee_id);
+CREATE INDEX IF NOT EXISTS idx_email_sends_status ON email_sends(status);
 
 -- Tracking events (opens, clicks, bounces, complaints)
-CREATE TABLE email_events (
+CREATE TABLE IF NOT EXISTS email_events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   send_id UUID REFERENCES email_sends(id) ON DELETE CASCADE,
   job_id UUID REFERENCES email_jobs(id) ON DELETE CASCADE,
@@ -58,10 +58,10 @@ CREATE TABLE email_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_email_events_send ON email_events(send_id);
-CREATE INDEX idx_email_events_job ON email_events(job_id);
-CREATE INDEX idx_email_events_attendee ON email_events(attendee_id);
-CREATE INDEX idx_email_events_type ON email_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_email_events_send ON email_events(send_id);
+CREATE INDEX IF NOT EXISTS idx_email_events_job ON email_events(job_id);
+CREATE INDEX IF NOT EXISTS idx_email_events_attendee ON email_events(attendee_id);
+CREATE INDEX IF NOT EXISTS idx_email_events_type ON email_events(event_type);
 
 -- Enable RLS on all tables
 ALTER TABLE email_jobs ENABLE ROW LEVEL SECURITY;
@@ -69,6 +69,14 @@ ALTER TABLE email_sends ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_events ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies (dashboard access via service key, so permissive)
-CREATE POLICY "Allow all on email_jobs" ON email_jobs FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on email_sends" ON email_sends FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all on email_events" ON email_events FOR ALL USING (true) WITH CHECK (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'email_jobs' AND policyname = 'Allow all on email_jobs') THEN
+    CREATE POLICY "Allow all on email_jobs" ON email_jobs FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'email_sends' AND policyname = 'Allow all on email_sends') THEN
+    CREATE POLICY "Allow all on email_sends" ON email_sends FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'email_events' AND policyname = 'Allow all on email_events') THEN
+    CREATE POLICY "Allow all on email_events" ON email_events FOR ALL USING (true) WITH CHECK (true);
+  END IF;
+END $$;
