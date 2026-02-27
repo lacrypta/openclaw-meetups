@@ -134,19 +134,10 @@ function migrate() {
   const isCI = process.env.CI === 'true';
   
   if (isProduction) {
-    console.log('🚀 Production environment detected\n');
-    
-    const dbUrl = getDatabaseUrl();
-    if (!dbUrl) {
-      console.error('❌ DATABASE_URL not found in production environment');
-      console.error('   Set it in Vercel dashboard or CI secrets');
-      console.error('   Format: postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres');
-      process.exit(1);
-    }
-    
-    if (!migrateRemote(dbUrl)) {
-      process.exit(1);
-    }
+    console.log('🚀 Production environment detected');
+    console.log('ℹ️  Skipping auto-migrations in production/Vercel builds');
+    console.log('   Run migrations manually: npx supabase db push --db-url <DATABASE_URL>\n');
+    return;
   } else {
     console.log('💻 Local development environment\n');
     
