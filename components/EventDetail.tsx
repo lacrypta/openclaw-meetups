@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CampaignTab } from "./CampaignTab";
 import { cn } from "@/lib/utils";
 
 interface EventDetailProps {
@@ -181,29 +183,42 @@ export function EventDetail({ eventId }: EventDetailProps) {
 
       <StatsBar stats={stats} loading={attendeesLoading} />
 
-      {/* Attendees table */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Attendees</h2>
-        {attendeesLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex gap-4">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-24" />
+      {/* Tabs: Attendees + Campaigns */}
+      <Tabs defaultValue="attendees">
+        <TabsList>
+          <TabsTrigger value="attendees">Attendees</TabsTrigger>
+          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="attendees">
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Attendees</h2>
+            {attendeesLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <ContactsTable
-            contacts={contactsFromAttendees}
-            onUpdateContact={handleUpdateContact}
-            eventId={eventId}
-          />
-        )}
-      </Card>
+            ) : (
+              <ContactsTable
+                contacts={contactsFromAttendees}
+                onUpdateContact={handleUpdateContact}
+                eventId={eventId}
+              />
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="campaigns">
+          <CampaignTab eventId={eventId} />
+        </TabsContent>
+      </Tabs>
 
       {editing && (
         <EventForm
