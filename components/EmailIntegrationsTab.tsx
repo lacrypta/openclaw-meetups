@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import type { EmailIntegration, EmailIntegrationType } from "@/lib/types";
+import type { EmailIntegration, EmailIntegrationType, EmailLayout } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmailIntegrationDialog } from "./EmailIntegrationDialog";
 import { TestEmailDialog } from "./TestEmailDialog";
+import { useLayouts } from "@/hooks/useLayouts";
 
 const TYPE_LABELS: Record<EmailIntegrationType, string> = {
   smtp: "SMTP",
@@ -35,6 +36,7 @@ function configSummary(integration: EmailIntegration): string {
 
 export function EmailIntegrationsTab() {
   const { token, ready } = useAuth();
+  const { layouts } = useLayouts();
   const [integrations, setIntegrations] = useState<EmailIntegration[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{
@@ -147,7 +149,7 @@ export function EmailIntegrationsTab() {
     await fetchIntegrations();
   };
 
-  const handleTest = async (email: string) => {
+  const handleTest = async (email: string, layoutId?: string) => {
     if (!testing) return;
     const res = await fetch(`/api/email-integrations/${testing.id}/test`, {
       method: "POST",
@@ -155,7 +157,7 @@ export function EmailIntegrationsTab() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ to: email }),
+      body: JSON.stringify({ to: email, layout_id: layoutId }),
     });
     if (!res.ok) {
       const { error } = await res.json();
@@ -288,6 +290,7 @@ export function EmailIntegrationsTab() {
       {testing && (
         <TestEmailDialog
           integrationName={testing.name}
+          layouts={layouts}
           onSubmit={handleTest}
           onClose={() => setTesting(null)}
         />

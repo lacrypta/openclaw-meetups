@@ -12,6 +12,10 @@
 import { execSync } from 'child_process';
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
+import { config } from 'dotenv';
+
+// Load .env.local so DATABASE_URL is available outside of Next.js
+config({ path: '.env.local' });
 
 const MIGRATIONS_DIR = './supabase/migrations';
 const REQUIRED_CONTAINER = 'supabase_db';
@@ -72,12 +76,22 @@ function migrateLocal() {
 }
 
 /**
+ * Ensure the URL uses the direct connection (port 5432) instead of the
+ * pgbouncer pooler (port 6543) which doesn't support prepared statements
+ * needed by supabase db push.
+ */
+function toDirectConnection(dbUrl) {
+  return dbUrl.replace(/pooler\.supabase\.com:6543/, 'pooler.supabase.com:5432');
+}
+
+/**
  * Apply migrations to remote Supabase (production)
  */
 function migrateRemote(dbUrl) {
+  const directUrl = toDirectConnection(dbUrl);
   try {
     console.log('🔄 Applying migrations to remote Supabase...');
-    execSync(`npx supabase db push --db-url "${dbUrl}"`, {
+    execSync(`npx supabase db push --db-url "${directUrl}"`, {
       encoding: 'utf-8',
       stdio: 'inherit'
     });

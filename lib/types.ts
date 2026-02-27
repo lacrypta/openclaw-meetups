@@ -102,6 +102,33 @@ export interface EmailEvent {
   created_at: string;
 }
 
+// Email templates & layouts
+
+export interface EmailLayout {
+  id: string;
+  name: string;
+  description: string | null;
+  html_content: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  segment: EmailJobSegment;
+  subject: string;
+  html_content: string;
+  text_content: string | null;
+  variables: string[];
+  layout_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Email integrations
 
 export type EmailIntegrationType = 'smtp' | 'aws_ses' | 'resend';
