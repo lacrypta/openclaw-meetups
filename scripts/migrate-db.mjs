@@ -12,10 +12,9 @@
 import { execSync } from 'child_process';
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { config } from 'dotenv';
+// Load .env.local so DATABASE_URL is available outside of Next.js (local dev only)
+try { const { config } = await import('dotenv'); config({ path: '.env.local' }); } catch {}
 
-// Load .env.local so DATABASE_URL is available outside of Next.js
-config({ path: '.env.local' });
 
 const MIGRATIONS_DIR = './supabase/migrations';
 const REQUIRED_CONTAINER = 'supabase_db';
