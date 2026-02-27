@@ -148,8 +148,16 @@ function migrate() {
   
   if (isProduction) {
     console.log('🚀 Production environment detected');
-    console.log('ℹ️  Skipping auto-migrations in production/Vercel builds');
-    console.log('   Run migrations manually: npx supabase db push --db-url <DATABASE_URL>\n');
+    const dbUrl = getDatabaseUrl();
+    if (dbUrl) {
+      console.log('📡 Found DATABASE_URL - applying migrations to remote database\n');
+      if (!migrateRemote(dbUrl)) {
+        process.exit(1);
+      }
+    } else {
+      console.log('⚠️  No DATABASE_URL found - skipping auto-migrations');
+      console.log('   Set DATABASE_URL or POSTGRES_URL in Vercel env vars to enable\n');
+    }
     return;
   } else {
     console.log('💻 Local development environment\n');
