@@ -1,7 +1,7 @@
 {
   "name": "openclaw-meetups",
   "private": true,
-  "version": "0.7.2",
+  "version": "0.7.3",
   "scripts": {
     "setup": "node scripts/setup-env.mjs",
     "migrate": "node scripts/migrate-db.mjs",
