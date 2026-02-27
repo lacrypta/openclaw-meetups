@@ -53,8 +53,6 @@ export function EventDetail({ eventId }: EventDetailProps) {
       pubkey: ea.pubkey || undefined,
       status: ea.status,
       checked_in: ea.checked_in,
-      email_sent: ea.email_sent,
-      email_type: ea.email_type || undefined,
       notes: ea.notes || undefined,
       registered_at: ea.registered_at,
     }));

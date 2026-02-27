@@ -33,8 +33,6 @@ export interface EventAttendee {
   name: string;
   email: string;
   pubkey: string | null;
-  email_sent: boolean;
-  email_type: string | null;
 }
 
 export interface Attendee {
@@ -42,8 +40,6 @@ export interface Attendee {
   name: string;
   email: string;
   pubkey: string | null;
-  email_sent: boolean;
-  email_type: string | null;
 }
 
 export interface AttendeeWithEvents extends Attendee {
@@ -55,6 +51,55 @@ export interface AttendeeWithEvents extends Attendee {
     checked_in: boolean;
     registered_at: string;
   }[];
+}
+
+// Email campaigns
+
+export type EmailJobStatus = 'pending' | 'running' | 'partial' | 'completed' | 'failed' | 'cancelled';
+export type EmailJobSegment = 'checked-in' | 'no-show' | 'waitlist' | 'custom';
+export type EmailSendStatus = 'pending' | 'sent' | 'failed' | 'bounced';
+export type EmailEventType = 'open' | 'click' | 'bounce' | 'complaint';
+
+export interface EmailJob {
+  id: string;
+  event_id: string;
+  segment: EmailJobSegment;
+  template_id: string | null;
+  subject: string;
+  status: EmailJobStatus;
+  total_contacts: number;
+  sent_count: number;
+  failed_count: number;
+  cursor: number;
+  errors: Array<{ email: string; error: string; attempts: number; timestamp?: string }>;
+  config: Record<string, unknown>;
+  created_by: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  last_heartbeat: string | null;
+  created_at: string;
+}
+
+export interface EmailSend {
+  id: string;
+  job_id: string;
+  attendee_id: number;
+  email: string;
+  status: EmailSendStatus;
+  attempts: number;
+  error: string | null;
+  sent_at: string | null;
+  created_at: string;
+}
+
+export interface EmailEvent {
+  id: string;
+  send_id: string | null;
+  job_id: string | null;
+  attendee_id: number | null;
+  event_type: EmailEventType;
+  metadata: Record<string, unknown>;
+  created_at: string;
 }
 
 // Email integrations

@@ -26,9 +26,7 @@ export async function GET(
         notes,
         attendees (
           name,
-          email,
-          email_sent,
-          email_type
+          email
         )
       `)
       .eq('event_id', eventId)
@@ -50,8 +48,6 @@ export async function GET(
       name: ea.attendees?.name || '',
       email: ea.attendees?.email || '',
       pubkey: null,
-      email_sent: ea.attendees?.email_sent || false,
-      email_type: ea.attendees?.email_type || null,
     }));
 
     return NextResponse.json({ attendees });

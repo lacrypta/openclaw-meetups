@@ -28,14 +28,12 @@ export default function AttendeesPage() {
     const approved = contacts.filter((c) => c.status === "approved").length;
     const waitlist = contacts.filter((c) => c.status === "waitlist").length;
     const checkedIn = contacts.filter((c) => c.checked_in).length;
-    const emailsSent = contacts.filter((c) => c.email_sent).length;
 
     return [
       { label: "Total Contacts", value: total, color: "#7c3aed" },
       { label: "Approved", value: approved, color: "#34d399" },
       { label: "Waitlist", value: waitlist, color: "#fbbf24" },
       { label: "Checked In", value: checkedIn, color: "#e879a8" },
-      { label: "Emails Sent", value: emailsSent, color: "#7c3aed" },
     ];
   }, [contacts]);
 

@@ -45,15 +45,13 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const { id, email_sent, email_type, notes } = await request.json();
+    const { id, notes } = await request.json();
 
     if (!id) {
       return NextResponse.json({ error: 'Missing contact ID' }, { status: 400 });
     }
 
     const updates: Record<string, any> = {};
-    if (email_sent !== undefined) updates.email_sent = email_sent;
-    if (email_type !== undefined) updates.email_type = email_type;
     if (notes !== undefined) updates.notes = notes;
 
     const { data, error } = await supabase
