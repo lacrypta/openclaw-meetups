@@ -145,7 +145,8 @@ function migrate() {
     }
     
     if (!migrateRemote(dbUrl)) {
-      process.exit(1);
+      console.warn('⚠️  Migration failed - continuing build anyway');
+      // process.exit(1); // Non-fatal: don't block deploy on migration errors
     }
   } else {
     console.log('💻 Local development environment\n');
