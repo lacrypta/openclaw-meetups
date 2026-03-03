@@ -3,6 +3,9 @@
 import { useEffect, useRef } from "react";
 import meetupConfig from "../config/meetup.json";
 
+const MEETUP_DATE =
+  process.env.NEXT_PUBLIC_MEETUP_DATE ?? meetupConfig.nextMeetupDate;
+
 export function HeroSection() {
   const logoRef = useRef<HTMLImageElement>(null);
 
@@ -17,7 +20,7 @@ export function HeroSection() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  const nextDate = new Date(meetupConfig.nextMeetupDate);
+  const nextDate = new Date(MEETUP_DATE);
 
   const formattedDate = nextDate.toLocaleDateString("es-AR", {
     weekday: "long",

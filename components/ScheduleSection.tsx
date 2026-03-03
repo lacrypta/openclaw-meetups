@@ -2,8 +2,11 @@
 
 import meetupConfig from "../config/meetup.json";
 
+const MEETUP_DATE =
+  process.env.NEXT_PUBLIC_MEETUP_DATE ?? meetupConfig.nextMeetupDate;
+
 export function ScheduleSection() {
-  const nextDate = new Date(meetupConfig.nextMeetupDate);
+  const nextDate = new Date(MEETUP_DATE);
 
   const formattedDate = nextDate.toLocaleDateString("es-AR", {
     weekday: "long",
