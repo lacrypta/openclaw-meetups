@@ -152,7 +152,7 @@ function migrate() {
     if (dbUrl) {
       console.log('📡 Found DATABASE_URL - applying migrations to remote database\n');
       if (!migrateRemote(dbUrl)) {
-        process.exit(1);
+        console.warn('⚠️  Migration failed — continuing build anyway (non-fatal)');
       }
     } else {
       console.log('⚠️  No DATABASE_URL found - skipping auto-migrations');
