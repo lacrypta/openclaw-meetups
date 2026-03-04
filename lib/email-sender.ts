@@ -1,6 +1,12 @@
+/**
+ * Email Sender — sends emails using configured integrations.
+ * Supports SMTP, AWS SES, and Resend providers.
+ */
+
+import { supabase } from '@/lib/supabase';
 import nodemailer from 'nodemailer';
-import { promises as dnsPromises } from 'dns';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { promises as dnsPromises } from 'dns';
 import type { EmailIntegration, SmtpConfig, AwsSesConfig, ResendConfig } from './types';
 
 async function resolveIPv4(hostname: string): Promise<string> {
@@ -83,4 +89,53 @@ export async function sendEmail(
     default:
       throw new Error(`Unsupported integration type: ${integration.type}`);
   }
+}
+
+/**
+ * Send an RSVP confirmation email using the default email integration.
+ */
+export async function sendConfirmationEmail(
+  to: string,
+  userName: string,
+  eventName: string
+): Promise<void> {
+  // Get default integration
+  const { data: integration, error } = await supabase
+    .from('email_integrations')
+    .select('*')
+    .eq('is_default', true)
+    .maybeSingle();
+
+  if (error || !integration) {
+    throw new Error('No default email integration configured');
+  }
+
+  // Try to use a template from the database
+  const { data: template } = await supabase
+    .from('email_content_templates')
+    .select('body_html, subject')
+    .eq('type', 'confirmation')
+    .eq('is_active', true)
+    .maybeSingle();
+
+  const subject = template?.subject
+    ? template.subject.replace('{{event_name}}', eventName)
+    : `✅ Confirmación: ${eventName}`;
+
+  const html = template?.body_html
+    ? template.body_html
+        .replace(/\{\{name\}\}/g, userName)
+        .replace(/\{\{event_name\}\}/g, eventName)
+    : `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>¡Confirmado! 🎉</h2>
+        <p>Hola <strong>${userName}</strong>,</p>
+        <p>Tu asistencia a <strong>${eventName}</strong> ha sido confirmada.</p>
+        <p>¡Nos vemos ahí!</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+        <p style="color: #888; font-size: 12px;">OpenClaw Meetups — La Crypta</p>
+      </div>
+    `;
+
+  await sendEmail(integration as EmailIntegration, { to, subject, html });
 }
