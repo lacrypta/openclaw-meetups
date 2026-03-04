@@ -53,7 +53,7 @@
 > "I'm Mr. Meeseeks, look at me!"
 
 - Empecé a crear agentes "a lo boludo"
-- Gorilator, Gorilatron, Academy, Travels, Konga...
+- Gorilator, Gorilatron, Academy, Travels...
 - Sin límites, sin control
 - Cada agente con acceso a todo
 - **Como los Meeseeks:** aparecen, hacen cosas, y se descontrolan
@@ -98,8 +98,7 @@
    main (Claudio) ──┬── gorilator (Discord/WhatsApp)
                     ├── gorilatron (Telegram)
                     ├── academy (Telegram)
-                    ├── travels (Claudia - Telegram)
-                    └── konga (Nodo Lab)
+                    └── travels (Claudia - Telegram)
    ```
 
 ---

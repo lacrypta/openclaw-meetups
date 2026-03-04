@@ -79,7 +79,7 @@
 1. **claudio.solutions** — Web personal de Claudio
 2. **GitHub de Claudio** — Repos que creó él (github.com/claudiomolt)
 3. **Tweet viral** — Reacción de Claudio cuando se viralizó
-4. **Mapa de agentes** — Estructura: main, gorilator, gorilatron, academy, travels, konga
+4. **Mapa de agentes** — Estructura: main, gorilator, gorilatron, academy, travels
 
 ---
 

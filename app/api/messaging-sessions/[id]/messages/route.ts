@@ -9,22 +9,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth-server';
 
-interface RouteContext {
-  params: { id: string };
-}
-
-export async function GET(request: NextRequest, { params }: RouteContext) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const pubkey = verifyToken(request);
   if (!pubkey) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const { id } = await params;
 
   try {
     // Verify session exists
     const { data: session, error: sessionError } = await supabase
       .from('messaging_sessions')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (sessionError || !session) {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const { data: messages, error: messagesError } = await supabase
       .from('messages')
       .select('*')
-      .eq('session_id', params.id)
+      .eq('session_id', id)
       .order('created_at', { ascending: true });
 
     if (messagesError) {
