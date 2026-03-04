@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Contact } from "../hooks/useContacts";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -14,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getToken } from "@/lib/auth";
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -21,7 +23,7 @@ interface ContactsTableProps {
   eventId?: string;
 }
 
-type SortField = "name" | "email" | "status" | "registered_at" | "checked_in";
+type SortField = "name" | "email" | "status" | "registered_at" | "checked_in" | "attendance_confirmed";
 type SortDirection = "asc" | "desc";
 
 const statusVariant: Record<string, string> = {
@@ -32,6 +34,38 @@ const statusVariant: Record<string, string> = {
 
 export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTableProps) {
   const [search, setSearch] = useState("");
+  const [sendingConfirmation, setSendingConfirmation] = useState<string | null>(null);
+
+  const handleSendConfirmation = async (contact: Contact) => {
+    if (!eventId) return;
+    const token = getToken();
+    if (!token) return;
+
+    setSendingConfirmation(contact.id);
+    try {
+      const res = await fetch(`/api/events/${eventId}/attendees/send-confirmation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ attendee_id: contact.id }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Error: ${err.error}`);
+        return;
+      }
+
+      // Update local state
+      onUpdateContact(contact.id, { attendance_confirmed: true } as any);
+    } catch (err) {
+      alert('Failed to send confirmation');
+    } finally {
+      setSendingConfirmation(null);
+    }
+  };
   const [sortField, setSortField] = useState<SortField>("registered_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -83,6 +117,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
     { field: "email", label: "Email" },
     { field: "status", label: "Status" },
     { field: "checked_in", label: "Checked In" },
+    { field: "attendance_confirmed", label: "Confirmed" },
     { field: "registered_at", label: "Registered" },
   ];
 
@@ -170,6 +205,28 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                     </button>
                   ) : (
                     <span>{contact.checked_in ? "✅" : "❌"}</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
+                  {contact.attendance_confirmed ? (
+                    <Badge variant="secondary" className="bg-success/20 text-success text-xs">
+                      ✅ Confirmed
+                    </Badge>
+                  ) : eventId ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      disabled={sendingConfirmation === contact.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSendConfirmation(contact);
+                      }}
+                    >
+                      {sendingConfirmation === contact.id ? "Sending..." : "Send Confirmation"}
+                    </Button>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">

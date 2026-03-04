@@ -22,6 +22,7 @@ export async function GET(
         attendee_id,
         status,
         checked_in,
+        attendance_confirmed,
         registered_at,
         notes,
         attendees (
@@ -48,6 +49,7 @@ export async function GET(
       name: ea.attendees?.name || '',
       email: ea.attendees?.email || '',
       pubkey: null,
+      attendance_confirmed: ea.attendance_confirmed || false,
     }));
 
     return NextResponse.json({ attendees });

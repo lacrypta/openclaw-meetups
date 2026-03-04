@@ -27,6 +27,7 @@ export interface EventAttendee {
   attendee_id: number;
   status: AttendeeStatus;
   checked_in: boolean;
+  attendance_confirmed: boolean;
   registered_at: string;
   notes: string | null;
   // joined from attendees table

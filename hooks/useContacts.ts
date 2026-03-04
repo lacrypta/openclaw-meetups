@@ -10,6 +10,7 @@ export interface Contact {
   pubkey?: string;
   status: 'approved' | 'waitlist' | 'declined';
   checked_in: boolean;
+  attendance_confirmed: boolean;
   notes?: string;
   registered_at: string;
 }

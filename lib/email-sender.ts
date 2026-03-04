@@ -111,21 +111,27 @@ export async function sendConfirmationEmail(
   }
 
   // Try to use a template from the database
+  const firstName = userName.split(' ')[0];
   const { data: template } = await supabase
-    .from('email_content_templates')
-    .select('body_html, subject')
-    .eq('type', 'confirmation')
+    .from('email_templates')
+    .select('html_content, subject, layout_id, email_layouts(html_content)')
+    .eq('segment', 'confirmation')
     .eq('is_active', true)
     .maybeSingle();
 
+  const replaceVars = (text: string) =>
+    text
+      .replace(/\{\{first_name\}\}/g, firstName)
+      .replace(/\{\{name\}\}/g, userName)
+      .replace(/\{\{email\}\}/g, to)
+      .replace(/\{\{event_name\}\}/g, eventName);
+
   const subject = template?.subject
-    ? template.subject.replace('{{event_name}}', eventName)
+    ? replaceVars(template.subject)
     : `✅ Confirmación: ${eventName}`;
 
-  const html = template?.body_html
-    ? template.body_html
-        .replace(/\{\{name\}\}/g, userName)
-        .replace(/\{\{event_name\}\}/g, eventName)
+  let templateHtml = template?.html_content
+    ? replaceVars(template.html_content)
     : `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>¡Confirmado! 🎉</h2>
@@ -136,6 +142,12 @@ export async function sendConfirmationEmail(
         <p style="color: #888; font-size: 12px;">OpenClaw Meetups — La Crypta</p>
       </div>
     `;
+
+  // Wrap in layout if available
+  const layoutHtml = (template as any)?.email_layouts?.html_content;
+  const html = layoutHtml
+    ? replaceVars(layoutHtml).replace('{{content}}', templateHtml).replace('{{subject}}', subject)
+    : templateHtml;
 
   await sendEmail(integration as EmailIntegration, { to, subject, html });
 }

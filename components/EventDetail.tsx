@@ -55,6 +55,7 @@ export function EventDetail({ eventId }: EventDetailProps) {
       pubkey: ea.pubkey || undefined,
       status: ea.status,
       checked_in: ea.checked_in,
+      attendance_confirmed: ea.attendance_confirmed || false,
       notes: ea.notes || undefined,
       registered_at: ea.registered_at,
     }));
