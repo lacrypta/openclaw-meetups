@@ -19,10 +19,12 @@ const ENV_EXAMPLE_PATH = '.env.example';
 
 const REQUIRED_VARS = [
   'SUPABASE_URL',
-  'SUPABASE_SERVICE_KEY',
   'JWT_SECRET',
   'ALLOWED_PUBKEYS'
 ];
+
+// Either name works: SUPABASE_SERVICE_KEY (local) or SUPABASE_SERVICE_ROLE_KEY (Vercel integration)
+const REQUIRED_ONE_OF = [['SUPABASE_SERVICE_KEY', 'SUPABASE_SERVICE_ROLE_KEY']];
 
 /**
  * Check if .env.local exists and has all required variables
@@ -31,16 +33,17 @@ function validateEnvFile(path) {
   if (!existsSync(path)) return false;
   
   const content = readFileSync(path, 'utf-8');
-  const missingVars = REQUIRED_VARS.filter(varName => {
-    const regex = new RegExp(`^${varName}=.+`, 'm');
-    return !regex.test(content);
-  });
-  
-  if (missingVars.length > 0) {
-    console.warn(`⚠️  Missing variables in ${path}:`, missingVars.join(', '));
+  const hasVar = (name) => new RegExp(`^${name}=.+`, 'm').test(content);
+
+  const missingVars = REQUIRED_VARS.filter(v => !hasVar(v));
+  const missingOneOf = REQUIRED_ONE_OF.filter(group => !group.some(hasVar));
+
+  const allMissing = [...missingVars, ...missingOneOf.map(g => g.join(' or '))];
+  if (allMissing.length > 0) {
+    console.warn(`⚠️  Missing variables in ${path}:`, allMissing.join(', '));
     return false;
   }
-  
+
   return true;
 }
 
@@ -107,8 +110,10 @@ function setup() {
     
     // Validate that required vars exist in process.env
     const missing = REQUIRED_VARS.filter(v => !process.env[v]);
-    if (missing.length > 0) {
-      console.error('❌ Missing required environment variables:', missing.join(', '));
+    const missingOneOf = REQUIRED_ONE_OF.filter(group => !group.some(v => process.env[v]));
+    const allMissing = [...missing, ...missingOneOf.map(g => g.join(' or '))];
+    if (allMissing.length > 0) {
+      console.error('❌ Missing required environment variables:', allMissing.join(', '));
       console.error('   Configure them in Vercel dashboard');
       process.exit(1);
     }

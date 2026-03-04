@@ -48,8 +48,6 @@ export async function GET(
       name: ea.attendees?.name || '',
       email: ea.attendees?.email || '',
       pubkey: null,
-      email_sent: false,
-      email_type: null,
     }));
 
     return NextResponse.json({ attendees });

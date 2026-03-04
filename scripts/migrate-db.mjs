@@ -12,6 +12,9 @@
 import { execSync } from 'child_process';
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
+// Load .env.local so DATABASE_URL is available outside of Next.js (local dev only)
+try { const { config } = await import('dotenv'); config({ path: '.env.local' }); } catch {}
+
 
 const MIGRATIONS_DIR = './supabase/migrations';
 const REQUIRED_CONTAINER = 'supabase_db';
@@ -72,12 +75,22 @@ function migrateLocal() {
 }
 
 /**
+ * Ensure the URL uses the direct connection (port 5432) instead of the
+ * pgbouncer pooler (port 6543) which doesn't support prepared statements
+ * needed by supabase db push.
+ */
+function toDirectConnection(dbUrl) {
+  return dbUrl.replace(/pooler\.supabase\.com:6543/, 'pooler.supabase.com:5432');
+}
+
+/**
  * Apply migrations to remote Supabase (production)
  */
 function migrateRemote(dbUrl) {
+  const directUrl = toDirectConnection(dbUrl);
   try {
     console.log('🔄 Applying migrations to remote Supabase...');
-    execSync(`npx supabase db push --db-url "${dbUrl}"`, {
+    execSync(`npx supabase db push --db-url "${directUrl}"`, {
       encoding: 'utf-8',
       stdio: 'inherit'
     });
@@ -108,7 +121,7 @@ function getDatabaseUrl() {
   }
   
   // Construct from SUPABASE_URL if available
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+  if (process.env.SUPABASE_URL && (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     console.log('⚠️  No DATABASE_URL found - you need to set it for production migrations');
     console.log('   Get it from Supabase Dashboard → Settings → Database → Connection string');
     return null;
@@ -134,20 +147,18 @@ function migrate() {
   const isCI = process.env.CI === 'true';
   
   if (isProduction) {
-    console.log('🚀 Production environment detected\n');
-    
+    console.log('🚀 Production environment detected');
     const dbUrl = getDatabaseUrl();
-    if (!dbUrl) {
-      console.error('❌ DATABASE_URL not found in production environment');
-      console.error('   Set it in Vercel dashboard or CI secrets');
-      console.error('   Format: postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres');
-      process.exit(1);
+    if (dbUrl) {
+      console.log('📡 Found DATABASE_URL - applying migrations to remote database\n');
+      if (!migrateRemote(dbUrl)) {
+        process.exit(1);
+      }
+    } else {
+      console.log('⚠️  No DATABASE_URL found - skipping auto-migrations');
+      console.log('   Set DATABASE_URL or POSTGRES_URL in Vercel env vars to enable\n');
     }
-    
-    if (!migrateRemote(dbUrl)) {
-      console.warn('⚠️  Migration failed - continuing build anyway');
-      // process.exit(1); // Non-fatal: don't block deploy on migration errors
-    }
+    return;
   } else {
     console.log('💻 Local development environment\n');
     

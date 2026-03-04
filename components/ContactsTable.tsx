@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { Contact } from "../hooks/useContacts";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -177,16 +176,13 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                   {new Date(contact.registered_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUpdateContact(contact.id, { email_sent: !contact.email_sent });
-                    }}
+                  <Link
+                    href={`/dashboard/attendees/${contact.id}`}
+                    className="text-primary text-sm no-underline"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {contact.email_sent ? "Mark Unsent" : "Mark Sent"}
-                  </Button>
+                    View
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

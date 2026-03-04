@@ -60,8 +60,6 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
               name: found.name,
               email: found.email,
               pubkey: found.pubkey || null,
-              email_sent: found.email_sent,
-              email_type: found.email_type || null,
             });
           }
         }
@@ -154,10 +152,6 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
               </span>
             </div>
           )}
-          <div>
-            <span className="text-muted-foreground">Email sent: </span>
-            <span>{attendee.email_sent ? "✅" : "❌"}</span>
-          </div>
         </div>
       </Card>
 
