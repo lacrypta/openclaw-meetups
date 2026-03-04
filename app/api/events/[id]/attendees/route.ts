@@ -19,15 +19,17 @@ export async function GET(
       .select(`
         id,
         event_id,
-        attendee_id,
+        user_id,
         status,
         checked_in,
         attendance_confirmed,
         registered_at,
         notes,
-        attendees (
+        users (
           name,
-          email
+          email,
+          phone,
+          pubkey
         )
       `)
       .eq('event_id', eventId)
@@ -41,15 +43,16 @@ export async function GET(
     const attendees = (data || []).map((ea: any) => ({
       id: ea.id,
       event_id: ea.event_id,
-      attendee_id: ea.attendee_id,
+      user_id: ea.user_id,
       status: ea.status,
       checked_in: ea.checked_in,
+      attendance_confirmed: ea.attendance_confirmed || false,
       registered_at: ea.registered_at,
       notes: ea.notes,
-      name: ea.attendees?.name || '',
-      email: ea.attendees?.email || '',
-      pubkey: null,
-      attendance_confirmed: ea.attendance_confirmed || false,
+      name: ea.users?.name || '',
+      email: ea.users?.email || '',
+      phone: ea.users?.phone || null,
+      pubkey: ea.users?.pubkey || null,
     }));
 
     return NextResponse.json({ attendees });
@@ -72,17 +75,17 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { attendee_id, status, notes } = body;
+    const { user_id, status, notes } = body;
 
-    if (!attendee_id) {
-      return NextResponse.json({ error: 'attendee_id is required' }, { status: 400 });
+    if (!user_id) {
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
     const { data, error } = await supabase
       .from('event_attendees')
       .insert({
         event_id: eventId,
-        attendee_id,
+        user_id,
         status: status || 'waitlist',
         notes: notes || null,
       })
@@ -114,10 +117,10 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { attendee_id, status, checked_in, notes } = body;
+    const { user_id, status, checked_in, notes } = body;
 
-    if (!attendee_id) {
-      return NextResponse.json({ error: 'attendee_id is required' }, { status: 400 });
+    if (!user_id) {
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
     const updates: Record<string, any> = {};
@@ -129,7 +132,7 @@ export async function PATCH(
       .from('event_attendees')
       .update(updates)
       .eq('event_id', eventId)
-      .eq('attendee_id', attendee_id)
+      .eq('user_id', user_id)
       .select()
       .single();
 

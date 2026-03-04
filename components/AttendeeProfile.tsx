@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getToken } from "../lib/auth";
-import type { Attendee, AttendeeStatus } from "../lib/types";
+import type { User, AttendeeStatus } from "../lib/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,7 +37,7 @@ const statusVariant: Record<string, string> = {
 };
 
 export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
-  const [attendee, setAttendee] = useState<Attendee | null>(null);
+  const [attendee, setAttendee] = useState<User | null>(null);
   const [events, setEvents] = useState<AttendeeEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +59,11 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
               id: found.id,
               name: found.name,
               email: found.email,
+              phone: found.phone || null,
               pubkey: found.pubkey || null,
+              email_verified: found.email_verified || false,
+              phone_verified: found.phone_verified || false,
+              luma_id: found.luma_id || null,
             });
           }
         }
@@ -78,7 +82,7 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
             if (eaRes.ok) {
               const { attendees: eventAttendees } = await eaRes.json();
               const match = eventAttendees.find(
-                (ea: any) => String(ea.attendee_id) === String(attendeeId)
+                (ea: any) => ea.user_id === attendeeId
               );
               if (match) {
                 attendeeEvents.push({

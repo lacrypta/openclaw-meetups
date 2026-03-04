@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Resolve segment to attendees
     let query = supabase
       .from('event_attendees')
-      .select('attendee_id, attendees!inner(id, name, email)')
+      .select('user_id, users!inner(id, name, email)')
       .eq('event_id', event_id);
 
     switch (segment as EmailJobSegment) {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     const attendees = (attendeeRows || []).map((row: Record<string, unknown>) => {
       const att = row.attendees as Record<string, unknown>;
       return {
-        attendee_id: row.attendee_id as number,
+        user_id: row.user_id as string,
         email: att.email as string,
       };
     });
@@ -121,9 +121,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Bulk insert email sends
-    const sends = attendees.map((a: { attendee_id: number; email: string }) => ({
+    const sends = attendees.map((a: { user_id: string; email: string }) => ({
       job_id: job.id,
-      attendee_id: a.attendee_id,
+      user_id: a.user_id,
       email: a.email,
       status: 'pending',
       attempts: 0,

@@ -53,7 +53,7 @@ export function useEventAttendees(eventId: string | null) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ attendee_id: attendeeId, status }),
+      body: JSON.stringify({ user_id: attendeeId, status }),
     });
 
     if (!response.ok) throw new Error('Failed to add attendee');
@@ -73,7 +73,7 @@ export function useEventAttendees(eventId: string | null) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ attendee_id: attendeeId, ...updates }),
+      body: JSON.stringify({ user_id: attendeeId, ...updates }),
     });
 
     if (!response.ok) throw new Error('Failed to update attendee');

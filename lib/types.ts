@@ -24,24 +24,31 @@ export interface EventWithCounts extends Event {
 export interface EventAttendee {
   id: string;
   event_id: string;
-  attendee_id: number;
+  user_id: string;
   status: AttendeeStatus;
   checked_in: boolean;
   attendance_confirmed: boolean;
   registered_at: string;
   notes: string | null;
-  // joined from attendees table
+  // joined from users table
   name: string;
   email: string;
   pubkey: string | null;
 }
 
-export interface Attendee {
-  id: number;
+export interface User {
+  id: string;
   name: string;
   email: string;
+  phone: string | null;
   pubkey: string | null;
+  email_verified: boolean;
+  phone_verified: boolean;
+  luma_id: string | null;
 }
+
+/** @deprecated Use User instead */
+export type Attendee = User;
 
 export interface AttendeeWithEvents extends Attendee {
   events: {
@@ -84,7 +91,7 @@ export interface EmailJob {
 export interface EmailSend {
   id: string;
   job_id: string;
-  attendee_id: number;
+  user_id: string;
   email: string;
   status: EmailSendStatus;
   attempts: number;
@@ -97,7 +104,7 @@ export interface EmailEvent {
   id: string;
   send_id: string | null;
   job_id: string | null;
-  attendee_id: number | null;
+  user_id: string | null;
   event_type: EmailEventType;
   metadata: Record<string, unknown>;
   created_at: string;

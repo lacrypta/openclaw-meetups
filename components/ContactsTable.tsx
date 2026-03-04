@@ -49,7 +49,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ attendee_id: contact.id }),
+        body: JSON.stringify({ user_id: contact.id }),
       });
 
       if (!res.ok) {

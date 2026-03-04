@@ -86,12 +86,10 @@ export async function POST(request: NextRequest) {
       const { error: attendeeError } = await supabase.from('event_attendees').upsert(
         {
           event_id: eventId,
-          // Store user_id as reference — adjust column name if schema differs
-          // Using attendee_id may refer to legacy integer id; store user_id separately
-          // If your event_attendees table doesn't have user_id yet, this is a best-effort insert
+          user_id: userId,
           attendance_confirmed: false,
         },
-        { ignoreDuplicates: true }
+        { onConflict: 'event_id,user_id', ignoreDuplicates: true }
       );
 
       if (attendeeError) {

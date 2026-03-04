@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    let query = supabase.from('attendees').select('*');
+    let query = supabase.from('users').select('*');
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
     if (notes !== undefined) updates.notes = notes;
 
     const { data, error } = await supabase
-      .from('attendees')
+      .from('users')
       .update(updates)
       .eq('id', id)
       .select()

@@ -1,8 +1,8 @@
 /**
  * POST /api/events/[id]/attendees/send-confirmation
  *
- * Manually send a confirmation email to an attendee.
- * Body: { attendee_id: number }
+ * Manually send a confirmation email to a user.
+ * Body: { user_id: string }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,25 +22,25 @@ export async function POST(
   const { id: eventId } = await params;
 
   try {
-    const { attendee_id } = await request.json();
+    const { user_id } = await request.json();
 
-    if (!attendee_id) {
-      return NextResponse.json({ error: 'attendee_id is required' }, { status: 400 });
+    if (!user_id) {
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
-    // Get attendee info
-    const { data: attendee, error: attError } = await supabase
-      .from('attendees')
+    // Get user info
+    const { data: user, error: userError } = await supabase
+      .from('users')
       .select('id, name, email')
-      .eq('id', attendee_id)
+      .eq('id', user_id)
       .single();
 
-    if (attError || !attendee) {
-      return NextResponse.json({ error: 'Attendee not found' }, { status: 404 });
+    if (userError || !user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (!attendee.email) {
-      return NextResponse.json({ error: 'Attendee has no email' }, { status: 400 });
+    if (!user.email) {
+      return NextResponse.json({ error: 'User has no email' }, { status: 400 });
     }
 
     // Get event info
@@ -55,16 +55,16 @@ export async function POST(
     }
 
     // Send confirmation email
-    await sendConfirmationEmail(attendee.email, attendee.name, event.name);
+    await sendConfirmationEmail(user.email, user.name, event.name);
 
     // Mark as confirmed
     await supabase
       .from('event_attendees')
       .update({ attendance_confirmed: true })
       .eq('event_id', eventId)
-      .eq('attendee_id', attendee_id);
+      .eq('user_id', user_id);
 
-    return NextResponse.json({ ok: true, sent_to: attendee.email });
+    return NextResponse.json({ ok: true, sent_to: user.email });
   } catch (error) {
     console.error('Send confirmation error:', error);
     const message = error instanceof Error ? error.message : 'Failed to send confirmation';

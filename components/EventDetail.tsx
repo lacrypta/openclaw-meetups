@@ -49,7 +49,7 @@ export function EventDetail({ eventId }: EventDetailProps) {
 
   const contactsFromAttendees: Contact[] = useMemo(() => {
     return attendees.map((ea) => ({
-      id: String(ea.attendee_id),
+      id: ea.user_id,
       name: ea.name,
       email: ea.email,
       pubkey: ea.pubkey || undefined,

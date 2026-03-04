@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // 3. Find user by phone
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, name, email, attendee_id')
+      .select('id, name, email')
       .eq('phone', phone)
       .maybeSingle();
 
@@ -144,13 +144,11 @@ export async function POST(request: NextRequest) {
     // 10. Handle side effects
     if (isConfirmed && session.event_id) {
       // Update event_attendees
-      if (user.attendee_id) {
-        await supabase
-          .from('event_attendees')
-          .update({ attendance_confirmed: true })
-          .eq('event_id', session.event_id)
-          .eq('attendee_id', user.attendee_id);
-      }
+      await supabase
+        .from('event_attendees')
+        .update({ attendance_confirmed: true })
+        .eq('event_id', session.event_id)
+        .eq('user_id', user.id);
 
       // Close the session
       await supabase
@@ -196,13 +194,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (isDeclined && session.event_id) {
-      if (user.attendee_id) {
-        await supabase
-          .from('event_attendees')
-          .update({ attendance_confirmed: false })
-          .eq('event_id', session.event_id)
-          .eq('attendee_id', user.attendee_id);
-      }
+      await supabase
+        .from('event_attendees')
+        .update({ attendance_confirmed: false })
+        .eq('event_id', session.event_id)
+        .eq('user_id', user.id);
 
       // Update Luma guest status to declined (non-blocking)
       if (user.email) {
