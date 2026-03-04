@@ -97,7 +97,8 @@ export async function sendEmail(
 export async function sendConfirmationEmail(
   to: string,
   userName: string,
-  eventName: string
+  eventName: string,
+  confirmationLink?: string
 ): Promise<void> {
   // Get default integration
   const { data: integration, error } = await supabase
@@ -119,12 +120,16 @@ export async function sendConfirmationEmail(
     .eq('is_active', true)
     .maybeSingle();
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+  const link = confirmationLink || `${baseUrl}/confirmation?email=${encodeURIComponent(to)}`;
+
   const replaceVars = (text: string) =>
     text
       .replace(/\{\{first_name\}\}/g, firstName)
       .replace(/\{\{name\}\}/g, userName)
       .replace(/\{\{email\}\}/g, to)
-      .replace(/\{\{event_name\}\}/g, eventName);
+      .replace(/\{\{event_name\}\}/g, eventName)
+      .replace(/\{\{confirmation_link\}\}/g, link);
 
   const subject = template?.subject
     ? replaceVars(template.subject)

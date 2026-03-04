@@ -41,6 +41,16 @@ BEGIN
   </tr>
 </table>
 
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+  <tr>
+    <td align="center">
+      <a href="{{confirmation_link}}" style="display: inline-block; background-color: #ff8c00; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+        ✅ Ver mi confirmación
+      </a>
+    </td>
+  </tr>
+</table>
+
 <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6; margin: 30px 0 10px;">
   Si por algún motivo no podés asistir, respondé a este mail o avisanos por WhatsApp.
 </p>
@@ -49,7 +59,7 @@ BEGIN
   ¡Nos vemos ahí! ⚡
 </p>$html$,
     '{{first_name}}, tu asistencia al {{event_name}} ha sido confirmada. ¡Te esperamos!',
-    '["first_name", "name", "email", "event_name"]'::jsonb,
+    '["first_name", "name", "email", "event_name", "confirmation_link"]'::jsonb,
     v_layout_id
   )
   ON CONFLICT DO NOTHING;
