@@ -1,14 +1,15 @@
 /**
  * POST /api/webhooks/luma
  *
- * Receives a new guest registration from Luma (via Zapier or direct webhook).
+ * Receives Luma webhook events. Handles `guest.registered`.
  * Flow:
- *   1. Parse guest data (name, email, phone, event_id)
- *   2. Upsert user in CRM users table
- *   3. Create event_attendees record (unconfirmed)
- *   4. Send WhatsApp confirmation request via WaSender
- *   5. Create messaging_session for this user+event
- *   6. Save the sent WhatsApp message in messages table
+ *   1. Verify webhook signature (if secret configured)
+ *   2. Parse `guest.registered` payload
+ *   3. Upsert user in CRM users table (match by email, set luma_id)
+ *   4. Link user to event in event_attendees table
+ *   5. Send WhatsApp confirmation request via WaSender
+ *   6. Create messaging_session for this user+event
+ *   7. Save the sent WhatsApp message in messages table
  *
  * No JWT auth — Luma uses its own webhook signature mechanism.
  */
@@ -16,31 +17,78 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage } from '@/lib/wasender';
+import { getLumaConfig } from '@/lib/integrations';
+import type { LumaWebhookPayload } from '@/lib/types';
+
+/** Verify Luma webhook signature (basic shared-secret check) */
+async function verifySignature(request: NextRequest): Promise<boolean> {
+  const config = await getLumaConfig();
+  if (!config.webhook_secret) return true; // No secret configured = skip
+
+  const provided =
+    request.headers.get('x-luma-signature') ||
+    request.headers.get('x-webhook-secret') ||
+    request.headers.get('authorization')?.replace('Bearer ', '') ||
+    '';
+
+  return provided === config.webhook_secret;
+}
 
 export async function POST(request: NextRequest) {
+  // 1. Verify signature
+  if (!(await verifySignature(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
 
-    // Extract guest data — adapt field names to your Luma/Zapier payload shape
-    const name: string = body.name || body.guest_name || '';
-    const email: string = body.email || body.guest_email || '';
-    const phone: string = body.phone || body.guest_phone || '';
-    const eventId: string = body.event_id || body.luma_event_id || '';
+    // Support both Luma native webhook shape and legacy flat shape (Zapier, etc.)
+    let name: string;
+    let email: string;
+    let phone: string;
+    let lumaGuestId: string;
+    let lumaEventId: string;
+    let eventName: string;
 
-    if (!name) {
-      return NextResponse.json({ error: 'name is required' }, { status: 400 });
+    if (body.type === 'guest.registered' && body.data) {
+      // Native Luma webhook payload
+      const payload = body as LumaWebhookPayload;
+      name = payload.data.guest.name || '';
+      email = payload.data.guest.email || '';
+      phone = payload.data.guest.phone || '';
+      lumaGuestId = payload.data.guest.api_id || '';
+      lumaEventId = payload.data.event.api_id || '';
+      eventName = payload.data.event.name || '';
+    } else {
+      // Legacy flat payload (Zapier or manual)
+      name = body.name || body.guest_name || '';
+      email = body.email || body.guest_email || '';
+      phone = body.phone || body.guest_phone || '';
+      lumaGuestId = body.luma_guest_id || body.guest_api_id || '';
+      lumaEventId = body.luma_event_id || body.event_api_id || '';
+      eventName = body.event_name || '';
     }
 
-    // 2. Upsert user — match by email if present, else by phone
+    if (!name && !email) {
+      return NextResponse.json({ error: 'guest name or email is required' }, { status: 400 });
+    }
+
+    // 2. Upsert user — match by email, set luma_id
     let userId: string;
 
     if (email) {
+      const upsertData: Record<string, string | null> = {
+        name,
+        email,
+        phone: phone || null,
+        updated_at: new Date().toISOString(),
+      };
+      if (lumaGuestId) upsertData.luma_id = lumaGuestId;
+
       const { data: upserted, error: upsertError } = await supabase
         .from('users')
-        .upsert(
-          { name, email, phone: phone || null, updated_at: new Date().toISOString() },
-          { onConflict: 'email', ignoreDuplicates: false }
-        )
+        .upsert(upsertData, { onConflict: 'email', ignoreDuplicates: false })
         .select('id')
         .single();
 
@@ -50,7 +98,6 @@ export async function POST(request: NextRequest) {
       }
       userId = upserted.id;
     } else if (phone) {
-      // No email — try to find by phone, else insert
       const { data: existing } = await supabase
         .from('users')
         .select('id')
@@ -59,15 +106,19 @@ export async function POST(request: NextRequest) {
 
       if (existing) {
         userId = existing.id;
-        // Update name if changed
-        await supabase
-          .from('users')
-          .update({ name, updated_at: new Date().toISOString() })
-          .eq('id', userId);
+        const updateData: Record<string, string | null> = {
+          name,
+          updated_at: new Date().toISOString(),
+        };
+        if (lumaGuestId) updateData.luma_id = lumaGuestId;
+        await supabase.from('users').update(updateData).eq('id', userId);
       } else {
+        const insertData: Record<string, string | null> = { name, phone };
+        if (lumaGuestId) insertData.luma_id = lumaGuestId;
+
         const { data: inserted, error: insertError } = await supabase
           .from('users')
-          .insert({ name, phone })
+          .insert(insertData)
           .select('id')
           .single();
 
@@ -81,32 +132,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'email or phone is required' }, { status: 400 });
     }
 
-    // 3. Create event_attendees record (unconfirmed)
-    if (eventId) {
+    // 3. Resolve internal event ID from luma_event_id
+    let internalEventId: string | null = null;
+    if (lumaEventId) {
+      const { data: event } = await supabase
+        .from('events')
+        .select('id, name')
+        .eq('luma_event_id', lumaEventId)
+        .maybeSingle();
+
+      if (event) {
+        internalEventId = event.id;
+        if (!eventName) eventName = event.name;
+      } else {
+        console.warn(`No event found for luma_event_id=${lumaEventId}`);
+      }
+    }
+
+    // 4. Link user to event in event_attendees
+    if (internalEventId) {
       const { error: attendeeError } = await supabase.from('event_attendees').upsert(
         {
-          event_id: eventId,
+          event_id: internalEventId,
           user_id: userId,
           attendance_confirmed: false,
+          status: 'approved',
         },
         { onConflict: 'event_id,user_id', ignoreDuplicates: true }
       );
 
       if (attendeeError) {
-        // Non-fatal — log and continue
         console.warn('event_attendees upsert warning:', attendeeError);
       }
     }
 
-    // 4. Send WhatsApp confirmation request
-    const confirmationMessage = `¡Hola ${name}! 👋 Soy Claudio del OpenClaw Meetup de La Crypta. Te registraste al evento del próximo encuentro.\n\n¿Confirmás tu asistencia? Respondé *sí* o *no* 🙌`;
+    // 5. Send WhatsApp confirmation message
+    const eventLabel = eventName ? ` al evento *${eventName}*` : ' al próximo OpenClaw Meetup';
+    const confirmationMessage =
+      `¡Hola ${name}! 👋 Soy el asistente de *La Crypta*.\n\n` +
+      `Te registraste${eventLabel}. 🎉\n\n` +
+      `¿Podés confirmar tu asistencia?\n` +
+      `• Respondé *1* para confirmar ✅\n` +
+      `• Respondé *2* para cancelar ❌\n\n` +
+      `¡Te esperamos!`;
 
     if (phone) {
-      await sendWhatsAppMessage(phone, confirmationMessage);
+      try {
+        await sendWhatsAppMessage(phone, confirmationMessage);
+      } catch (err) {
+        console.error('Failed to send WhatsApp message:', err);
+        // Non-fatal — continue
+      }
     }
 
-    // 5. Create messaging session
-    // Fetch the default master prompt
+    // 6. Create messaging session
     const { data: defaultPrompt } = await supabase
       .from('master_prompts')
       .select('id')
@@ -117,7 +196,7 @@ export async function POST(request: NextRequest) {
       .from('messaging_sessions')
       .insert({
         user_id: userId,
-        event_id: eventId || null,
+        event_id: internalEventId,
         status: 'active',
         master_prompt_id: defaultPrompt?.id || null,
       })
@@ -126,10 +205,11 @@ export async function POST(request: NextRequest) {
 
     if (sessionError || !session) {
       console.error('Session create error:', sessionError);
-      return NextResponse.json({ error: 'Failed to create messaging session' }, { status: 500 });
+      // Non-fatal for the webhook response — user and attendee are already created
+      return NextResponse.json({ ok: true, user_id: userId, session_id: null });
     }
 
-    // 6. Save sent message as assistant message in history
+    // 7. Save sent message in history
     if (phone) {
       const { error: msgError } = await supabase.from('messages').insert({
         session_id: session.id,
