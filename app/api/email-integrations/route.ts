@@ -36,7 +36,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch email integrations' }, { status: 500 });
     }
 
-    return NextResponse.json({ integrations: (data || []).map(mapRow) });
+    const integrations = (data || []).map(mapRow).sort((a, b) => 
+      (b.is_default ? 1 : 0) - (a.is_default ? 1 : 0)
+    );
+    return NextResponse.json({ integrations });
   } catch (error) {
     console.error('Email integrations GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
