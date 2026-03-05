@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNostr } from "../hooks/useNostr";
 import { useProfile } from "../hooks/useProfile";
@@ -18,6 +18,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { pubkey, logout: dashboardLogout } = useAuth();
   const { pubkey: nostrPubkey, logout: nostrLogout } = useNostr();
   const { profile } = useProfile(nostrPubkey || pubkey);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     dashboardLogout();
@@ -27,10 +28,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-card border-b border-border px-8 py-3 flex justify-end items-center">
+        <header className="bg-card border-b border-border px-4 sm:px-8 py-3 flex justify-between items-center">
+          {/* Mobile hamburger */}
+          <button
+            className="lg:hidden text-foreground text-xl p-1 -ml-1"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+
+          {/* Spacer for desktop (sidebar visible, no hamburger) */}
+          <div className="hidden lg:block" />
+
           <div className="flex gap-2 items-center">
             <Avatar className="w-8 h-8">
               {profile?.picture ? (
@@ -39,11 +52,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <AvatarFallback className="text-base">👤</AvatarFallback>
             </Avatar>
             {profile?.display_name || profile?.name ? (
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm hidden sm:inline">
                 {profile.display_name || profile.name}
               </span>
             ) : pubkey ? (
-              <span className="text-muted-foreground text-sm">
+              <span className="text-muted-foreground text-sm hidden sm:inline">
                 {pubkey.slice(0, 8)}...{pubkey.slice(-8)}
               </span>
             ) : null}
@@ -53,7 +66,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
         {/* Content */}
-        <main className="flex-1 p-8 text-foreground">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 text-foreground overflow-x-hidden">{children}</main>
       </div>
     </div>
   );
