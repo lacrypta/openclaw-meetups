@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { checkNip07 } from '../lib/nostr';
+import { checkNip07, getPublicKey } from '../lib/nostr';
 import {
   NostrSigner,
   Nip07Signer,
@@ -94,12 +94,23 @@ export function useNostr() {
     // User needs to re-login with nsec
   }, []);
 
+  function hexToBytes(hex: string): Uint8Array {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+    }
+    return bytes;
+  }
+
+  function bytesToHex(bytes: Uint8Array): string {
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   async function reconnectBunker() {
     const bunkerState = loadBunkerState();
     if (!bunkerState) throw new Error('No bunker state saved');
 
-    const { BunkerSigner, parseBunkerInput } = await import('nostr-tools/nip46');
-    const { hexToBytes } = await import('@noble/hashes/utils.js');
+    const { BunkerSigner } = await import('nostr-tools/nip46');
 
     const clientSecret = hexToBytes(bunkerState.clientSecretHex);
     const bp = {
@@ -155,8 +166,7 @@ export function useNostr() {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const { BunkerSigner, parseBunkerInput } = await import('nostr-tools/nip46');
-      const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
-      const { bytesToHex } = await import('@noble/hashes/utils.js');
+      const { generateSecretKey } = await import('nostr-tools/pure');
 
       // Parse bunker URL
       const bp = await parseBunkerInput(bunkerUrl);
