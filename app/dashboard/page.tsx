@@ -136,7 +136,7 @@ export default function DashboardOverviewPage() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Recent Registrations</h2>
-              <Link href="/dashboard/attendees" className="text-primary text-sm">
+              <Link href="/dashboard/users" className="text-primary text-sm">
                 View all →
               </Link>
             </div>
@@ -154,7 +154,7 @@ export default function DashboardOverviewPage() {
                   {recentRegistrations.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell>
-                        <Link href={`/dashboard/attendees/${c.id}`} className="text-foreground">
+                        <Link href={`/dashboard/users/${c.id}`} className="text-foreground">
                           {c.name}
                         </Link>
                       </TableCell>

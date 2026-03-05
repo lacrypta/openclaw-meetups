@@ -10,10 +10,10 @@ export default function AttendeePage({ params }: { params: Promise<{ id: string 
   return (
     <div>
       <Link
-        href="/dashboard/attendees"
+        href="/dashboard/users"
         className="text-muted-foreground text-sm inline-block mb-4 hover:text-foreground transition-colors"
       >
-        ← Back to Attendees
+        ← Back to Users
       </Link>
       <AttendeeProfile attendeeId={id} />
     </div>

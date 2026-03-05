@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 type FilterStatus = "all" | "approved" | "waitlist" | "checked_in";
 
-export default function AttendeesPage() {
+export default function UsersPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
 
   const filters = useMemo(() => {
@@ -46,7 +46,7 @@ export default function AttendeesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Attendees</h1>
+      <h1 className="text-2xl font-bold mb-6">Users</h1>
 
       <StatsBar stats={stats} loading={loading} />
 

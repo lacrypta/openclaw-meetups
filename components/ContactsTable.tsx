@@ -153,7 +153,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
               <TableRow key={contact.id}>
                 <TableCell>
                   <Link
-                    href={`/dashboard/attendees/${contact.id}`}
+                    href={`/dashboard/users/${contact.id}`}
                     className="text-foreground no-underline"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -234,7 +234,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                 </TableCell>
                 <TableCell>
                   <Link
-                    href={`/dashboard/attendees/${contact.id}`}
+                    href={`/dashboard/users/${contact.id}`}
                     className="text-primary text-sm no-underline"
                     onClick={(e) => e.stopPropagation()}
                   >
