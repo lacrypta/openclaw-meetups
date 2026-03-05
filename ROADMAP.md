@@ -1,7 +1,9 @@
 # ROADMAP — OpenClaw Meetups Platform
 
-> Última actualización: 2026-02-26
+> Última actualización: 2026-03-05
 > Orden secuencial de ejecución. Cada fase depende de la anterior.
+> 
+> ⚠️ **PIVOTE ESTRATÉGICO (Marzo 2026):** El proyecto evoluciona de "dashboard de eventos" a **plataforma todo-en-uno: Luma + Apollo + HubSpot, open source, Bitcoin-native.** Incluye creación de eventos con landing pages, CRM de asistentes, CRM de sponsors con outreach automatizado. Ver Phases 7-10.
 
 ---
 
@@ -155,4 +157,119 @@ Phase 4-6 can run in parallel
 
 ---
 
-*Generado por Claudio — 2026-02-26*
+---
+
+## Phase 7: Rebranding 🎨
+> El proyecto ya no es solo "OpenClaw Meetups". Es una plataforma completa de gestión de eventos + CRM. Necesita nombre y branding nuevo.
+
+| # | Task | Est. | Deps |
+|---|------|------|------|
+| 7.1 | **Naming:** Brainstorm + selección de nombre nuevo | 2h | — |
+| 7.2 | **Dominio:** Registrar dominio del nuevo nombre | 1h | 7.1 |
+| 7.3 | **Identidad visual:** Logo, paleta, tipografía | 4h | 7.1 |
+| 7.4 | **Rename repo** en GitHub (lacrypta/openclaw-meetups → nuevo nombre) | 1h | 7.1 |
+| 7.5 | **Update codebase:** package.json, meta tags, OG images, favicon | 2h | 7.3, 7.4 |
+| 7.6 | **Landing page del producto** (marketing site) | 4h | 7.3 |
+
+**Deliverable:** Nueva identidad, nuevo dominio, nuevo repo. El producto tiene nombre propio.
+
+---
+
+## Phase 8: Event Landing Pages (Luma Replacement) 🎪
+> Cualquier organizador puede crear un evento y generar una landing page automáticamente.
+
+| # | Task | Est. | Deps |
+|---|------|------|------|
+| 8.1 | **DB: `landing_templates` table** + seed 3 templates base (minimal, conference, meetup) | 2h | Phase 0 |
+| 8.2 | **DB: `organizations` table** (multi-org support) | 2h | Phase 0 |
+| 8.3 | **Event creation wizard:** título, fecha, lugar, descripción, imagen, template selector | 4h | 8.1 |
+| 8.4 | **Template engine:** Handlebars/JSX templates que renderizan landing desde datos del evento | 4h | 8.1 |
+| 8.5 | **Landing page renderer:** `/events/[slug]` genera landing completa desde template + datos | 3h | 8.4 |
+| 8.6 | **Template customizer:** editor visual para modificar colores, secciones, orden | 6h | 8.4 |
+| 8.7 | **Registration widget:** formulario embebible en landing (ya existe parcialmente) | 2h | 8.5 |
+| 8.8 | **Calendar integration:** botón "Agregar a Google Calendar" / descarga .ics | 1h | 8.5 |
+| 8.9 | **Recurring events:** crear serie (mensual, semanal) con un solo setup | 3h | 8.3 |
+| 8.10 | **Custom domains:** CNAME para `mienvento.miorg.com` | 2h | 8.5 |
+
+**Deliverable:** Organizador crea evento → landing se genera automáticamente → asistentes se registran → fluye al CRM.
+
+---
+
+## Phase 9: Sponsor CRM (Apollo Replacement) 🎯
+> Buscar, contactar y gestionar sponsors desde la plataforma.
+
+| # | Task | Est. | Deps |
+|---|------|------|------|
+| 9.1 | **DB: sponsors, sponsor_contacts, deals, activities, email_sequences** | 3h | Phase 0 |
+| 9.2 | **Sponsors dashboard:** lista, filtros por tier/status, búsqueda | 3h | 9.1 |
+| 9.3 | **Sponsor profile page:** info, contactos, historial de actividades, deals | 3h | 9.1 |
+| 9.4 | **Pipeline visual (Kanban):** prospect → contactado → respondió → reunión → propuesta → confirmado | 4h | 9.1 |
+| 9.5 | **Email outreach:** enviar emails personalizados desde la plataforma | 3h | Phase 1, 9.1 |
+| 9.6 | **Email sequences:** secuencias multi-step con delays automáticos | 4h | 9.5 |
+| 9.7 | **Follow-up reminders:** notificaciones cuando toca hacer follow-up | 2h | 9.6 |
+| 9.8 | **Activity log:** registrar llamadas, reuniones, notas, emails enviados | 2h | 9.1 |
+| 9.9 | **Sponsor ↔ Event linking:** asociar sponsor a evento, logo en landing automático | 2h | 9.1, 8.5 |
+| 9.10 | **Email templates para outreach:** templates de primer contacto, follow-up, propuesta | 2h | Phase 1 |
+
+**Deliverable:** CRM completo de sponsors con pipeline, outreach automatizado y vinculación a eventos.
+
+---
+
+## Phase 10: AI & Bitcoin-Native Features ⚡🤖
+> Las funcionalidades que ningún competidor tiene.
+
+| # | Task | Est. | Deps |
+|---|------|------|------|
+| 10.1 | **AI email writer:** genera emails personalizados por sponsor (Anthropic Claude) | 4h | Phase 9 |
+| 10.2 | **AI sponsor research:** dado un nombre de empresa, investiga y genera perfil | 4h | Phase 9 |
+| 10.3 | **Lightning payments:** sponsors pagan en sats (LaWallet integration) | 6h | Phase 9 |
+| 10.4 | **Lightning tickets:** asistentes pagan entrada en sats | 4h | Phase 8 |
+| 10.5 | **Nostr event announcements:** publicar evento en relays Nostr | 2h | Phase 8 |
+| 10.6 | **WhatsApp RSVP integration** (ya existe, conectar con nuevo modelo) | 2h | Phase 8, 9 |
+
+**Deliverable:** Platform con superpoderes: AI + Lightning + Nostr. Diferenciador absoluto.
+
+---
+
+## Updated Summary
+
+| Phase | Focus | Est. Hours | Status |
+|-------|-------|-----------|--------|
+| 0 | Data Model Fix | 8h | 🔲 |
+| 1 | Email Templates | 12h | ✅ (PR #25 merged) |
+| 2 | Campaign Engine | 17h | 🔲 |
+| 3 | Tracking & Analytics | 11h | 🔲 |
+| 4 | Event Pages | 22h | 🔲 |
+| 5 | SEO & Performance | 9h | 🔲 |
+| 6 | CI/CD & Testing | 7h | 🔲 |
+| **7** | **Rebranding** | **14h** | **🔲 NEW** |
+| **8** | **Event Landing Pages (Luma)** | **29h** | **🔲 NEW** |
+| **9** | **Sponsor CRM (Apollo)** | **28h** | **🔲 NEW** |
+| **10** | **AI & Bitcoin-Native** | **22h** | **🔲 NEW** |
+| **Total** | | **~179h** | |
+
+## New Execution Order
+
+```
+Phase 0 (data fix) → Phase 1 (templates) ✅ → Phase 2 (campaigns)
+                                                      ↓
+Phase 7 (REBRANDING) ←── puede arrancar en paralelo
+                                                      ↓
+Phase 8 (Event Landings / Luma replacement)
+                          ↓
+Phase 9 (Sponsor CRM / Apollo replacement)
+                          ↓
+Phase 10 (AI + Bitcoin-native)
+                          ↓
+Phases 3-6 (tracking, SEO, testing) — en paralelo
+```
+
+**Prioridad inmediata:**
+1. Phase 7 (Rebranding) — definir nombre y dirección
+2. Phase 0 + 2 (data fix + campaigns) — funcionalidad core
+3. Phase 8 (Event landings) — reemplazar Luma
+4. Phase 9 (Sponsor CRM) — reemplazar Apollo
+
+---
+
+*Actualizado por Claudio — 2026-03-05*
