@@ -165,9 +165,50 @@ export interface ResendConfig {
 export interface EmailIntegration {
   id: string;
   name: string;
+  /** Mapped from config.type — the email provider (smtp, aws_ses, resend) */
   type: EmailIntegrationType;
-  config: string;
+  /** JSONB config object (includes 'type' and 'is_default' keys internally) */
+  config: Record<string, unknown>;
   is_default: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// Generic integrations
+
+export interface Integration {
+  id: string;
+  provider: string;
+  name: string;
+  config: Record<string, unknown>;
+  is_active: boolean;
+}
+
+export interface LumaConfig {
+  api_key: string;
+  base_url: string;
+  webhook_secret?: string;
+}
+
+export interface WaSenderConfig {
+  api_key: string;
+  webhook_secret?: string;
+  phone_number: string;
+}
+
+export interface LumaWebhookPayload {
+  type: string; // e.g. 'guest.registered'
+  data: {
+    guest: {
+      api_id: string;
+      name: string;
+      email: string;
+      phone?: string;
+    };
+    event: {
+      api_id: string;
+      name: string;
+    };
+  };
 }

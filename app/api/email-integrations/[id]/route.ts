@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth-server';
+import type { EmailIntegration } from '@/lib/types';
+
+/** Map an integrations row (provider='email') to EmailIntegration shape */
+function mapRow(row: Record<string, unknown>): EmailIntegration {
+  const config = (row.config as Record<string, unknown>) || {};
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    type: config.type as EmailIntegration['type'],
+    config,
+    is_default: Boolean(config.is_default),
+    is_active: Boolean(row.is_active),
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  };
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -17,21 +33,55 @@ export async function PATCH(
     const body = await request.json();
     const { name, config, is_default } = body;
 
-    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
-    if (name !== undefined) updates.name = name;
-    if (config !== undefined) updates.config = config;
+    // Load current row
+    const { data: current, error: fetchErr } = await supabase
+      .from('integrations')
+      .select('*')
+      .eq('id', id)
+      .eq('provider', 'email')
+      .single();
+
+    if (fetchErr || !current) {
+      return NextResponse.json({ error: 'Integration not found' }, { status: 404 });
+    }
+
+    const currentConfig = (current.config as Record<string, unknown>) || {};
+
+    // Build updated config
+    let newConfig = { ...currentConfig };
+    if (config !== undefined) {
+      const configObj = typeof config === 'string' ? JSON.parse(config) : config;
+      newConfig = { ...newConfig, ...configObj };
+    }
 
     // If setting as default, unset all others first
     if (is_default === true) {
-      await supabase
-        .from('email_integrations')
-        .update({ is_default: false })
-        .eq('is_default', true);
-      updates.is_default = true;
+      const { data: allRows } = await supabase
+        .from('integrations')
+        .select('id, config')
+        .eq('provider', 'email');
+
+      for (const row of (allRows || [])) {
+        if (row.id === id) continue;
+        const cfg = (row.config as Record<string, unknown>) || {};
+        if (cfg.is_default) {
+          await supabase
+            .from('integrations')
+            .update({ config: { ...cfg, is_default: false } })
+            .eq('id', row.id);
+        }
+      }
+      newConfig.is_default = true;
     }
 
+    const updates: Record<string, unknown> = {
+      config: newConfig,
+      updated_at: new Date().toISOString(),
+    };
+    if (name !== undefined) updates.name = name;
+
     const { data, error } = await supabase
-      .from('email_integrations')
+      .from('integrations')
       .update(updates)
       .eq('id', id)
       .select()
@@ -42,7 +92,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update email integration' }, { status: 500 });
     }
 
-    return NextResponse.json({ integration: data });
+    return NextResponse.json({ integration: mapRow(data as Record<string, unknown>) });
   } catch (error) {
     console.error('Email integration PATCH error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -63,12 +113,14 @@ export async function DELETE(
   try {
     // Check if this integration is the default
     const { data: integration } = await supabase
-      .from('email_integrations')
-      .select('is_default')
+      .from('integrations')
+      .select('config')
       .eq('id', id)
+      .eq('provider', 'email')
       .single();
 
-    if (integration?.is_default) {
+    const cfg = (integration?.config as Record<string, unknown>) || {};
+    if (cfg.is_default) {
       return NextResponse.json(
         { error: 'Cannot delete the default integration. Set another as default first.' },
         { status: 400 }
@@ -76,9 +128,10 @@ export async function DELETE(
     }
 
     const { error } = await supabase
-      .from('email_integrations')
+      .from('integrations')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('provider', 'email');
 
     if (error) {
       console.error('Email integration delete error:', error);

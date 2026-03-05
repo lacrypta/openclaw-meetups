@@ -28,12 +28,13 @@ export async function sendEmail(
   integration: EmailIntegration,
   options: SendEmailOptions
 ): Promise<void> {
-  const config = JSON.parse(integration.config);
+  // config is already a JSONB object (no JSON.parse needed)
+  const config = integration.config;
   const { to, subject, html } = options;
 
   switch (integration.type) {
     case 'smtp': {
-      const cfg = config as SmtpConfig;
+      const cfg = config as unknown as SmtpConfig;
       const ip = await resolveIPv4(cfg.host);
       const secure = cfg.port === 465;
       const transport = nodemailer.createTransport({
@@ -48,7 +49,7 @@ export async function sendEmail(
     }
 
     case 'aws_ses': {
-      const cfg = config as AwsSesConfig;
+      const cfg = config as unknown as AwsSesConfig;
       const ses = new SESClient({
         region: cfg.region,
         credentials: {
@@ -70,7 +71,7 @@ export async function sendEmail(
     }
 
     case 'resend': {
-      const cfg = config as ResendConfig;
+      const cfg = config as unknown as ResendConfig;
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -100,14 +101,25 @@ export async function sendConfirmationEmail(
   eventName: string,
   confirmationLink?: string
 ): Promise<void> {
-  // Get default integration
-  const { data: integration, error } = await supabase
-    .from('email_integrations')
+  // Get default integration from generic integrations table (provider='email')
+  const { data: rawIntegration, error } = await supabase
+    .from('integrations')
     .select('*')
-    .eq('is_default', true)
+    .eq('provider', 'email')
+    .eq('is_active', true)
+    .order('created_at')
     .maybeSingle();
 
-  if (error || !integration) {
+  // Map raw integrations row to EmailIntegration shape
+  const integration = rawIntegration
+    ? {
+        ...rawIntegration,
+        type: (rawIntegration.config as Record<string, unknown>).type as string,
+        is_default: Boolean((rawIntegration.config as Record<string, unknown>).is_default),
+      }
+    : null;
+
+  if (error || !rawIntegration || !integration) {
     throw new Error('No default email integration configured');
   }
 

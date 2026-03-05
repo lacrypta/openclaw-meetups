@@ -25,10 +25,10 @@ import { generateResponse } from '@/lib/ai-engine';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 import { sendConfirmationEmail } from '@/lib/email-sender';
 import { findGuestByEmail, updateGuestStatus } from '@/lib/luma';
+import { getWaSenderConfig } from '@/lib/integrations';
 
 const CONFIRMED_TAG = '[CONFIRMED]';
 const DECLINED_TAG = '[DECLINED]';
-const WEBHOOK_SECRET = process.env.WASENDER_WEBHOOK_SECRET || '';
 
 /** Strip intent tags from AI content before sending to user */
 function stripTags(content: string): string {
@@ -39,16 +39,18 @@ function stripTags(content: string): string {
 }
 
 /** Verify webhook authenticity */
-function verifyWebhook(request: NextRequest): boolean {
-  if (!WEBHOOK_SECRET) return true; // No secret configured = skip verification
-  const secret = request.headers.get('x-wasender-secret') ||
+async function verifyWebhook(request: NextRequest): Promise<boolean> {
+  const config = await getWaSenderConfig();
+  const secret = config.webhook_secret || process.env.WASENDER_WEBHOOK_SECRET || '';
+  if (!secret) return true; // No secret configured = skip verification
+  const provided = request.headers.get('x-wasender-secret') ||
     request.headers.get('authorization')?.replace('Bearer ', '') || '';
-  return secret === WEBHOOK_SECRET;
+  return provided === secret;
 }
 
 export async function POST(request: NextRequest) {
   // 1. Verify webhook secret
-  if (!verifyWebhook(request)) {
+  if (!(await verifyWebhook(request))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

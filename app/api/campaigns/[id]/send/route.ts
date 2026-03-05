@@ -43,15 +43,24 @@ export async function POST(
       .update({ status: 'running', started_at: job.started_at || new Date().toISOString() })
       .eq('id', id);
 
-    // 3. Load integration
+    // 3. Load integration (from generic integrations table, provider='email')
     const integrationId = (job.config as Record<string, unknown>).integration_id as string;
-    const { data: integration, error: intError } = await supabase
-      .from('email_integrations')
+    const { data: rawIntegration, error: intError } = await supabase
+      .from('integrations')
       .select('*')
       .eq('id', integrationId)
+      .eq('provider', 'email')
       .single();
 
-    if (intError || !integration) {
+    const integration = rawIntegration
+      ? {
+          ...rawIntegration,
+          type: (rawIntegration.config as Record<string, unknown>).type as string,
+          is_default: Boolean((rawIntegration.config as Record<string, unknown>).is_default),
+        }
+      : null;
+
+    if (intError || !rawIntegration || !integration) {
       await supabase
         .from('email_jobs')
         .update({ status: 'failed', completed_at: new Date().toISOString() })

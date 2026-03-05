@@ -18,14 +18,15 @@ const TYPE_LABELS: Record<EmailIntegrationType, string> = {
 
 function configSummary(integration: EmailIntegration): string {
   try {
-    const cfg = JSON.parse(integration.config);
+    // config is now a JSONB object (not a string)
+    const cfg = integration.config;
     switch (integration.type) {
       case "smtp":
         return `${cfg.host}:${cfg.port}`;
       case "aws_ses":
-        return cfg.region;
+        return String(cfg.region || "");
       case "resend":
-        return cfg.from_email;
+        return String(cfg.from_email || "");
       default:
         return "";
     }
