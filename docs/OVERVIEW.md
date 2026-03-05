@@ -369,3 +369,20 @@ Luma supports multiple visual themes for event creation pages (e.g., "Minimalist
 - Full Spanish language support (as shown in screenshots)
 - Date formatting follows locale (e.g., "mie, 25 feb", "viernes, 20 feb")
 - Currency and number formatting locale-aware
+
+---
+
+## Documentation Index
+
+| Doc | Descripción |
+|-----|-------------|
+| [OVERVIEW.md](./OVERVIEW.md) | Este archivo — UI/UX & funcionalidad |
+| [whatsapp-messaging-limits.md](./whatsapp-messaging-limits.md) | ⚠️ **WARNING** — Límites y mejores prácticas de WhatsApp |
+| [wasenderapi-reference.md](./wasenderapi-reference.md) | Referencia técnica WaSenderAPI |
+| [feature-whatsapp-rsvp-flow.md](./feature-whatsapp-rsvp-flow.md) | Flujo RSVP por WhatsApp |
+| [feature-ai-messaging-engine.md](./feature-ai-messaging-engine.md) | Motor de mensajería IA |
+| [EMAIL-CAMPAIGNS.md](./EMAIL-CAMPAIGNS.md) | Sistema de campañas email |
+| [FEATURE_EMAIL_TEMPLATES.md](./FEATURE_EMAIL_TEMPLATES.md) | Templates de email |
+| [luma-api-reference.md](./luma-api-reference.md) | Referencia API de Luma |
+| [ENV_SETUP.md](./ENV_SETUP.md) | Variables de entorno |
+| [LANDING.md](./LANDING.md) | Landing page spec |
