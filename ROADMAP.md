@@ -190,6 +190,10 @@ Phase 4-6 can run in parallel
 | 8.8 | **Calendar integration:** botón "Agregar a Google Calendar" / descarga .ics | 1h | 8.5 |
 | 8.9 | **Recurring events:** crear serie (mensual, semanal) con un solo setup | 3h | 8.3 |
 | 8.10 | **Custom domains:** CNAME para `mienvento.miorg.com` | 2h | 8.5 |
+| 8.11 | **Event types:** presencial, virtual, o híbrido — selector en creación | 1h | 8.3 |
+| 8.12 | **Virtual event support:** integración Google Meet, Zoom, Jitsi, o link custom | 2h | 8.11 |
+| 8.13 | **Auto-send meeting link:** al confirmar registro, enviar link de la sala automáticamente | 1h | 8.12 |
+| 8.14 | **Hybrid events:** mostrar dirección física + link virtual en la misma landing | 1h | 8.11 |
 
 **Deliverable:** Organizador crea evento → landing se genera automáticamente → asistentes se registran → fluye al CRM.
 
