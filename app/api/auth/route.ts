@@ -17,7 +17,22 @@ interface Nip98Event {
 
 export async function POST(request: NextRequest) {
   try {
-    const event = (await request.json()) as Nip98Event;
+    const body = await request.json();
+
+    // Pubkey-only auth (fallback for bunker/nsec without NIP-07 signer)
+    if (body.method === 'pubkey-only') {
+      const { pubkey } = body;
+      if (!pubkey || typeof pubkey !== 'string' || pubkey.length !== 64) {
+        return NextResponse.json({ error: 'Invalid pubkey' }, { status: 400 });
+      }
+      if (!ALLOWED_PUBKEYS.includes(pubkey)) {
+        return NextResponse.json({ error: 'Pubkey not authorized' }, { status: 403 });
+      }
+      const token = jwt.sign({ pubkey }, JWT_SECRET, { expiresIn: '24h' });
+      return NextResponse.json({ token, pubkey });
+    }
+
+    const event = body as Nip98Event;
 
     // Verify it's a NIP-98 event (kind 27235)
     if (event.kind !== 27235) {

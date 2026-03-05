@@ -31,12 +31,37 @@ export async function createNip98Event(url: string, method: string): Promise<any
 
 export async function login(): Promise<{ token: string; pubkey: string }> {
   const nip98Url = window.location.origin + '/api/auth';
-  const signedEvent = await createNip98Event(nip98Url, 'POST');
+
+  // Try NIP-98 (requires window.nostr — NIP-07 or NIP-46 signer)
+  if (window.nostr) {
+    const signedEvent = await createNip98Event(nip98Url, 'POST');
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(signedEvent),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+
+    const data = await response.json();
+    localStorage.setItem(TOKEN_KEY, data.token);
+    return data;
+  }
+
+  // Fallback: pubkey-only auth (for bunker/nsec logins where signer isn't available as NIP-07)
+  const savedState = localStorage.getItem('openclaw_nostr');
+  if (!savedState) throw new Error('No Nostr session found');
+
+  const { pubkey } = JSON.parse(savedState);
+  if (!pubkey) throw new Error('No pubkey found');
 
   const response = await fetch('/api/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(signedEvent),
+    body: JSON.stringify({ pubkey, method: 'pubkey-only' }),
   });
 
   if (!response.ok) {
