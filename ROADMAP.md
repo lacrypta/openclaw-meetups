@@ -226,8 +226,11 @@ Phase 4-6 can run in parallel
 | 10.4 | **Lightning tickets:** asistentes pagan entrada en sats | 4h | Phase 8 |
 | 10.5 | **Nostr event announcements:** publicar evento en relays Nostr | 2h | Phase 8 |
 | 10.6 | **WhatsApp RSVP integration** (ya existe, conectar con nuevo modelo) | 2h | Phase 8, 9 |
+| 10.7 | **Multi-channel chatbots:** WhatsApp, Telegram, Nostr — asistentes y sponsors interactúan por el canal que prefieran | 8h | Phase 8, 9 |
+| 10.8 | **Chatbot flows:** RSVP, consultas, confirmaciones, follow-ups — todo automatizado por AI en cada canal | 6h | 10.7 |
+| 10.9 | **Unified inbox:** todas las conversaciones (WA, Telegram, Nostr) en un solo lugar del dashboard | 4h | 10.7 |
 
-**Deliverable:** Platform con superpoderes: AI + Lightning + Nostr. Diferenciador absoluto.
+**Deliverable:** Platform con superpoderes: AI + Lightning + Nostr + chatbots multi-canal. Diferenciador absoluto.
 
 ---
 
@@ -245,8 +248,8 @@ Phase 4-6 can run in parallel
 | **7** | **Rebranding** | **14h** | **🔲 NEW** |
 | **8** | **Event Landing Pages (Luma)** | **29h** | **🔲 NEW** |
 | **9** | **Sponsor CRM (Apollo)** | **28h** | **🔲 NEW** |
-| **10** | **AI & Bitcoin-Native** | **22h** | **🔲 NEW** |
-| **Total** | | **~179h** | |
+| **10** | **AI & Bitcoin-Native + Chatbots** | **40h** | **🔲 NEW** |
+| **Total** | | **~197h** | |
 
 ## New Execution Order
 
