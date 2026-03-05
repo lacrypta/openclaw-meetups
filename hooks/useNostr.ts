@@ -1,7 +1,18 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { loginWithNip07, nsecToHex, checkNip07 } from '../lib/nostr';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { checkNip07 } from '../lib/nostr';
+import {
+  NostrSigner,
+  Nip07Signer,
+  PlainSigner,
+  getActiveSigner,
+  setActiveSigner,
+  clearActiveSigner,
+  saveBunkerState,
+  loadBunkerState,
+  clearBunkerState,
+} from '../lib/signer';
 
 export type LoginMethod = 'nip07' | 'nsec' | 'bunker' | null;
 
@@ -41,38 +52,82 @@ export function useNostr() {
     loading: false,
     error: null,
   });
+  const bunkerSignerRef = useRef<any>(null);
 
-  // On mount, restore saved state and verify NIP-07 session
+  // On mount, restore saved state and reconnect signer
   useEffect(() => {
     const saved = loadSavedState();
-    if (saved.pubkey && saved.method) {
-      setState(s => ({ ...s, pubkey: saved.pubkey, method: saved.method }));
+    if (!saved.pubkey || !saved.method) return;
 
-      if (saved.method === 'nip07') {
-        checkNip07().then(async (hasExt) => {
-          if (hasExt) {
-            try {
-              const currentPubkey = await loginWithNip07();
-              if (currentPubkey !== saved.pubkey) {
-                saveState(currentPubkey, 'nip07');
-                setState(s => ({ ...s, pubkey: currentPubkey }));
-              }
-            } catch {
-              saveState(null, null);
-              setState(s => ({ ...s, pubkey: null, method: null }));
+    setState(s => ({ ...s, pubkey: saved.pubkey, method: saved.method }));
+
+    if (saved.method === 'nip07') {
+      const signer = new Nip07Signer();
+      setActiveSigner(signer);
+      // Verify extension is still available
+      checkNip07().then(async (hasExt) => {
+        if (hasExt) {
+          try {
+            const currentPubkey = await signer.getPublicKey();
+            if (currentPubkey !== saved.pubkey) {
+              saveState(currentPubkey, 'nip07');
+              setState(s => ({ ...s, pubkey: currentPubkey }));
             }
+          } catch {
+            clearActiveSigner();
+            saveState(null, null);
+            setState(s => ({ ...s, pubkey: null, method: null }));
           }
-        });
-      }
+        }
+      });
+    } else if (saved.method === 'bunker') {
+      // Try to reconnect bunker from saved state
+      reconnectBunker().catch(() => {
+        // If reconnection fails, clear state
+        clearActiveSigner();
+        clearBunkerState();
+        saveState(null, null);
+        setState(s => ({ ...s, pubkey: null, method: null }));
+      });
     }
+    // nsec: signer can't be restored (secret not persisted for security)
+    // User needs to re-login with nsec
   }, []);
+
+  async function reconnectBunker() {
+    const bunkerState = loadBunkerState();
+    if (!bunkerState) throw new Error('No bunker state saved');
+
+    const { BunkerSigner, parseBunkerInput } = await import('nostr-tools/nip46');
+    const { hexToBytes } = await import('@noble/hashes/utils.js');
+
+    const clientSecret = hexToBytes(bunkerState.clientSecretHex);
+    const bp = {
+      pubkey: bunkerState.remotePubkey,
+      relays: bunkerState.relays,
+      secret: bunkerState.secret,
+    };
+
+    const signer = BunkerSigner.fromBunker(clientSecret, bp);
+    await signer.connect();
+    const pubkey = await signer.getPublicKey();
+
+    bunkerSignerRef.current = signer;
+    setActiveSigner(signer);
+    setState(s => ({ ...s, pubkey, method: 'bunker' }));
+    saveState(pubkey, 'bunker');
+  }
 
   const loginNip07 = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const hasExtension = await checkNip07();
       if (!hasExtension) throw new Error('No se detectó extensión NIP-07 (Alby, nos2x, etc.)');
-      const pubkey = await loginWithNip07();
+
+      const signer = new Nip07Signer();
+      const pubkey = await signer.getPublicKey();
+
+      setActiveSigner(signer);
       saveState(pubkey, 'nip07');
       setState({ pubkey, method: 'nip07', loading: false, error: null });
     } catch (e: any) {
@@ -84,7 +139,11 @@ export function useNostr() {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       if (!nsec.startsWith('nsec1')) throw new Error('nsec inválido');
-      const { pubkey } = nsecToHex(nsec);
+      const { nsecToHex } = await import('../lib/nostr');
+      const { seckey, pubkey } = nsecToHex(nsec);
+
+      const signer = new PlainSigner(seckey, pubkey);
+      setActiveSigner(signer);
       saveState(pubkey, 'nsec');
       setState({ pubkey, method: 'nsec', loading: false, error: null });
     } catch (e: any) {
@@ -95,12 +154,33 @@ export function useNostr() {
   const loginBunker = useCallback(async (bunkerUrl: string) => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      if (!bunkerUrl.startsWith('bunker://')) throw new Error('URL inválida. Debe empezar con bunker://');
-      // NIP-46 basic: extract pubkey from bunker URL
-      const url = new URL(bunkerUrl.replace('bunker://', 'https://'));
-      const pubkey = url.hostname || url.pathname.replace('//', '');
-      if (!pubkey || pubkey.length !== 64) throw new Error('No se pudo extraer pubkey del bunker URL');
-      // In production, you'd establish a NIP-46 connection here
+      const { BunkerSigner, parseBunkerInput } = await import('nostr-tools/nip46');
+      const { generateSecretKey, getPublicKey } = await import('nostr-tools/pure');
+      const { bytesToHex } = await import('@noble/hashes/utils.js');
+
+      // Parse bunker URL
+      const bp = await parseBunkerInput(bunkerUrl);
+      if (!bp) throw new Error('URL de bunker inválida');
+
+      // Generate ephemeral client keypair
+      const clientSecret = generateSecretKey();
+      const clientSecretHex = bytesToHex(clientSecret);
+
+      // Create bunker signer and connect
+      const signer = BunkerSigner.fromBunker(clientSecret, bp);
+      await signer.connect();
+      const pubkey = await signer.getPublicKey();
+
+      // Save bunker state for reconnection
+      saveBunkerState({
+        clientSecretHex,
+        remotePubkey: bp.pubkey,
+        relays: bp.relays,
+        secret: bp.secret,
+      });
+
+      bunkerSignerRef.current = signer;
+      setActiveSigner(signer);
       saveState(pubkey, 'bunker');
       setState({ pubkey, method: 'bunker', loading: false, error: null });
     } catch (e: any) {
@@ -109,7 +189,13 @@ export function useNostr() {
   }, []);
 
   const logout = useCallback(() => {
+    clearActiveSigner();
+    clearBunkerState();
     saveState(null, null);
+    if (bunkerSignerRef.current) {
+      bunkerSignerRef.current.close?.().catch(() => {});
+      bunkerSignerRef.current = null;
+    }
     setState({ pubkey: null, method: null, loading: false, error: null });
   }, []);
 

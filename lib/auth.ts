@@ -1,3 +1,5 @@
+import { getActiveSigner } from './signer';
+
 declare global {
   interface Window {
     nostr?: {
@@ -9,59 +11,32 @@ declare global {
 
 const TOKEN_KEY = 'openclaw_jwt';
 
-export async function createNip98Event(url: string, method: string): Promise<any> {
-  if (!window.nostr) {
-    throw new Error('NIP-07 extension not found');
+export async function login(): Promise<{ token: string; pubkey: string }> {
+  const signer = getActiveSigner();
+  if (!signer) {
+    throw new Error('No signer available. Please login first.');
   }
 
-  const pubkey = await window.nostr.getPublicKey();
+  const pubkey = await signer.getPublicKey();
+  const nip98Url = window.location.origin + '/api/auth';
+
+  // Create and sign NIP-98 event using the active signer
   const event = {
     kind: 27235,
-    pubkey,
     created_at: Math.floor(Date.now() / 1000),
     tags: [
-      ['u', url],
-      ['method', method],
+      ['u', nip98Url],
+      ['method', 'POST'],
     ],
     content: '',
   };
 
-  return await window.nostr.signEvent(event);
-}
-
-export async function login(): Promise<{ token: string; pubkey: string }> {
-  const nip98Url = window.location.origin + '/api/auth';
-
-  // Try NIP-98 (requires window.nostr — NIP-07 or NIP-46 signer)
-  if (window.nostr) {
-    const signedEvent = await createNip98Event(nip98Url, 'POST');
-    const response = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(signedEvent),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
-    }
-
-    const data = await response.json();
-    localStorage.setItem(TOKEN_KEY, data.token);
-    return data;
-  }
-
-  // Fallback: pubkey-only auth (for bunker/nsec logins where signer isn't available as NIP-07)
-  const savedState = localStorage.getItem('openclaw_nostr');
-  if (!savedState) throw new Error('No Nostr session found');
-
-  const { pubkey } = JSON.parse(savedState);
-  if (!pubkey) throw new Error('No pubkey found');
+  const signedEvent = await signer.signEvent(event);
 
   const response = await fetch('/api/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pubkey, method: 'pubkey-only' }),
+    body: JSON.stringify(signedEvent),
   });
 
   if (!response.ok) {
@@ -83,7 +58,6 @@ export function isAuthenticated(): boolean {
   if (!token) return false;
 
   try {
-    // Decode JWT payload (without verification, just to check expiry)
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.exp * 1000 > Date.now();
   } catch {
