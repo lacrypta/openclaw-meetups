@@ -35,14 +35,23 @@ export async function sendEmail(
   switch (integration.type) {
     case 'smtp': {
       const cfg = config as unknown as SmtpConfig;
-      const ip = await resolveIPv4(cfg.host);
+      let host = cfg.host;
+      const tlsOptions: Record<string, unknown> = { servername: cfg.host };
+      try {
+        host = await resolveIPv4(cfg.host);
+      } catch {
+        // DNS lookup may not work in serverless environments; fall back to hostname
+      }
       const secure = cfg.port === 465;
       const transport = nodemailer.createTransport({
-        host: ip,
+        host,
         port: cfg.port,
         secure,
         auth: { user: cfg.username, pass: cfg.password },
-        tls: { servername: cfg.host },
+        tls: tlsOptions,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
       });
       await transport.sendMail({ from: cfg.from_email, to, subject, html });
       break;
