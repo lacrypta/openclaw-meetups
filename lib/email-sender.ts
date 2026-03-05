@@ -108,7 +108,8 @@ export async function sendConfirmationEmail(
   to: string,
   userName: string,
   eventName: string,
-  confirmationLink?: string
+  confirmationLink?: string,
+  confirmationToken?: string
 ): Promise<void> {
   // Get default integration from generic integrations table (provider='email')
   const { data: rawIntegration, error } = await supabase
@@ -142,7 +143,8 @@ export async function sendConfirmationEmail(
     .maybeSingle();
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
-  const link = confirmationLink || `${baseUrl}/confirmation?email=${encodeURIComponent(to)}`;
+  const link = confirmationLink ||
+    (confirmationToken ? `${baseUrl}/confirm/${confirmationToken}` : `${baseUrl}/confirmation?email=${encodeURIComponent(to)}`);
 
   const replaceVars = (text: string) =>
     text

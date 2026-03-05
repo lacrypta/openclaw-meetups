@@ -28,18 +28,20 @@ export async function POST(
       return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
-    // Get user info
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, name, email')
-      .eq('id', user_id)
-      .single();
+    // Get attendee record with confirmation_token
+    const { data: attendee, error: attendeeError } = await supabase
+      .from('event_attendees')
+      .select('id, confirmation_token, users(name, email)')
+      .eq('event_id', eventId)
+      .eq('user_id', user_id)
+      .maybeSingle();
 
-    if (userError || !user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (attendeeError || !attendee) {
+      return NextResponse.json({ error: 'Attendee not found' }, { status: 404 });
     }
 
-    if (!user.email) {
+    const userData = attendee.users as unknown as { name: string; email: string } | null;
+    if (!userData?.email) {
       return NextResponse.json({ error: 'User has no email' }, { status: 400 });
     }
 
@@ -54,17 +56,32 @@ export async function POST(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
 
-    // Send confirmation email
-    await sendConfirmationEmail(user.email, user.name, event.name);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+    const confirmationToken = attendee.confirmation_token as string | null;
+    const confirmationLink = confirmationToken
+      ? `${baseUrl}/confirm/${confirmationToken}`
+      : undefined;
 
-    // Mark as confirmed
+    // Send confirmation email with token-based link
+    await sendConfirmationEmail(
+      userData.email,
+      userData.name,
+      event.name,
+      confirmationLink,
+      confirmationToken ?? undefined
+    );
+
+    // Mark email as sent
     await supabase
       .from('event_attendees')
-      .update({ attendance_confirmed: true })
-      .eq('event_id', eventId)
-      .eq('user_id', user_id);
+      .update({
+        email_sent: true,
+        email_sent_at: new Date().toISOString(),
+        email_type: 'confirmation',
+      })
+      .eq('id', attendee.id);
 
-    return NextResponse.json({ ok: true, sent_to: user.email });
+    return NextResponse.json({ ok: true, sent_to: userData.email });
   } catch (error) {
     console.error('Send confirmation error:', error);
     const message = error instanceof Error ? error.message : 'Failed to send confirmation';
