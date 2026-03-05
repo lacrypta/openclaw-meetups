@@ -33,15 +33,21 @@ let SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, EMAIL_FROM;
 
 async function loadSmtpConfig() {
   try {
+    // Query generic integrations table with provider='email'
     const { data, error } = await supabase
-      .from('email_integrations')
+      .from('integrations')
       .select('*')
-      .eq('is_default', true)
-      .single();
+      .eq('provider', 'email')
+      .eq('is_active', true)
+      .order('created_at')
+      .limit(1)
+      .maybeSingle();
 
     if (data && data.config) {
-      const config = JSON.parse(data.config);
-      log(`✅ Loaded SMTP config from email_integrations (${data.name})`);
+      // config is JSONB (already an object, no JSON.parse needed)
+      const config = data.config;
+      // type is stored inside config (e.g. config.type = 'smtp')
+      log(`✅ Loaded SMTP config from integrations (${data.name}, type=${config.type})`);
       SMTP_HOST = config.host;
       SMTP_PORT = config.port;
       SMTP_SECURE = config.secure;

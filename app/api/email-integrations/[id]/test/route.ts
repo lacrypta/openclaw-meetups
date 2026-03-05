@@ -21,13 +21,22 @@ export async function POST(
       return NextResponse.json({ error: 'Recipient email is required' }, { status: 400 });
     }
 
-    const { data: integration, error: fetchError } = await supabase
-      .from('email_integrations')
+    const { data: rawIntegration, error: fetchError } = await supabase
+      .from('integrations')
       .select('*')
       .eq('id', id)
+      .eq('provider', 'email')
       .single();
 
-    if (fetchError || !integration) {
+    const integration = rawIntegration
+      ? {
+          ...rawIntegration,
+          type: (rawIntegration.config as Record<string, unknown>).type as string,
+          is_default: Boolean((rawIntegration.config as Record<string, unknown>).is_default),
+        }
+      : null;
+
+    if (fetchError || !rawIntegration || !integration) {
       return NextResponse.json({ error: 'Integration not found' }, { status: 404 });
     }
 

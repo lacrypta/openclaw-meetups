@@ -52,13 +52,11 @@ interface ResendForm {
   from_email: string;
 }
 
-function parseConfig(integration: EmailIntegration | null | undefined) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseConfig(integration: EmailIntegration | null | undefined): any {
   if (!integration) return null;
-  try {
-    return JSON.parse(integration.config);
-  } catch {
-    return null;
-  }
+  // config is now a JSONB object (not a string); return as-is
+  return integration.config || null;
 }
 
 export function EmailIntegrationDialog({
