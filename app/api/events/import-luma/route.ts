@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
               event_id: newEvent.id,
               user_id: user.id,
               status,
-              luma_id: guest.api_id,
             },
             { onConflict: 'event_id,user_id', ignoreDuplicates: true }
           );
