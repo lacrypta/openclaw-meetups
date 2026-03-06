@@ -14,6 +14,7 @@ export interface Event {
   created_at: string;
   updated_at: string;
   requires_confirmation?: boolean;
+  luma_event_id?: string | null;
 }
 
 export interface EventWithCounts extends Event {

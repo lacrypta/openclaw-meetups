@@ -152,6 +152,16 @@ export function EventDetail({ eventId }: EventDetailProps) {
           {event.description && (
             <p className="text-muted-foreground/60 mt-3 text-sm">{event.description}</p>
           )}
+          {event.luma_event_id && (
+            <a
+              href={`https://lu.ma/${event.luma_event_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 mt-2 text-sm text-amber-500 hover:text-amber-400 transition-colors"
+            >
+              🔗 View on Luma
+            </a>
+          )}
         </div>
         <div className="flex gap-2 shrink-0">
           <Badge
