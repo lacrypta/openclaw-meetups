@@ -202,14 +202,14 @@ export async function POST(request: NextRequest) {
       `• Respondé *2* para cancelar ❌\n\n` +
       `¡Te esperamos!`;
 
-    if (phone) {
-      try {
-        await sendWhatsAppMessage(phone, confirmationMessage);
-      } catch (err) {
-        console.error('Failed to send WhatsApp message:', err);
-        // Non-fatal — continue
-      }
-    }
+    // TODO: WhatsApp confirmation paused until WaSender integration is configured in Settings
+    // if (phone) {
+    //   try {
+    //     await sendWhatsAppMessage(phone, confirmationMessage);
+    //   } catch (err) {
+    //     console.error('Failed to send WhatsApp message:', err);
+    //   }
+    // }
 
     // 6. Create messaging session (non-fatal — tables may not exist yet)
     let sessionId: string | null = null;
