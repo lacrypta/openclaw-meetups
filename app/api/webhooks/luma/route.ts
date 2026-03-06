@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
           event_id: internalEventId,
           user_id: userId,
           attendance_confirmed: false,
-          status: 'approved',
+          status: 'waitlist',
         },
         { onConflict: 'event_id,user_id', ignoreDuplicates: true }
       );
