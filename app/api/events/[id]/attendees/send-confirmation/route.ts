@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth-server';
-import { sendConfirmationEmail } from '@/lib/email-sender';
+import { send } from '@/lib/email-service';
 
 export async function POST(
   request: NextRequest,
@@ -60,16 +60,20 @@ export async function POST(
     const confirmationToken = attendee.confirmation_token as string | null;
     const confirmationLink = confirmationToken
       ? `${baseUrl}/confirm/${confirmationToken}`
-      : undefined;
+      : `${baseUrl}/confirmation?email=${encodeURIComponent(userData.email)}`;
 
-    // Send confirmation email with token-based link
-    await sendConfirmationEmail(
-      userData.email,
-      userData.name,
-      event.name,
-      confirmationLink,
-      confirmationToken ?? undefined
-    );
+    const firstName = userData.name.split(' ')[0];
+    await send({
+      to: userData.email,
+      segment: 'confirmation',
+      variables: {
+        name: userData.name,
+        first_name: firstName,
+        email: userData.email,
+        event_name: event.name,
+        confirmation_link: confirmationLink,
+      },
+    });
 
     // Mark email as sent
     await supabase

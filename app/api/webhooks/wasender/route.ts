@@ -23,7 +23,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { generateResponse } from '@/lib/ai-engine';
 import { sendWhatsAppMessage } from '@/lib/wasender';
-import { sendConfirmationEmail } from '@/lib/email-sender';
+import { send } from '@/lib/email-service';
 import { confirmAttendance, declineAttendance } from '@/lib/confirm-attendance';
 import { getWaSenderConfig } from '@/lib/integrations';
 
@@ -177,9 +177,17 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (event) {
-          sendConfirmationEmail(user.email, user.name, event.name).catch((err) =>
-            console.error('Failed to send confirmation email:', err)
-          );
+          const firstName = user.name ? user.name.split(' ')[0] : '';
+          send({
+            to: user.email,
+            segment: 'confirmation',
+            variables: {
+              name: user.name || '',
+              first_name: firstName,
+              email: user.email,
+              event_name: event.name,
+            },
+          }).catch((err) => console.error('Failed to send confirmation email:', err));
         }
       }
 

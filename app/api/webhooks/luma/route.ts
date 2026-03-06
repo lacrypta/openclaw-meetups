@@ -19,7 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 import { getLumaConfig } from '@/lib/integrations';
 import { logWebhook } from '@/lib/webhook-logger';
-import { sendConfirmationEmail } from '@/lib/email-sender';
+import { send } from '@/lib/email-service';
 import type { LumaWebhookPayload } from '@/lib/types';
 
 /** Verify Luma webhook signature (basic shared-secret check) */
@@ -223,11 +223,22 @@ export async function POST(request: NextRequest) {
           .eq('user_id', userId)
           .maybeSingle();
 
-        if (ea?.confirmation_token) {
-          await sendConfirmationEmail(email, name, eventName, undefined, ea.confirmation_token);
-        } else {
-          await sendConfirmationEmail(email, name, eventName);
-        }
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+        const confirmationLink = ea?.confirmation_token
+          ? `${baseUrl}/confirm/${ea.confirmation_token}`
+          : `${baseUrl}/confirmation?email=${encodeURIComponent(email)}`;
+        const firstName = name.split(' ')[0];
+        await send({
+          to: email,
+          segment: 'confirmation',
+          variables: {
+            name,
+            first_name: firstName,
+            email,
+            event_name: eventName,
+            confirmation_link: confirmationLink,
+          },
+        });
       } catch (err) {
         console.error('Failed to send confirmation email:', err);
         // Non-fatal — continue
