@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-interface LumaCalendar {
+interface LumaEvent {
   api_id: string;
   name: string;
+  start_at: string;
 }
 
 interface LumaIntegration {
@@ -33,7 +34,7 @@ export function LumaIntegrationTab() {
   const [apiKey, setApiKey] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [calendars, setCalendars] = useState<LumaCalendar[] | null>(null);
+  const [lumaEvents, setLumaEvents] = useState<LumaEvent[] | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -62,7 +63,7 @@ export function LumaIntegrationTab() {
     if (!apiKey.trim()) return;
     setVerifying(true);
     setMessage(null);
-    setCalendars(null);
+    setLumaEvents(null);
     try {
       const res = await fetch("/api/integrations/luma/verify", {
         method: "POST",
@@ -77,8 +78,8 @@ export function LumaIntegrationTab() {
         setMessage({ type: "error", text: data.error || "Verification failed" });
         return;
       }
-      setCalendars(data.calendars || []);
-      setMessage({ type: "success", text: "API key verified successfully!" });
+      setLumaEvents(data.events || []);
+      setMessage({ type: "success", text: `API key verified! ${data.event_count} event(s) found.` });
     } catch {
       setMessage({ type: "error", text: "Verification request failed" });
     } finally {
@@ -106,7 +107,7 @@ export function LumaIntegrationTab() {
       }
       setMessage({ type: "success", text: "Luma integration saved!" });
       setApiKey("");
-      setCalendars(null);
+      setLumaEvents(null);
       setEditing(false);
       await fetchIntegration();
     } catch {
@@ -204,7 +205,7 @@ export function LumaIntegrationTab() {
                   type="password"
                   placeholder="luma-api-key-..."
                   value={apiKey}
-                  onChange={(e) => { setApiKey(e.target.value); setCalendars(null); }}
+                  onChange={(e) => { setApiKey(e.target.value); setLumaEvents(null); }}
                   className="font-mono"
                 />
                 <Button
@@ -228,19 +229,22 @@ export function LumaIntegrationTab() {
               </p>
             </div>
 
-            {calendars !== null && (
+            {lumaEvents !== null && (
               <div className="rounded-md bg-muted/30 p-3 space-y-2">
-                <p className="text-sm font-medium text-green-500">✅ Connected Calendars</p>
-                {calendars.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No calendars found</p>
+                <p className="text-sm font-medium text-green-500">✅ API Key Valid</p>
+                {lumaEvents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No events found in your Luma account</p>
                 ) : (
-                  <ul className="space-y-1">
-                    {calendars.map((cal) => (
-                      <li key={cal.api_id} className="text-sm text-foreground">
-                        • {cal.name}
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <p className="text-sm text-muted-foreground">{lumaEvents.length} event(s) found:</p>
+                    <ul className="space-y-1">
+                      {lumaEvents.map((ev) => (
+                        <li key={ev.api_id} className="text-sm text-foreground">
+                          • {ev.name} {ev.start_at ? `— ${new Date(ev.start_at).toLocaleDateString()}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
               </div>
             )}
@@ -255,7 +259,7 @@ export function LumaIntegrationTab() {
               {editing && (
                 <Button
                   variant="outline"
-                  onClick={() => { setEditing(false); setApiKey(""); setCalendars(null); setMessage(null); }}
+                  onClick={() => { setEditing(false); setApiKey(""); setLumaEvents(null); setMessage(null); }}
                 >
                   Cancel
                 </Button>

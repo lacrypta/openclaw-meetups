@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'api_key is required' }, { status: 400 });
     }
 
-    const res = await fetch(`${LUMA_BASE_URL}/calendar/list-calendars`, {
+    // Use list-events to verify API key (list-calendars doesn't exist in Luma API)
+    const res = await fetch(`${LUMA_BASE_URL}/calendar/list-events`, {
       headers: {
         'x-luma-api-key': api_key,
         'Content-Type': 'application/json',
@@ -31,7 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json({ success: true, calendars: data.entries || [] });
+    const events = (data.entries || []).map((e: any) => ({
+      name: e.event?.name || e.name,
+      start_at: e.event?.start_at || e.start_at,
+      api_id: e.event?.api_id || e.api_id,
+    }));
+    return NextResponse.json({ success: true, events, event_count: events.length });
   } catch (err) {
     console.error('Luma verify error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
