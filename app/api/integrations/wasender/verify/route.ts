@@ -23,11 +23,11 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await res.json();
-    // "Session not found" means key is valid but no WhatsApp session linked yet
-    const valid = data.success === true || data.message?.includes('Session not found');
+    // Valid responses: {status: "connected"} or {success: false, message: "Session not found"}
+    const valid = data.status === 'connected' || data.message?.includes('Session not found') || data.success === true;
     return NextResponse.json({
       valid,
-      message: data.success ? 'Connected' : data.message || 'API key valid, no session linked yet',
+      message: data.status === 'connected' ? 'WhatsApp session connected' : data.message || 'API key valid',
       account: data,
     });
   } catch {
