@@ -268,6 +268,22 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Luma webhook error:', error);
+    // Try to update log with error
+    try {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      // log may not exist if error was before log creation
+      await supabase
+        .from('webhook_logs')
+        .update({
+          status: 'error',
+          response_status: 500,
+          error_message: errMsg,
+          processing_time_ms: Date.now() - startTime,
+        })
+        .eq('status', 'processing')
+        .order('created_at', { ascending: false })
+        .limit(1);
+    } catch { /* ignore */ }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
