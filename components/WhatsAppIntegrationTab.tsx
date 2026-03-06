@@ -26,6 +26,9 @@ export function WhatsAppIntegrationTab() {
   const [sendOnNewGuest, setSendOnNewGuest] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [masterPrompt, setMasterPrompt] = useState("");
+  const [promptSaving, setPromptSaving] = useState(false);
+  const [promptSaved, setPromptSaved] = useState(false);
 
   const loadIntegration = useCallback(async () => {
     if (!token) return;
@@ -50,6 +53,23 @@ export function WhatsAppIntegrationTab() {
   }, [token]);
 
   useEffect(() => { loadIntegration(); }, [loadIntegration]);
+
+  // Load master prompt
+  useEffect(() => {
+    (async () => {
+      const t = getToken();
+      if (!t) return;
+      try {
+        const res = await fetch("/api/master-prompt", {
+          headers: { Authorization: `Bearer ${t}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.prompt?.content) setMasterPrompt(data.prompt.content);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const handleVerify = async () => {
     if (!apiKey.trim() || !token) return;
@@ -268,6 +288,51 @@ export function WhatsAppIntegrationTab() {
           </div>
         </CardContent>
       </Card>
+      {/* Master Prompt */}
+      <Card>
+        <CardContent className="py-4 space-y-3">
+          <div>
+            <p className="text-sm font-medium">AI Master Prompt</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              System prompt used by the AI to handle WhatsApp conversations. Controls tone, intent detection, and behavior.
+            </p>
+          </div>
+          <textarea
+            value={masterPrompt}
+            onChange={(e) => { setMasterPrompt(e.target.value); setPromptSaved(false); }}
+            rows={10}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground font-mono resize-y min-h-[120px]"
+            placeholder="Enter the system prompt for the AI messaging engine..."
+          />
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              disabled={promptSaving || !masterPrompt.trim()}
+              onClick={async () => {
+                const t = getToken();
+                if (!t) return;
+                setPromptSaving(true);
+                try {
+                  const res = await fetch("/api/master-prompt", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
+                    body: JSON.stringify({ content: masterPrompt }),
+                  });
+                  if (res.ok) {
+                    setPromptSaved(true);
+                    setTimeout(() => setPromptSaved(false), 3000);
+                  }
+                } catch { /* ignore */ }
+                setPromptSaving(false);
+              }}
+            >
+              {promptSaving ? "Saving..." : promptSaved ? "✅ Saved" : "Save Prompt"}
+            </Button>
+            {promptSaved && <span className="text-xs text-green-500">Prompt updated</span>}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Webhook hint */}
       <Card>
         <CardContent className="py-4 space-y-2">

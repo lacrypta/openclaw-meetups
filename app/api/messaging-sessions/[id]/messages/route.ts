@@ -1,7 +1,7 @@
 /**
  * GET /api/messaging-sessions/[id]/messages
  *
- * Returns the full message history for a given session.
+ * Returns the full message history for a given session, plus session metadata.
  * Requires JWT auth (admin only).
  */
 
@@ -21,10 +21,14 @@ export async function GET(
   const { id } = await params;
 
   try {
-    // Verify session exists
+    // Fetch session with user and event metadata
     const { data: session, error: sessionError } = await supabase
       .from('messaging_sessions')
-      .select('id')
+      .select(`
+        *,
+        users (id, name, email, phone),
+        events (id, name)
+      `)
       .eq('id', id)
       .single();
 
@@ -43,7 +47,7 @@ export async function GET(
       return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
     }
 
-    return NextResponse.json({ messages: messages || [] });
+    return NextResponse.json({ session, messages: messages || [] });
   } catch (error) {
     console.error('messages GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
