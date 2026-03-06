@@ -34,9 +34,14 @@ export async function GET(request: NextRequest) {
     const data = await res.json();
     const now = new Date();
 
+    // Log raw first entry for debugging
+    if (data.entries?.[0]) {
+      console.log('Luma raw entry sample:', JSON.stringify(data.entries[0]).substring(0, 500));
+    }
+
     // Filter upcoming events only
     const events = (data.entries || [])
-      .map((entry: Record<string, unknown>) => entry.event as Record<string, unknown>)
+      .map((entry: Record<string, unknown>) => (entry.event || entry) as Record<string, unknown>)
       .filter((event: Record<string, unknown>) => {
         if (!event) return false;
         const startAt = event.start_at as string | undefined;

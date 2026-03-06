@@ -52,10 +52,16 @@ export async function POST(request: NextRequest) {
     };
     const baseUrl = config.base_url;
 
-    // Fetch event details
-    const eventRes = await fetch(`${baseUrl}/event/get?event_api_id=${luma_event_id}`, {
+    // Fetch event details — try both param names
+    let eventRes = await fetch(`${baseUrl}/event/get?event_api_id=${luma_event_id}`, {
       headers,
     });
+    if (!eventRes.ok) {
+      // Luma docs are inconsistent — try alternative param name
+      eventRes = await fetch(`${baseUrl}/event/get?api_id=${luma_event_id}`, {
+        headers,
+      });
+    }
     if (!eventRes.ok) {
       const text = await eventRes.text();
       return NextResponse.json(
@@ -63,7 +69,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { event: lumaEvent }: { event: LumaEvent } = await eventRes.json();
+    const eventData = await eventRes.json();
+    const lumaEvent: LumaEvent = eventData.event || eventData;
 
     // Resolve location string
     const location =
