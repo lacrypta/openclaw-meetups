@@ -193,24 +193,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Send WhatsApp confirmation message
-    const eventLabel = eventName ? ` al evento *${eventName}*` : ' al próximo OpenClaw Meetup';
-    const confirmationMessage =
-      `¡Hola ${name}! 👋 Soy el asistente de *La Crypta*.\n\n` +
-      `Te registraste${eventLabel}. 🎉\n\n` +
-      `¿Podés confirmar tu asistencia?\n` +
-      `• Respondé *1* para confirmar ✅\n` +
-      `• Respondé *2* para cancelar ❌\n\n` +
-      `¡Te esperamos!`;
-
-    // 5a. Send WhatsApp confirmation (if enabled in WaSender settings)
+    // 5. Send WhatsApp confirmation with direct link
     const wasenderConfig = await getWaSenderConfig();
     if (wasenderConfig.send_whatsapp_on_new_guest && phone) {
       try {
+        // Get confirmation token for this attendee
+        const { data: eaForWa } = await supabase
+          .from('event_attendees')
+          .select('confirmation_token')
+          .eq('event_id', internalEventId!)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+        const confirmLink = eaForWa?.confirmation_token
+          ? `${baseUrl}/confirm/${eaForWa.confirmation_token}`
+          : null;
+
+        const eventLabel = eventName ? ` a *${eventName}*` : ' al próximo OpenClaw Meetup';
+        const firstName = name?.split(' ')[0] || name || '';
+        const confirmationMessage = confirmLink
+          ? `¡Hola ${firstName}! 👋\n\n` +
+            `Te registraste${eventLabel}. 🎉\n\n` +
+            `Confirmá tu asistencia acá:\n${confirmLink}\n\n` +
+            `O respondé *si* a este mensaje. ¡Te esperamos! ⚡`
+          : `¡Hola ${firstName}! 👋\n\n` +
+            `Te registraste${eventLabel}. 🎉\n\n` +
+            `Respondé *si* para confirmar tu asistencia. ¡Te esperamos! ⚡`;
+
         await sendWhatsAppMessage(phone, confirmationMessage);
       } catch (err) {
         console.error('Failed to send WhatsApp message:', err);
-        // Non-fatal — continue
       }
     }
 
@@ -273,10 +286,12 @@ export async function POST(request: NextRequest) {
 
       // 7. Save sent message in history
       if (sessionId && phone) {
+        const eventLabel = eventName ? ` a *${eventName}*` : ' al próximo OpenClaw Meetup';
+        const savedMsg = `Mensaje de confirmación enviado por WhatsApp para registro${eventLabel}`;
         await supabase.from('messages').insert({
           session_id: sessionId,
           role: 'assistant',
-          content: confirmationMessage,
+          content: savedMsg,
         });
       }
     } catch (err) {
