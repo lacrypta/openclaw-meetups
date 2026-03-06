@@ -1,10 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(supabaseUrl, supabaseKey);
-}
+import { supabase } from '@/lib/supabase';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -13,10 +7,8 @@ interface PageProps {
 export default async function ConfirmPage({ params }: PageProps) {
   const { token } = await params;
 
-  const supabaseAdmin = getSupabaseAdmin();
-
   // Fetch attendee + event by token
-  const { data: attendee, error } = await supabaseAdmin
+  const { data: attendee, error } = await supabase
     .from('event_attendees')
     .select(`
       id,
