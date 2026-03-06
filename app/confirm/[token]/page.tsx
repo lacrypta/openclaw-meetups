@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { confirmAttendance } from '@/lib/confirm-attendance';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -13,11 +14,10 @@ export default async function ConfirmPage({ params }: PageProps) {
     .select(`
       id,
       user_id,
+      event_id,
       attendance_confirmed,
-      confirmed_at,
-      status,
-      users (name, email),
-      events (id, name, date, location, description, image_url)
+      users (name),
+      events (id, name, date, location)
     `)
     .eq('confirmation_token', token)
     .maybeSingle();
@@ -25,7 +25,6 @@ export default async function ConfirmPage({ params }: PageProps) {
   const eventData = attendee?.events as any;
   const userData = attendee?.users as any;
 
-  // Error or not found
   if (error || !attendee || !eventData) {
     return (
       <main style={{ background: '#060b18', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
@@ -35,131 +34,69 @@ export default async function ConfirmPage({ params }: PageProps) {
             Link inválido o expirado
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: 1.6 }}>
-            Este enlace de confirmación no es válido o ya expiró. Por favor contactate con el organizador del evento.
+            Este enlace de confirmación no es válido. Contactate con el organizador del evento.
           </p>
         </div>
       </main>
     );
   }
 
-  const isConfirmed = attendee.attendance_confirmed;
+  // Auto-confirm on page load
+  if (!attendee.attendance_confirmed) {
+    try {
+      await confirmAttendance(attendee.id);
+    } catch (e) {
+      console.error('Auto-confirm error:', e);
+    }
+  }
+
   const eventDate = new Date(eventData.date);
   const formattedDate = eventDate.toLocaleDateString('es-AR', {
     weekday: 'long',
-    year: 'numeric',
-    month: 'long',
     day: 'numeric',
+    month: 'long',
+  });
+  const formattedTime = eventDate.toLocaleTimeString('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
   });
 
+  const firstName = userData?.name?.split(' ')[0] || 'Asistente';
+
   return (
     <main style={{ background: '#060b18', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div style={{ maxWidth: '520px', width: '100%' }}>
-        {/* Event image */}
-        {eventData.image_url && (
-          <div style={{ borderRadius: '16px 16px 0 0', overflow: 'hidden', height: '200px' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={eventData.image_url}
-              alt={eventData.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+      <div style={{ background: '#0d1526', borderRadius: '16px', padding: '2.5rem', maxWidth: '480px', width: '100%', textAlign: 'center', border: '1px solid #1e2d4d' }}>
+        
+        <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🎉</div>
+        
+        <h1 style={{ color: '#f59e0b', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+          ¡Confirmado, {firstName}!
+        </h1>
+        
+        <p style={{ color: '#94a3b8', fontSize: '1rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          Tu lugar en <strong style={{ color: '#f1f5f9' }}>{eventData.name}</strong> está reservado.
+        </p>
+
+        <div style={{ background: '#0a1020', borderRadius: '12px', padding: '1.25rem', border: '1px solid #1e2d4d', textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#cbd5e1', fontSize: '0.95rem', marginBottom: '0.6rem' }}>
+            <span>📅</span>
+            <span style={{ textTransform: 'capitalize' }}>{formattedDate}</span>
           </div>
-        )}
-
-        <div style={{
-          background: '#0d1526',
-          borderRadius: eventData.image_url ? '0 0 16px 16px' : '16px',
-          padding: '2rem',
-          border: '1px solid #1e2d4d',
-          borderTop: eventData.image_url ? 'none' : '1px solid #1e2d4d',
-        }}>
-          {/* Brand header */}
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-            <span style={{ color: '#f59e0b', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              OpenClaw Meetups
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#cbd5e1', fontSize: '0.95rem', marginBottom: eventData.location ? '0.6rem' : '0' }}>
+            <span>🕐</span>
+            <span>{formattedTime} hs</span>
           </div>
-
-          {/* Event name */}
-          <h1 style={{ color: '#f1f5f9', fontSize: '1.6rem', fontWeight: 700, margin: '0 0 1rem', lineHeight: 1.3 }}>
-            {eventData.name}
-          </h1>
-
-          {/* Event details */}
-          <div style={{ marginBottom: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-              <span>📅</span>
-              <span style={{ textTransform: 'capitalize' }}>{formattedDate}</span>
+          {eventData.location && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#cbd5e1', fontSize: '0.95rem' }}>
+              <span>📍</span>
+              <span>{eventData.location}</span>
             </div>
-            {eventData.location && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.9rem' }}>
-                <span>📍</span>
-                <span>{eventData.location}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Description */}
-          {eventData.description && (
-            <p style={{ color: '#64748b', fontSize: '0.875rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
-              {eventData.description}
-            </p>
-          )}
-
-          {/* Divider */}
-          <hr style={{ border: 'none', borderTop: '1px solid #1e2d4d', margin: '1.5rem 0' }} />
-
-          {/* Attendee greeting */}
-          <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            Hola, <strong style={{ color: '#f1f5f9' }}>{userData?.name || 'asistente'}</strong>
-          </p>
-
-          {/* Confirmation status */}
-          {isConfirmed ? (
-            <div style={{
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              borderRadius: '12px',
-              padding: '1.25rem',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-              <p style={{ color: '#4ade80', fontWeight: 600, fontSize: '1rem', margin: 0 }}>
-                Ya confirmaste tu asistencia
-              </p>
-              {attendee.confirmed_at && (
-                <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.4rem' }}>
-                  Confirmado el {new Date(attendee.confirmed_at).toLocaleDateString('es-AR')}
-                </p>
-              )}
-            </div>
-          ) : (
-            <form action={`/api/confirm/${token}`} method="POST">
-              <button
-                type="submit"
-                style={{
-                  width: '100%',
-                  background: '#f59e0b',
-                  color: '#060b18',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '1rem',
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  letterSpacing: '0.02em',
-                }}
-              >
-                ✅ Confirmar Asistencia
-              </button>
-              <p style={{ color: '#475569', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.75rem' }}>
-                Al confirmar, tu lugar queda reservado en el evento.
-              </p>
-            </form>
           )}
         </div>
+
+        <p style={{ color: '#475569', fontSize: '0.8rem', marginTop: '1.5rem' }}>
+          Te esperamos ⚡
+        </p>
       </div>
     </main>
   );
