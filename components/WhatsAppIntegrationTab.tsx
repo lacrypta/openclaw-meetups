@@ -268,6 +268,27 @@ export function WhatsAppIntegrationTab() {
           </div>
         </CardContent>
       </Card>
+      {/* Webhook hint */}
+      <Card>
+        <CardContent className="py-4 space-y-2">
+          <p className="text-sm font-medium">Webhook URL</p>
+          <p className="text-xs text-muted-foreground">
+            Paste this URL in your WaSender session webhook settings to receive incoming messages:
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-muted/40 rounded px-3 py-2 font-mono break-all">
+              https://openclaw.lacrypta.ar/api/webhooks/wasender
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { navigator.clipboard.writeText("https://openclaw.lacrypta.ar/api/webhooks/wasender"); }}
+            >
+              Copy
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
