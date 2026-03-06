@@ -44,7 +44,7 @@ export default async function ConfirmPage({ params }: PageProps) {
         }}>
           {/* Logo */}
           <img
-            src="/lacrypta-iso.png"
+            src="https://raw.githubusercontent.com/lacrypta/branding/refs/heads/main/title/512-white-transparent.png"
             alt="La Crypta"
             style={{ width: '48px', height: '48px', margin: '0 auto 1.5rem', display: 'block', opacity: 0.5 }}
           />
@@ -137,7 +137,7 @@ export default async function ConfirmPage({ params }: PageProps) {
           marginBottom: '2rem',
         }}>
           <img
-            src="/lacrypta-iso.png"
+            src="https://raw.githubusercontent.com/lacrypta/branding/refs/heads/main/title/512-white-transparent.png"
             alt="La Crypta"
             style={{ height: '28px', opacity: 0.85 }}
           />
@@ -326,7 +326,7 @@ export default async function ConfirmPage({ params }: PageProps) {
             marginTop: '0.25rem',
           }}>
             <img
-              src="/lacrypta-iso.png"
+              src="https://raw.githubusercontent.com/lacrypta/branding/refs/heads/main/title/512-white-transparent.png"
               alt="La Crypta"
               style={{ width: '16px', height: '16px', opacity: 0.3 }}
             />
