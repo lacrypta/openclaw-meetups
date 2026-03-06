@@ -13,6 +13,7 @@ export interface Event {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  requires_confirmation?: boolean;
 }
 
 export interface EventWithCounts extends Event {
@@ -30,6 +31,11 @@ export interface EventAttendee {
   attendance_confirmed: boolean;
   registered_at: string;
   notes: string | null;
+  confirmation_token?: string;
+  confirmed_at?: string;
+  email_sent?: boolean;
+  email_sent_at?: string;
+  email_type?: string;
   // joined from users table
   name: string;
   email: string;

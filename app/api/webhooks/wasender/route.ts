@@ -24,7 +24,7 @@ import { supabase } from '@/lib/supabase';
 import { generateResponse } from '@/lib/ai-engine';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 import { sendConfirmationEmail } from '@/lib/email-sender';
-import { findGuestByEmail, updateGuestStatus } from '@/lib/luma';
+import { confirmAttendance, declineAttendance } from '@/lib/confirm-attendance';
 import { getWaSenderConfig } from '@/lib/integrations';
 
 const CONFIRMED_TAG = '[CONFIRMED]';
@@ -143,14 +143,20 @@ export async function POST(request: NextRequest) {
     // 9. Send reply via WaSender
     await sendWhatsAppMessage(phone, cleanContent);
 
-    // 10. Handle side effects
+    // 10. Handle side effects — unified confirmation flow (DB + Luma sync)
     if (isConfirmed && session.event_id) {
-      // Update event_attendees
-      await supabase
+      // Find event_attendee for this user+event
+      const { data: ea } = await supabase
         .from('event_attendees')
-        .update({ attendance_confirmed: true })
+        .select('id')
         .eq('event_id', session.event_id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (ea) {
+        // Unified: marks confirmed + syncs to Luma if applicable
+        await confirmAttendance(ea.id);
+      }
 
       // Close the session
       await supabase
@@ -166,7 +172,7 @@ export async function POST(request: NextRequest) {
       if (user.email) {
         const { data: event } = await supabase
           .from('events')
-          .select('name, luma_event_id')
+          .select('name')
           .eq('id', session.event_id)
           .single();
 
@@ -174,21 +180,6 @@ export async function POST(request: NextRequest) {
           sendConfirmationEmail(user.email, user.name, event.name).catch((err) =>
             console.error('Failed to send confirmation email:', err)
           );
-
-          // Update Luma guest status (non-blocking)
-          if (event.luma_event_id && user.email) {
-            (async () => {
-              try {
-                const guest = await findGuestByEmail(event.luma_event_id, user.email!);
-                if (guest) {
-                  await updateGuestStatus(event.luma_event_id, guest.api_id, 'approved');
-                  console.log(`Luma guest ${guest.api_id} approved for event ${event.luma_event_id}`);
-                }
-              } catch (err) {
-                console.error('Failed to update Luma guest status:', err);
-              }
-            })();
-          }
         }
       }
 
@@ -196,33 +187,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (isDeclined && session.event_id) {
-      await supabase
+      const { data: ea } = await supabase
         .from('event_attendees')
-        .update({ attendance_confirmed: false })
+        .select('id')
         .eq('event_id', session.event_id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      // Update Luma guest status to declined (non-blocking)
-      if (user.email) {
-        const { data: event } = await supabase
-          .from('events')
-          .select('luma_event_id')
-          .eq('id', session.event_id)
-          .single();
-
-        if (event?.luma_event_id) {
-          (async () => {
-            try {
-              const guest = await findGuestByEmail(event.luma_event_id, user.email!);
-              if (guest) {
-                await updateGuestStatus(event.luma_event_id, guest.api_id, 'declined');
-                console.log(`Luma guest ${guest.api_id} declined for event ${event.luma_event_id}`);
-              }
-            } catch (err) {
-              console.error('Failed to update Luma guest status:', err);
-            }
-          })();
-        }
+      if (ea) {
+        // Unified: marks declined + syncs to Luma if applicable
+        await declineAttendance(ea.id);
       }
 
       console.log(`User ${user.id} declined attendance for event ${session.event_id}`);
