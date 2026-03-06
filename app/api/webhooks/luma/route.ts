@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 import { getLumaConfig } from '@/lib/integrations';
 import { logWebhook } from '@/lib/webhook-logger';
+import { sendConfirmationEmail } from '@/lib/email-sender';
 import type { LumaWebhookPayload } from '@/lib/types';
 
 /** Verify Luma webhook signature (basic shared-secret check) */
@@ -210,6 +211,29 @@ export async function POST(request: NextRequest) {
     //     console.error('Failed to send WhatsApp message:', err);
     //   }
     // }
+
+    // 5b. Send confirmation email with unique token link
+    if (email && internalEventId) {
+      try {
+        // Get the confirmation token for this attendee
+        const { data: ea } = await supabase
+          .from('event_attendees')
+          .select('confirmation_token')
+          .eq('event_id', internalEventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (ea?.confirmation_token) {
+          await sendConfirmationEmail(email, name, eventName, ea.confirmation_token);
+        } else {
+          // Fallback without token
+          await sendConfirmationEmail(email, name, eventName);
+        }
+      } catch (err) {
+        console.error('Failed to send confirmation email:', err);
+        // Non-fatal — continue
+      }
+    }
 
     // 6. Create messaging session (non-fatal — tables may not exist yet)
     let sessionId: string | null = null;
