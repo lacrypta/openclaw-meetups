@@ -37,6 +37,7 @@ export async function getLumaConfig(): Promise<LumaConfig> {
       api_key: cfg.api_key || process.env.LUMA_API_KEY || '',
       base_url: cfg.base_url || 'https://public-api.luma.com/v1',
       webhook_secret: cfg.webhook_secret,
+      send_confirmation_email: cfg.send_confirmation_email ?? true,
     };
   }
 

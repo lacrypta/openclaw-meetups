@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { api_key, webhook_secret } = await request.json();
+    const { api_key, webhook_secret, send_confirmation_email } = await request.json();
     if (!api_key || typeof api_key !== 'string') {
       return NextResponse.json({ error: 'api_key is required' }, { status: 400 });
     }
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const config: Record<string, unknown> = {
       api_key,
       base_url: 'https://public-api.luma.com/v1',
+      send_confirmation_email: send_confirmation_email ?? true,
     };
     if (webhook_secret) config.webhook_secret = webhook_secret;
 

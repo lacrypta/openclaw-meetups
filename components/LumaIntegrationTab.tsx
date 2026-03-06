@@ -37,6 +37,7 @@ export function LumaIntegrationTab() {
   const [lumaEvents, setLumaEvents] = useState<LumaEvent[] | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [sendConfirmEmail, setSendConfirmEmail] = useState(true);
 
   const fetchIntegration = useCallback(async () => {
     if (!token) { setLoading(false); return; }
@@ -47,6 +48,9 @@ export function LumaIntegrationTab() {
       if (!res.ok) throw new Error("Failed to fetch");
       const { integration: data } = await res.json();
       setIntegration(data);
+      if (data?.config?.send_confirmation_email !== undefined) {
+        setSendConfirmEmail(data.config.send_confirmation_email);
+      }
     } catch {
       setMessage({ type: "error", text: "Failed to load Luma integration" });
     } finally {
@@ -98,7 +102,7 @@ export function LumaIntegrationTab() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: JSON.stringify({ api_key: apiKey, send_confirmation_email: sendConfirmEmail }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -268,6 +272,51 @@ export function LumaIntegrationTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Confirmation email toggle */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Send Email Confirmation request on new guest</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                When enabled, new guests from Luma will receive an email asking to confirm attendance.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                const newVal = !sendConfirmEmail;
+                setSendConfirmEmail(newVal);
+                // Save immediately if integration exists
+                if (integration) {
+                  try {
+                    await fetch("/api/integrations/luma", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        api_key: integration.config?.api_key || apiKey,
+                        send_confirmation_email: newVal,
+                      }),
+                    });
+                  } catch { /* silent */ }
+                }
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                sendConfirmEmail ? "bg-primary" : "bg-muted"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  sendConfirmEmail ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Webhook hint */}
       <Card>

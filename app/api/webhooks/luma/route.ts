@@ -212,8 +212,10 @@ export async function POST(request: NextRequest) {
     //   }
     // }
 
-    // 5b. Send confirmation email with unique token link
-    if (email && internalEventId) {
+    // 5b. Send confirmation email with unique token link (if enabled in Luma settings)
+    const lumaConfig = await getLumaConfig();
+    const shouldSendEmail = lumaConfig.send_confirmation_email !== false;
+    if (shouldSendEmail && email && internalEventId) {
       try {
         // Get the confirmation token for this attendee
         const { data: ea } = await supabase

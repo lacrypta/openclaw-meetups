@@ -197,6 +197,7 @@ export interface LumaConfig {
   api_key: string;
   base_url: string;
   webhook_secret?: string;
+  send_confirmation_email?: boolean;
 }
 
 export interface WaSenderConfig {
