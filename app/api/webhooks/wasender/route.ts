@@ -42,19 +42,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    // Try every possible field — unknown WaSender payload format
+    // WaSender actual payload: data.messages.key.cleanedSenderPn / data.messages.messageBody
+    const msg = body.data?.messages || {};
     const phone: string =
-      body.from || body.phone || body.sender || body.remoteJid ||
-      body.data?.from || body.data?.phone || body.data?.sender || body.data?.remoteJid ||
-      body.message?.from || body.message?.sender || '';
+      msg.key?.cleanedSenderPn || msg.key?.senderPn?.replace('@s.whatsapp.net', '') ||
+      body.from || body.phone || body.data?.from || '';
 
     const messageText: string =
-      body.text || body.body || body.message?.text || body.message?.body ||
-      body.data?.text || body.data?.body || body.data?.message?.text ||
-      body.content || body.data?.content || '';
+      msg.messageBody || msg.message?.conversation ||
+      body.text || body.body || body.data?.body || '';
 
     const wasenderMessageId: string =
-      body.messageId || body.id || body.data?.messageId || body.data?.id || '';
+      msg.id || msg.key?.id || body.messageId || body.id || '';
+
+    // Skip messages sent by us (fromMe)
+    if (msg.key?.fromMe === true) {
+      await log.update({ status: 'success', metadata: { note: 'skipped own message' } });
+      return NextResponse.json({ ok: true, note: 'own message skipped' });
+    }
 
     const extracted = { phone, messageText: messageText.substring(0, 200), wasenderMessageId };
 
