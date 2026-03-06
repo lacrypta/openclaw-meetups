@@ -11,6 +11,7 @@ interface WaSenderIntegration {
   config: {
     api_key: string;
     phone_number: string;
+    webhook_secret?: string;
     send_whatsapp_on_new_guest: boolean;
   };
 }
@@ -21,6 +22,7 @@ export function WhatsAppIntegrationTab() {
   const [loading, setLoading] = useState(true);
   const [apiKey, setApiKey] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [webhookSecret, setWebhookSecret] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sendOnNewGuest, setSendOnNewGuest] = useState(false);
@@ -44,6 +46,9 @@ export function WhatsAppIntegrationTab() {
       }
       if (data?.config?.phone_number) {
         setPhoneNumber(data.config.phone_number);
+      }
+      if (data?.config?.webhook_secret) {
+        setWebhookSecret(data.config.webhook_secret);
       }
     } catch {
       setMessage({ type: "error", text: "Failed to load WhatsApp integration" });
@@ -105,6 +110,7 @@ export function WhatsAppIntegrationTab() {
         body: JSON.stringify({
           api_key: apiKey,
           phone_number: phoneNumber,
+          webhook_secret: webhookSecret,
           send_whatsapp_on_new_guest: sendOnNewGuest,
         }),
       });
@@ -152,6 +158,7 @@ export function WhatsAppIntegrationTab() {
           body: JSON.stringify({
             api_key: integration.config?.api_key || apiKey,
             phone_number: phoneNumber || integration.config?.phone_number || "",
+            webhook_secret: webhookSecret || integration.config?.webhook_secret || "",
             send_whatsapp_on_new_guest: newVal,
           }),
         });
@@ -247,6 +254,21 @@ export function WhatsAppIntegrationTab() {
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="text-sm font-mono"
                 />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">
+                  Webhook Secret <span className="text-muted-foreground/50">(optional)</span>
+                </label>
+                <Input
+                  type="password"
+                  placeholder="Your webhook secret for signature verification"
+                  value={webhookSecret}
+                  onChange={(e) => setWebhookSecret(e.target.value)}
+                  className="text-sm font-mono"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set the same secret in WaSender webhook config. Sent as <code className="text-xs">x-webhook-signature</code> header.
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSave} disabled={saving || !apiKey.trim()}>

@@ -35,9 +35,8 @@ function stripTags(content: string): string {
 async function verifyWebhook(request: NextRequest): Promise<boolean> {
   const config = await getWaSenderConfig();
   const secret = config.webhook_secret;
-  if (!secret) return true;
-  const provided = request.headers.get('x-wasender-secret') ||
-    request.headers.get('authorization')?.replace('Bearer ', '') || '';
+  if (!secret) return true; // No secret configured = skip verification
+  const provided = request.headers.get('x-webhook-signature') || '';
   return provided === secret;
 }
 
