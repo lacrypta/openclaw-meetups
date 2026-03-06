@@ -224,9 +224,8 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
 
         if (ea?.confirmation_token) {
-          await sendConfirmationEmail(email, name, eventName, ea.confirmation_token);
+          await sendConfirmationEmail(email, name, eventName, undefined, ea.confirmation_token);
         } else {
-          // Fallback without token
           await sendConfirmationEmail(email, name, eventName);
         }
       } catch (err) {
