@@ -53,14 +53,17 @@ function mapIntegration(raw: Record<string, unknown>): EmailIntegration {
 
 /** Fetches the active default email integration from the DB. */
 async function getDefaultIntegration(): Promise<EmailIntegration> {
-  const { data: raw, error } = await supabase
+  // Prefer the integration marked as default (config->is_default), fallback to newest
+  const { data: rows, error } = await supabase
     .from('integrations')
     .select('*')
     .eq('provider', 'email')
     .eq('is_active', true)
-    .order('created_at')
-    .limit(1)
-    .single();
+    .order('created_at', { ascending: false });
+
+  const raw = rows?.find(
+    (r) => (r.config as Record<string, unknown>)?.is_default === true
+  ) || rows?.[0] || null;
 
   if (error || !raw) {
     throw new Error('No default email integration configured');
