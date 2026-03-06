@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
         location,
         image_url: lumaEvent.cover_url || null,
         luma_event_id: lumaEvent.api_id,
+        luma_url: lumaEvent.url || null,
         status: 'published',
         requires_confirmation: true,
         created_by: pubkey,
