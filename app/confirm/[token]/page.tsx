@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { confirmAttendance } from '@/lib/confirm-attendance';
+import { getGeneralSettings } from '@/lib/settings';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -50,15 +51,19 @@ export default async function ConfirmPage({ params }: PageProps) {
     }
   }
 
+  const settings = await getGeneralSettings();
+  const tz = settings.timezone;
   const eventDate = new Date(eventData.date);
   const formattedDate = eventDate.toLocaleDateString('es-AR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone: tz,
   });
   const formattedTime = eventDate.toLocaleTimeString('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: tz,
   });
 
   const firstName = userData?.name?.split(' ')[0] || 'Asistente';

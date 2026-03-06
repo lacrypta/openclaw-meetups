@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GeneralSettingsTab } from "@/components/GeneralSettingsTab";
 import { EmailIntegrationsTab } from "@/components/EmailIntegrationsTab";
 import { LumaIntegrationTab } from "@/components/LumaIntegrationTab";
 
@@ -14,11 +15,15 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="email">
+      <Tabs defaultValue="general">
         <TabsList>
+          <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="luma">Luma</TabsTrigger>
         </TabsList>
+        <TabsContent value="general">
+          <GeneralSettingsTab />
+        </TabsContent>
         <TabsContent value="email">
           <EmailIntegrationsTab />
         </TabsContent>

@@ -6,6 +6,7 @@ import { ContactsTable } from "./ContactsTable";
 import { EventForm } from "./EventForm";
 import { useEvent } from "../hooks/useEvent";
 import { useEventAttendees } from "../hooks/useEventAttendees";
+import { useTimezone } from "../hooks/useTimezone";
 import type { EventWithCounts } from "../lib/types";
 import type { Contact } from "../hooks/useContacts";
 import { Card } from "@/components/ui/card";
@@ -30,6 +31,7 @@ const statusVariant: Record<string, string> = {
 
 export function EventDetail({ eventId }: EventDetailProps) {
   const { event, loading: eventLoading, updateEvent } = useEvent(eventId);
+  const timezone = useTimezone();
   const { attendees, loading: attendeesLoading, updateAttendee } = useEventAttendees(eventId);
   const [editing, setEditing] = useState(false);
 
@@ -136,15 +138,17 @@ export function EventDetail({ eventId }: EventDetailProps) {
           <h1 className="text-[1.75rem] font-bold mb-2">{event.name}</h1>
           <div className="flex gap-4 flex-wrap text-muted-foreground text-sm">
             <span>
-              {new Date(event.date).toLocaleDateString("en-US", {
+              {new Date(event.date).toLocaleDateString("es-AR", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
                 year: "numeric",
+                timeZone: timezone,
               })}{" "}
-              {new Date(event.date).toLocaleTimeString("en-US", {
+              {new Date(event.date).toLocaleTimeString("es-AR", {
                 hour: "2-digit",
                 minute: "2-digit",
+                timeZone: timezone,
               })}
             </span>
             {event.location && <span>{event.location}</span>}

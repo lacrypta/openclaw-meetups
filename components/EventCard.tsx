@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { useTimezone } from "../hooks/useTimezone";
 import type { EventWithCounts } from "../lib/types";
 
 interface EventCardProps {
@@ -19,6 +20,7 @@ const statusVariant: Record<string, string> = {
 };
 
 export function EventCard({ event }: EventCardProps) {
+  const timezone = useTimezone();
   const capacityPct = event.capacity
     ? Math.min((event.attendee_count / event.capacity) * 100, 100)
     : 0;
@@ -42,15 +44,17 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         <div className="text-muted-foreground text-sm mb-2">
-          {new Date(event.date).toLocaleDateString("en-US", {
+          {new Date(event.date).toLocaleDateString("es-AR", {
             weekday: "short",
             month: "short",
             day: "numeric",
             year: "numeric",
+            timeZone: timezone,
           })}{" "}
-          {new Date(event.date).toLocaleTimeString("en-US", {
+          {new Date(event.date).toLocaleTimeString("es-AR", {
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: timezone,
           })}
         </div>
 
