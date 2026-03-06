@@ -48,9 +48,9 @@ export async function sendEmail(
         secure,
         auth: { user: cfg.username, pass: cfg.password },
         tls: tlsOptions,
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
       });
       await transport.sendMail({ from: cfg.from_email, to, subject, html });
       break;
