@@ -73,13 +73,15 @@ export async function POST(request: NextRequest) {
 
     if (body.type === 'guest.registered' && body.data) {
       // Native Luma webhook payload
-      const payload = body as LumaWebhookPayload;
-      name = payload.data.guest.name || '';
-      email = payload.data.guest.email || '';
-      phone = payload.data.guest.phone || '';
-      lumaGuestId = payload.data.guest.api_id || '';
-      lumaEventId = payload.data.event.api_id || '';
-      eventName = payload.data.event.name || '';
+      // Luma sends: data.user_name, data.user_email, data.phone_number, data.api_id (guest)
+      // Event info nested in: data.event.api_id, data.event.name
+      const d = body.data;
+      name = d.user_name || `${d.user_first_name || ''} ${d.user_last_name || ''}`.trim() || '';
+      email = d.user_email || '';
+      phone = d.phone_number || '';
+      lumaGuestId = d.api_id || '';
+      lumaEventId = d.event?.api_id || '';
+      eventName = d.event?.name || '';
     } else {
       // Legacy flat payload (Zapier or manual)
       name = body.name || body.guest_name || '';
