@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmailIntegrationsTab } from "@/components/EmailIntegrationsTab";
+import { LumaIntegrationTab } from "@/components/LumaIntegrationTab";
 
 export default function SettingsPage() {
   return (
@@ -16,9 +17,13 @@ export default function SettingsPage() {
       <Tabs defaultValue="email">
         <TabsList>
           <TabsTrigger value="email">Email</TabsTrigger>
+          <TabsTrigger value="luma">Luma</TabsTrigger>
         </TabsList>
         <TabsContent value="email">
           <EmailIntegrationsTab />
+        </TabsContent>
+        <TabsContent value="luma">
+          <LumaIntegrationTab />
         </TabsContent>
       </Tabs>
     </div>

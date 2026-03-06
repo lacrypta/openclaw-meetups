@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEvents } from "@/hooks/useEvents";
+import { useAuth } from "@/hooks/useAuth";
 import { EventCard } from "@/components/EventCard";
 import { EventForm } from "@/components/EventForm";
+import { LumaImportDialog } from "@/components/LumaImportDialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
@@ -22,16 +24,39 @@ const statusFilters: { label: string; value: EventStatus | "all" }[] = [
 export default function EventsPage() {
   const [filter, setFilter] = useState<EventStatus | "all">("all");
   const [showForm, setShowForm] = useState(false);
+  const [showLumaImport, setShowLumaImport] = useState(false);
+  const [lumaActive, setLumaActive] = useState(false);
 
-  const { events, loading, error, createEvent } = useEvents(
+  const { token, ready } = useAuth();
+  const { events, loading, error, createEvent, refetch } = useEvents(
     filter === "all" ? undefined : { status: filter }
   );
+
+  // Check if Luma integration is active
+  useEffect(() => {
+    if (!ready || !token) return;
+    fetch("/api/integrations/luma", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setLumaActive(!!data.integration?.is_active);
+      })
+      .catch(() => {});
+  }, [ready, token]);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Events</h1>
-        <Button onClick={() => setShowForm(true)}>+ Create Event</Button>
+        <div className="flex gap-2">
+          {lumaActive && (
+            <Button variant="outline" onClick={() => setShowLumaImport(true)}>
+              ⚡ Import from Luma
+            </Button>
+          )}
+          <Button onClick={() => setShowForm(true)}>+ Create Event</Button>
+        </div>
       </div>
 
       {/* Status filters */}
@@ -89,6 +114,13 @@ export default function EventsPage() {
             await createEvent(data);
           }}
           onClose={() => setShowForm(false)}
+        />
+      )}
+
+      {showLumaImport && (
+        <LumaImportDialog
+          onClose={() => setShowLumaImport(false)}
+          onImported={() => refetch()}
         />
       )}
     </div>
