@@ -2,6 +2,7 @@
  * POST /api/webhooks/wasender
  *
  * DEBUG MODE: AI disabled — log everything, save messages to session.
+ * Sessions indexed by PHONE (not user_id).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
-    // WaSender actual payload: data.messages.key.cleanedSenderPn / data.messages.messageBody
+    // WaSender payload: data.messages.key.cleanedSenderPn / data.messages.messageBody
     const msg = body.data?.messages || {};
     const phone: string =
       msg.key?.cleanedSenderPn || msg.key?.senderPn?.replace('@s.whatsapp.net', '') ||
@@ -55,63 +56,59 @@ export async function POST(request: NextRequest) {
     const wasenderMessageId: string =
       msg.id || msg.key?.id || body.messageId || body.id || '';
 
-    // Skip messages sent by us (fromMe)
+    const senderName: string = msg.pushName || '';
+
+    // Skip own messages
     if (msg.key?.fromMe === true) {
       await log.update({ status: 'success', metadata: { note: 'skipped own message' } });
       return NextResponse.json({ ok: true, note: 'own message skipped' });
     }
 
-    const extracted = { phone, messageText: messageText.substring(0, 200), wasenderMessageId };
+    const extracted = { phone, messageText: messageText.substring(0, 200), wasenderMessageId, senderName };
 
     if (!phone && !messageText) {
       await log.update({ status: 'success', metadata: { ...extracted, note: 'no phone/message in payload', body_keys: Object.keys(body) } });
       return NextResponse.json({ ok: true, note: 'no phone or message', body_keys: Object.keys(body) });
     }
 
-    // Normalize phone
-    const cleanPhone = phone.replace(/[^\d+]/g, '');
-    const phoneVariants = [
-      cleanPhone,
-      cleanPhone.startsWith('+') ? cleanPhone.slice(1) : `+${cleanPhone}`,
-    ];
+    // Normalize phone — always store with +
+    const digitsOnly = phone.replace(/[^\d]/g, '');
+    const normalizedPhone = `+${digitsOnly}`;
 
-    // Find user (limit 1 — multiple users may share same phone in test data)
-    const { data: users } = await supabase
+    // Find matching users (may be multiple)
+    const { data: matchingUsers } = await supabase
       .from('users')
       .select('id, name, email, phone')
-      .or(phoneVariants.map(p => `phone.eq.${p}`).join(','))
-      .order('created_at', { ascending: true })
-      .limit(1);
+      .or(`phone.eq.${normalizedPhone},phone.eq.${digitsOnly}`)
+      .order('created_at', { ascending: true });
 
-    const user = users?.[0] || null;
+    const userCount = matchingUsers?.length || 0;
+    const firstUser = matchingUsers?.[0] || null;
 
-    if (!user) {
-      await log.update({ status: 'success', metadata: { ...extracted, note: 'unknown user', cleanPhone } });
-      return NextResponse.json({ ok: true, note: 'unknown user', cleanPhone });
-    }
-
-    // Find latest event attendance
-    const { data: attendee } = await supabase
-      .from('event_attendees')
-      .select('id, event_id, events(name)')
-      .eq('user_id', user.id)
-      .order('id', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const eventId = attendee?.event_id || null;
-
-    // Find or create session
+    // Find or create session BY PHONE
     let { data: session } = await supabase
       .from('messaging_sessions')
-      .select('id')
-      .eq('user_id', user.id)
+      .select('id, user_id')
+      .eq('phone', normalizedPhone)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (!session) {
+      // Find latest event attendance for any matching user
+      let eventId: string | null = null;
+      if (firstUser) {
+        const { data: attendee } = await supabase
+          .from('event_attendees')
+          .select('event_id')
+          .eq('user_id', firstUser.id)
+          .order('id', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        eventId = attendee?.event_id || null;
+      }
+
       const { data: prompt } = await supabase
         .from('master_prompts')
         .select('id')
@@ -121,12 +118,13 @@ export async function POST(request: NextRequest) {
       const { data: newSession, error: sessErr } = await supabase
         .from('messaging_sessions')
         .insert({
-          user_id: user.id,
+          phone: normalizedPhone,
+          user_id: userCount === 1 ? firstUser!.id : null, // auto-assign only if unambiguous
           event_id: eventId,
           status: 'active',
           master_prompt_id: prompt?.id || null,
         })
-        .select('id')
+        .select('id, user_id')
         .single();
 
       if (sessErr) {
@@ -153,18 +151,24 @@ export async function POST(request: NextRequest) {
       status: 'success',
       metadata: {
         ...extracted,
-        user_id: user.id,
-        user_name: user.name,
+        normalizedPhone,
+        matching_users: userCount,
+        assigned_user_id: session!.user_id,
         session_id: session!.id,
-        event_name: (attendee?.events as any)?.name || null,
-        note: 'message saved — AI disabled',
+        note: userCount > 1
+          ? `message saved — ${userCount} users share this phone (unassigned)`
+          : userCount === 1
+            ? 'message saved — user auto-assigned'
+            : 'message saved — no matching user',
       },
     });
 
     return NextResponse.json({
       ok: true,
-      user_id: user.id,
+      phone: normalizedPhone,
       session_id: session!.id,
+      matching_users: userCount,
+      assigned: session!.user_id ? true : false,
       message_saved: true,
       ai_disabled: true,
     });
