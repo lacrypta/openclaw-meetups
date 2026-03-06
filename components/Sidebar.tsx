@@ -10,6 +10,7 @@ const navItems = [
   { label: "Users", href: "/dashboard/users", icon: "👥" },
   { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬" },
   { label: "Templates", href: "/dashboard/templates", icon: "✉️" },
+  { label: "Logs", href: "/dashboard/logs", icon: "📋" },
   { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
 ];
 
