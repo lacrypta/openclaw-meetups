@@ -1,59 +1,66 @@
 /**
  * POST /api/webhooks/wasender
  *
- * Receives inbound WhatsApp messages from WaSenderAPI.
- * Flow:
- *   1. Verify webhook secret
- *   2. Extract phone + message text
- *   3. Find user by phone
- *   4. Find or create messaging session for user's latest pending event
- *   5. Save inbound message
- *   6. Generate AI response (with full conversation history)
- *   7. Parse [CONFIRMED] / [DECLINED] intent from AI response
- *   8. Save AI response with model/token metadata
- *   9. Send reply via WhatsApp
- *  10. Handle confirm/decline: DB + Luma sync + close session
+ * DEBUG MODE: AI disabled — log everything, save messages to session.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { generateResponse } from '@/lib/ai-engine';
-import { sendWhatsAppMessage } from '@/lib/wasender';
-import { confirmAttendance, declineAttendance } from '@/lib/confirm-attendance';
+import { logWebhook } from '@/lib/webhook-logger';
 import { getWaSenderConfig } from '@/lib/integrations';
 
-const CONFIRMED_TAG = '[CONFIRMED]';
-const DECLINED_TAG = '[DECLINED]';
+export async function POST(request: NextRequest) {
+  const rawBody = await request.text();
+  const hdrs: Record<string, string> = {};
+  request.headers.forEach((v, k) => { hdrs[k] = v; });
 
-function stripTags(content: string): string {
-  return content
-    .replace(CONFIRMED_TAG, '')
-    .replace(DECLINED_TAG, '')
-    .trim();
-}
+  let parsedBody: any;
+  try { parsedBody = JSON.parse(rawBody); } catch { parsedBody = rawBody; }
 
-async function verifyWebhook(request: NextRequest): Promise<boolean> {
+  const log = await logWebhook({
+    provider: 'wasender',
+    event_type: 'inbound_message',
+    request_headers: hdrs,
+    request_body: parsedBody,
+  });
+
+  // Verify webhook secret
   const config = await getWaSenderConfig();
   const secret = config.webhook_secret;
-  if (!secret) return true; // No secret configured = skip verification
-  const provided = request.headers.get('x-webhook-signature') || '';
-  return provided === secret;
-}
-
-export async function POST(request: NextRequest) {
-  if (!(await verifyWebhook(request))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (secret) {
+    const provided = request.headers.get('x-webhook-signature') || '';
+    if (provided !== secret) {
+      await log.update({ status: 'rejected', metadata: { reason: 'invalid signature' } });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   try {
-    const body = await request.json();
+    const body = parsedBody;
+    if (typeof body !== 'object' || !body) {
+      await log.update({ status: 'error', error_message: 'invalid JSON body' });
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
 
-    const phone: string = body.from || body.phone || body.data?.from || '';
-    const messageText: string = body.text || body.body || body.message || body.data?.body || '';
-    const wasenderMessageId: string = body.messageId || body.id || '';
+    // Try every possible field — unknown WaSender payload format
+    const phone: string =
+      body.from || body.phone || body.sender || body.remoteJid ||
+      body.data?.from || body.data?.phone || body.data?.sender || body.data?.remoteJid ||
+      body.message?.from || body.message?.sender || '';
 
-    if (!phone || !messageText) {
-      return NextResponse.json({ ok: true, note: 'no phone or message' });
+    const messageText: string =
+      body.text || body.body || body.message?.text || body.message?.body ||
+      body.data?.text || body.data?.body || body.data?.message?.text ||
+      body.content || body.data?.content || '';
+
+    const wasenderMessageId: string =
+      body.messageId || body.id || body.data?.messageId || body.data?.id || '';
+
+    const extracted = { phone, messageText: messageText.substring(0, 200), wasenderMessageId };
+
+    if (!phone && !messageText) {
+      await log.update({ status: 'success', metadata: { ...extracted, note: 'no phone/message in payload', body_keys: Object.keys(body) } });
+      return NextResponse.json({ ok: true, note: 'no phone or message', body_keys: Object.keys(body) });
     }
 
     // Normalize phone
@@ -63,7 +70,7 @@ export async function POST(request: NextRequest) {
       cleanPhone.startsWith('+') ? cleanPhone.slice(1) : `+${cleanPhone}`,
     ];
 
-    // Find user by phone
+    // Find user
     const { data: user } = await supabase
       .from('users')
       .select('id, name, email, phone')
@@ -71,45 +78,39 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!user) {
-      console.warn(`WhatsApp from unknown phone: ${cleanPhone}`);
-      return NextResponse.json({ ok: true, note: 'unknown user' });
+      await log.update({ status: 'success', metadata: { ...extracted, note: 'unknown user', cleanPhone } });
+      return NextResponse.json({ ok: true, note: 'unknown user', cleanPhone });
     }
 
-    // Find latest pending event attendance
+    // Find latest event attendance
     const { data: attendee } = await supabase
       .from('event_attendees')
-      .select('id, event_id, attendance_confirmed, events(name)')
+      .select('id, event_id, events(name)')
       .eq('user_id', user.id)
-      .eq('attendance_confirmed', false)
       .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (!attendee) {
-      return NextResponse.json({ ok: true, note: 'no pending attendance' });
-    }
+    const eventId = attendee?.event_id || null;
 
-    const eventId = attendee.event_id;
-    const eventName = (attendee.events as any)?.name || 'el evento';
-
-    // Find or create messaging session
+    // Find or create session
     let { data: session } = await supabase
       .from('messaging_sessions')
       .select('id')
       .eq('user_id', user.id)
-      .eq('event_id', eventId)
       .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!session) {
-      // Get default master prompt
       const { data: prompt } = await supabase
         .from('master_prompts')
         .select('id')
         .eq('is_default', true)
         .maybeSingle();
 
-      const { data: newSession } = await supabase
+      const { data: newSession, error: sessErr } = await supabase
         .from('messaging_sessions')
         .insert({
           user_id: user.id,
@@ -120,108 +121,48 @@ export async function POST(request: NextRequest) {
         .select('id')
         .single();
 
+      if (sessErr) {
+        await log.update({ status: 'error', error_message: `create_session: ${sessErr.message}` });
+        return NextResponse.json({ error: sessErr.message }, { status: 500 });
+      }
       session = newSession;
     }
 
-    if (!session) {
-      console.error('Failed to create messaging session');
-      return NextResponse.json({ error: 'Session creation failed' }, { status: 500 });
-    }
-
-    // Save inbound message
-    await supabase.from('messages').insert({
-      session_id: session.id,
+    // Save message
+    const { error: msgErr } = await supabase.from('messages').insert({
+      session_id: session!.id,
       role: 'user',
       content: messageText,
       wasender_message_id: wasenderMessageId || null,
     });
 
-    // Generate AI response with full conversation history
-    let rawContent: string;
-    let model = '';
-    let provider = '';
-    let tokensIn = 0;
-    let tokensOut = 0;
-
-    try {
-      const aiResult = await generateResponse(session.id, messageText);
-      rawContent = aiResult.content;
-      model = aiResult.model;
-      provider = aiResult.provider;
-      tokensIn = aiResult.tokensIn;
-      tokensOut = aiResult.tokensOut;
-    } catch (err) {
-      console.error('AI engine failed, using keyword fallback:', err);
-      // Keyword fallback
-      const normalized = messageText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const confirmWords = ['si', 'yes', 'confirmo', 'voy', '1'];
-      const declineWords = ['no', 'cancelo', 'no voy', '2'];
-      if (confirmWords.includes(normalized)) {
-        rawContent = `${CONFIRMED_TAG}¡Listo! Tu asistencia a ${eventName} está confirmada. ¡Te esperamos! ⚡`;
-      } else if (declineWords.includes(normalized)) {
-        rawContent = `${DECLINED_TAG}Entendido. Cancelamos tu lugar en ${eventName}. Si cambiás de opinión, respondé *si*.`;
-      } else {
-        rawContent = `¡Hola! Estoy acá para confirmar tu asistencia a *${eventName}*. ¿Podés confirmar? Respondé *si* o *no*.`;
-      }
+    if (msgErr) {
+      await log.update({ status: 'error', error_message: `save_message: ${msgErr.message}` });
+      return NextResponse.json({ error: msgErr.message }, { status: 500 });
     }
 
-    // Parse intent
-    const isConfirmed = rawContent.includes(CONFIRMED_TAG);
-    const isDeclined = rawContent.includes(DECLINED_TAG);
-    const cleanContent = stripTags(rawContent);
-
-    // Save AI response
-    await supabase.from('messages').insert({
-      session_id: session.id,
-      role: 'assistant',
-      content: cleanContent,
-      model_used: model || null,
-      provider: provider || null,
-      tokens_in: tokensIn || null,
-      tokens_out: tokensOut || null,
+    await log.update({
+      status: 'success',
+      metadata: {
+        ...extracted,
+        user_id: user.id,
+        user_name: user.name,
+        session_id: session!.id,
+        event_name: (attendee?.events as any)?.name || null,
+        note: 'message saved — AI disabled',
+      },
     });
-
-    // Send reply via WhatsApp
-    try {
-      await sendWhatsAppMessage(user.phone || cleanPhone, cleanContent);
-    } catch (err) {
-      console.error('Failed to send WhatsApp reply:', err);
-    }
-
-    // Handle confirmation
-    if (isConfirmed) {
-      await confirmAttendance(attendee.id);
-
-      // Close session
-      await supabase
-        .from('messaging_sessions')
-        .update({ status: 'closed', closed_at: new Date().toISOString() })
-        .eq('id', session.id);
-
-      console.log(`User ${user.id} confirmed via WhatsApp for event ${eventId}`);
-    }
-
-    // Handle decline
-    if (isDeclined) {
-      await declineAttendance(attendee.id);
-
-      await supabase
-        .from('messaging_sessions')
-        .update({ status: 'closed', closed_at: new Date().toISOString() })
-        .eq('id', session.id);
-
-      console.log(`User ${user.id} declined via WhatsApp for event ${eventId}`);
-    }
 
     return NextResponse.json({
       ok: true,
-      intent: isConfirmed ? 'confirmed' : isDeclined ? 'declined' : 'conversation',
-      session_id: session.id,
       user_id: user.id,
+      session_id: session!.id,
+      message_saved: true,
+      ai_disabled: true,
     });
 
-  } catch (error) {
-    console.error('WaSender webhook error:', error);
+  } catch (error: any) {
+    await log.update({ status: 'error', error_message: error?.message || String(error) });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
