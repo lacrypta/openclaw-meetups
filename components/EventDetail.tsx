@@ -241,13 +241,26 @@ export function EventDetail({ eventId }: EventDetailProps) {
           initial={{
             name: event.name,
             description: event.description || "",
-            date: event.date.slice(0, 16),
+            date: new Date(event.date).toLocaleString("sv-SE", { timeZone: timezone }).slice(0, 16),
             location: event.location || "",
             capacity: event.capacity?.toString() || "",
             status: event.status,
           }}
           onSubmit={async (data) => {
-            await updateEvent(data);
+            // data.date is in configured timezone (e.g. "2026-03-27T21:00")
+            // Get the UTC offset for this timezone to convert back
+            const tempDate = new Date();
+            const offsetStr = new Intl.DateTimeFormat("en-US", {
+              timeZone: timezone,
+              timeZoneName: "shortOffset",
+            }).formatToParts(tempDate).find(p => p.type === "timeZoneName")?.value || "GMT-3";
+            const match = offsetStr.match(/GMT([+-]?\d+(?::\d+)?)/);
+            const offset = match ? match[1] : "-3";
+            const paddedOffset = offset.includes(":") ? offset : `${offset}:00`;
+            const sign = paddedOffset.startsWith("-") ? "-" : "+";
+            const abs = paddedOffset.replace(/^[+-]/, "").padStart(5, "0");
+            const isoWithTz = `${data.date}:00${sign}${abs}`;
+            await updateEvent({ ...data, date: new Date(isoWithTz).toISOString() });
           }}
           onClose={() => setEditing(false)}
         />
