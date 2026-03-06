@@ -75,12 +75,15 @@ export async function POST(request: NextRequest) {
       cleanPhone.startsWith('+') ? cleanPhone.slice(1) : `+${cleanPhone}`,
     ];
 
-    // Find user
-    const { data: user } = await supabase
+    // Find user (limit 1 — multiple users may share same phone in test data)
+    const { data: users } = await supabase
       .from('users')
       .select('id, name, email, phone')
       .or(phoneVariants.map(p => `phone.eq.${p}`).join(','))
-      .maybeSingle();
+      .order('created_at', { ascending: true })
+      .limit(1);
+
+    const user = users?.[0] || null;
 
     if (!user) {
       await log.update({ status: 'success', metadata: { ...extracted, note: 'unknown user', cleanPhone } });
