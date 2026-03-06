@@ -296,9 +296,7 @@ export default async function ConfirmPage({ params }: PageProps) {
                 lineHeight: 1.7,
                 margin: 0,
               }}>
-                💻 Traé tu laptop para instalar y probar en vivo
-                <br />
-                🍺 Entrada libre — traé algo para compartir
+                💻 Traé tu laptop si querés probar en vivo
               </p>
             </div>
           </div>
