@@ -204,6 +204,7 @@ export interface WaSenderConfig {
   api_key: string;
   webhook_secret?: string;
   phone_number: string;
+  send_whatsapp_on_new_guest?: boolean;
 }
 
 export interface LumaWebhookPayload {

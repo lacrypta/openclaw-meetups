@@ -17,7 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage } from '@/lib/wasender';
-import { getLumaConfig } from '@/lib/integrations';
+import { getLumaConfig, getWaSenderConfig } from '@/lib/integrations';
 import { logWebhook } from '@/lib/webhook-logger';
 import { send } from '@/lib/email-service';
 import type { LumaWebhookPayload } from '@/lib/types';
@@ -203,14 +203,16 @@ export async function POST(request: NextRequest) {
       `• Respondé *2* para cancelar ❌\n\n` +
       `¡Te esperamos!`;
 
-    // TODO: WhatsApp confirmation paused until WaSender integration is configured in Settings
-    // if (phone) {
-    //   try {
-    //     await sendWhatsAppMessage(phone, confirmationMessage);
-    //   } catch (err) {
-    //     console.error('Failed to send WhatsApp message:', err);
-    //   }
-    // }
+    // 5a. Send WhatsApp confirmation (if enabled in WaSender settings)
+    const wasenderConfig = await getWaSenderConfig();
+    if (wasenderConfig.send_whatsapp_on_new_guest && phone) {
+      try {
+        await sendWhatsAppMessage(phone, confirmationMessage);
+      } catch (err) {
+        console.error('Failed to send WhatsApp message:', err);
+        // Non-fatal — continue
+      }
+    }
 
     // 5b. Send confirmation email with unique token link (if enabled in Luma settings)
     const lumaConfig = await getLumaConfig();

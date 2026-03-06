@@ -62,6 +62,7 @@ export async function getWaSenderConfig(): Promise<WaSenderConfig> {
       api_key: cfg.api_key || process.env.WASENDER_API_KEY || '',
       webhook_secret: cfg.webhook_secret || process.env.WASENDER_WEBHOOK_SECRET,
       phone_number: cfg.phone_number || '',
+      send_whatsapp_on_new_guest: cfg.send_whatsapp_on_new_guest ?? false,
     };
   }
 

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralSettingsTab } from "@/components/GeneralSettingsTab";
 import { EmailIntegrationsTab } from "@/components/EmailIntegrationsTab";
 import { LumaIntegrationTab } from "@/components/LumaIntegrationTab";
+import { WhatsAppIntegrationTab } from "@/components/WhatsAppIntegrationTab";
 
 export default function SettingsPage() {
   return (
@@ -20,6 +21,7 @@ export default function SettingsPage() {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="luma">Luma</TabsTrigger>
+          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <GeneralSettingsTab />
@@ -29,6 +31,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="luma">
           <LumaIntegrationTab />
+        </TabsContent>
+        <TabsContent value="whatsapp">
+          <WhatsAppIntegrationTab />
         </TabsContent>
       </Tabs>
     </div>
