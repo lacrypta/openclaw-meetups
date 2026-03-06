@@ -18,6 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 import { getLumaConfig } from '@/lib/integrations';
+import { logWebhook } from '@/lib/webhook-logger';
 import type { LumaWebhookPayload } from '@/lib/types';
 
 /** Verify Luma webhook signature (basic shared-secret check) */
@@ -35,20 +36,32 @@ async function verifySignature(request: NextRequest): Promise<boolean> {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[LUMA WEBHOOK] ==================== INCOMING REQUEST ====================');
-  console.log('[LUMA WEBHOOK] Headers:', JSON.stringify(Object.fromEntries(request.headers.entries())));
+  const startTime = Date.now();
+  const headers = Object.fromEntries(request.headers.entries());
 
   // 1. Verify signature
   const sigValid = await verifySignature(request);
-  console.log('[LUMA WEBHOOK] Signature valid:', sigValid);
   if (!sigValid) {
-    console.log('[LUMA WEBHOOK] ❌ Signature verification FAILED');
+    await logWebhook({
+      provider: 'luma',
+      request_headers: headers,
+    }).then(log => log.update({
+      status: 'error',
+      response_status: 401,
+      error_message: 'Signature verification failed',
+      processing_time_ms: Date.now() - startTime,
+    }));
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const body = await request.json();
-    console.log('[LUMA WEBHOOK] Raw body:', JSON.stringify(body).substring(0, 2000));
+    const log = await logWebhook({
+      provider: 'luma',
+      event_type: body.type || 'unknown',
+      request_headers: headers,
+      request_body: body,
+    });
 
     // Support both Luma native webhook shape and legacy flat shape (Zapier, etc.)
     let name: string;
@@ -77,10 +90,13 @@ export async function POST(request: NextRequest) {
       eventName = body.event_name || '';
     }
 
-    console.log('[LUMA WEBHOOK] Parsed:', { name, email, phone, lumaGuestId, lumaEventId, eventName });
-
     if (!name && !email) {
-      console.log('[LUMA WEBHOOK] ❌ No name or email');
+      await log.update({
+        status: 'error',
+        response_status: 400,
+        error_message: 'No name or email in payload',
+        processing_time_ms: Date.now() - startTime,
+      });
       return NextResponse.json({ error: 'guest name or email is required' }, { status: 400 });
     }
 
@@ -107,7 +123,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to upsert user' }, { status: 500 });
       }
       userId = upserted.id;
-      console.log('[LUMA WEBHOOK] ✅ User upserted:', userId);
     } else if (phone) {
       const { data: existing } = await supabase
         .from('users')
@@ -155,9 +170,6 @@ export async function POST(request: NextRequest) {
       if (event) {
         internalEventId = event.id;
         if (!eventName) eventName = event.name;
-        console.log('[LUMA WEBHOOK] ✅ Event matched:', internalEventId, eventName);
-      } else {
-        console.warn(`[LUMA WEBHOOK] ⚠️ No event found for luma_event_id=${lumaEventId}`);
       }
     }
 
@@ -234,14 +246,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[LUMA WEBHOOK] ✅ COMPLETE — user:', userId, 'session:', session.id);
+    await log.update({
+      status: 'success',
+      response_status: 200,
+      response_body: { ok: true, user_id: userId, session_id: session.id },
+      metadata: {
+        user_id: userId,
+        session_id: session.id,
+        event_id: internalEventId,
+        event_name: eventName,
+        guest_name: name,
+        guest_email: email,
+        whatsapp_sent: !!phone,
+      },
+      processing_time_ms: Date.now() - startTime,
+    });
+
     return NextResponse.json({
       ok: true,
       user_id: userId,
       session_id: session.id,
     });
   } catch (error) {
-    console.error('[LUMA WEBHOOK] ❌ ERROR:', error);
+    console.error('Luma webhook error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
