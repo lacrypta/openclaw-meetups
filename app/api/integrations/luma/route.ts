@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
           config,
           is_active: true,
         },
-        { onConflict: 'provider' }
+        { onConflict: 'provider,name' }
       )
       .select()
       .single();
