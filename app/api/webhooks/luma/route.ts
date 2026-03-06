@@ -211,50 +211,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Create messaging session
-    const { data: defaultPrompt } = await supabase
-      .from('master_prompts')
-      .select('id')
-      .eq('is_default', true)
-      .maybeSingle();
+    // 6. Create messaging session (non-fatal — tables may not exist yet)
+    let sessionId: string | null = null;
+    try {
+      const { data: defaultPrompt } = await supabase
+        .from('master_prompts')
+        .select('id')
+        .eq('is_default', true)
+        .maybeSingle();
 
-    const { data: session, error: sessionError } = await supabase
-      .from('messaging_sessions')
-      .insert({
-        user_id: userId,
-        event_id: internalEventId,
-        status: 'active',
-        master_prompt_id: defaultPrompt?.id || null,
-      })
-      .select('id')
-      .single();
+      const { data: session } = await supabase
+        .from('messaging_sessions')
+        .insert({
+          user_id: userId,
+          event_id: internalEventId,
+          status: 'active',
+          master_prompt_id: defaultPrompt?.id || null,
+        })
+        .select('id')
+        .single();
 
-    if (sessionError || !session) {
-      console.error('Session create error:', sessionError);
-      // Non-fatal for the webhook response — user and attendee are already created
-      return NextResponse.json({ ok: true, user_id: userId, session_id: null });
-    }
+      sessionId = session?.id || null;
 
-    // 7. Save sent message in history
-    if (phone) {
-      const { error: msgError } = await supabase.from('messages').insert({
-        session_id: session.id,
-        role: 'assistant',
-        content: confirmationMessage,
-      });
-
-      if (msgError) {
-        console.warn('Failed to save initial message:', msgError);
+      // 7. Save sent message in history
+      if (sessionId && phone) {
+        await supabase.from('messages').insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: confirmationMessage,
+        });
       }
+    } catch (err) {
+      console.warn('Messaging session setup skipped (tables may not exist):', err);
     }
 
     await log.update({
       status: 'success',
       response_status: 200,
-      response_body: { ok: true, user_id: userId, session_id: session.id },
+      response_body: { ok: true, user_id: userId, session_id: sessionId },
       metadata: {
         user_id: userId,
-        session_id: session.id,
+        session_id: sessionId,
         event_id: internalEventId,
         event_name: eventName,
         guest_name: name,
@@ -267,7 +264,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       user_id: userId,
-      session_id: session.id,
+      session_id: sessionId,
     });
   } catch (error) {
     console.error('Luma webhook error:', error);
