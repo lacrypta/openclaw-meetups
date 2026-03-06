@@ -118,7 +118,8 @@ export async function sendConfirmationEmail(
     .eq('provider', 'email')
     .eq('is_active', true)
     .order('created_at')
-    .maybeSingle();
+    .limit(1)
+    .single();
 
   // Map raw integrations row to EmailIntegration shape
   const integration = rawIntegration
