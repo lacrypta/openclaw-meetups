@@ -49,6 +49,8 @@ export function LumaImportDialog({ onClose, onImported }: LumaImportDialogProps)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchEvents = useCallback(async () => {
+    if (!token) return;
+    setMessage(null);
     try {
       const res = await fetch("/api/integrations/luma/events", {
         headers: { Authorization: `Bearer ${token}` },
@@ -58,6 +60,7 @@ export function LumaImportDialog({ onClose, onImported }: LumaImportDialogProps)
         setMessage({ type: "error", text: data.error || "Failed to load events" });
         return;
       }
+      setMessage(null);
       setEvents(data.events || []);
     } catch {
       setMessage({ type: "error", text: "Failed to load Luma events" });
