@@ -32,7 +32,7 @@ export async function confirmAttendance(
       user_id,
       attendance_confirmed,
       events (name, luma_event_id),
-      users (name, luma_id)
+      users (name, email, luma_id)
     `)
     .eq('id', attendeeId)
     .single();
@@ -68,15 +68,14 @@ export async function confirmAttendance(
   }
 
   // Sync to Luma if applicable
-  if (eventData?.luma_event_id && userData?.luma_id) {
+  if (eventData?.luma_event_id && userData?.email) {
     try {
       await syncLumaGuestStatus(
         eventData.luma_event_id,
-        userData.luma_id,
+        userData.email,
         'approved'
       );
     } catch (err) {
-      // Log but don't fail — DB is already updated
       console.error('Luma sync failed (non-fatal):', err);
     }
   }
@@ -102,7 +101,7 @@ export async function declineAttendance(
       event_id,
       user_id,
       events (name, luma_event_id),
-      users (name, luma_id)
+      users (name, email, luma_id)
     `)
     .eq('id', attendeeId)
     .single();
@@ -126,11 +125,11 @@ export async function declineAttendance(
     return { success: false, error: 'Failed to update attendance' };
   }
 
-  if (eventData?.luma_event_id && userData?.luma_id) {
+  if (eventData?.luma_event_id && userData?.email) {
     try {
       await syncLumaGuestStatus(
         eventData.luma_event_id,
-        userData.luma_id,
+        userData.email,
         'declined'
       );
     } catch (err) {
@@ -150,7 +149,7 @@ export async function declineAttendance(
  */
 async function syncLumaGuestStatus(
   lumaEventId: string,
-  lumaGuestId: string,
+  guestEmail: string,
   status: 'approved' | 'declined',
 ): Promise<void> {
   const config = await getLumaConfig();
@@ -168,7 +167,7 @@ async function syncLumaGuestStatus(
     },
     body: JSON.stringify({
       event_api_id: lumaEventId,
-      guest_api_id: lumaGuestId,
+      guest: { type: 'email', email: guestEmail },
       status,
     }),
   });
