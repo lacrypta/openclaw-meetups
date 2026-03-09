@@ -54,6 +54,7 @@ export function EventDetail({ eventId }: EventDetailProps) {
       id: ea.user_id,
       name: ea.name,
       email: ea.email,
+      phone: ea.phone || null,
       pubkey: ea.pubkey || undefined,
       status: ea.status,
       checked_in: ea.checked_in,

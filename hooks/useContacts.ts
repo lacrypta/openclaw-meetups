@@ -7,6 +7,7 @@ export interface Contact {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   pubkey?: string;
   status: 'approved' | 'waitlist' | 'declined';
   checked_in: boolean;

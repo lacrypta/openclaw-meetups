@@ -14,6 +14,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getToken } from "@/lib/auth";
 
@@ -34,14 +40,14 @@ const statusVariant: Record<string, string> = {
 
 export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTableProps) {
   const [search, setSearch] = useState("");
-  const [sendingConfirmation, setSendingConfirmation] = useState<string | null>(null);
+  const [sendingAction, setSendingAction] = useState<string | null>(null);
 
   const handleSendConfirmation = async (contact: Contact) => {
     if (!eventId) return;
     const token = getToken();
     if (!token) return;
 
-    setSendingConfirmation(contact.id);
+    setSendingAction(`email-${contact.id}`);
     try {
       const res = await fetch(`/api/events/${eventId}/attendees/send-confirmation`, {
         method: 'POST',
@@ -58,14 +64,44 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
         return;
       }
 
-      // Update local state
       onUpdateContact(contact.id, { attendance_confirmed: true } as any);
     } catch (err) {
-      alert('Failed to send confirmation');
+      alert('Failed to send confirmation email');
     } finally {
-      setSendingConfirmation(null);
+      setSendingAction(null);
     }
   };
+
+  const handleSendWhatsApp = async (contact: Contact) => {
+    if (!eventId) return;
+    const token = getToken();
+    if (!token) return;
+
+    setSendingAction(`whatsapp-${contact.id}`);
+    try {
+      const res = await fetch(`/api/events/${eventId}/attendees/send-whatsapp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ user_id: contact.id }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Error: ${err.error}`);
+        return;
+      }
+
+      alert(`WhatsApp sent to ${contact.phone}`);
+    } catch (err) {
+      alert('Failed to send WhatsApp');
+    } finally {
+      setSendingAction(null);
+    }
+  };
+
   const [sortField, setSortField] = useState<SortField>("registered_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -212,19 +248,6 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                     <Badge variant="secondary" className="bg-success/20 text-success text-xs">
                       ✅ Confirmed
                     </Badge>
-                  ) : eventId ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      disabled={sendingConfirmation === contact.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendConfirmation(contact);
-                      }}
-                    >
-                      {sendingConfirmation === contact.id ? "Sending..." : "Send Confirmation"}
-                    </Button>
                   ) : (
                     <span className="text-muted-foreground text-xs">—</span>
                   )}
@@ -233,13 +256,55 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                   {new Date(contact.registered_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/dashboard/users/${contact.id}`}
-                    className="text-primary text-sm no-underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    View
-                  </Link>
+                  {eventId ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={sendingAction?.endsWith(contact.id) || false}
+                        >
+                          {sendingAction?.endsWith(contact.id) ? (
+                            <span className="animate-spin text-xs">⏳</span>
+                          ) : (
+                            <span className="text-lg">⋯</span>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/users/${contact.id}`} className="no-underline">
+                            👤 View Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        {!contact.attendance_confirmed && (
+                          <DropdownMenuItem
+                            onClick={() => handleSendConfirmation(contact)}
+                            disabled={sendingAction === `email-${contact.id}`}
+                          >
+                            📧 Send Confirmation Email
+                          </DropdownMenuItem>
+                        )}
+                        {contact.phone && (
+                          <DropdownMenuItem
+                            onClick={() => handleSendWhatsApp(contact)}
+                            disabled={sendingAction === `whatsapp-${contact.id}`}
+                          >
+                            💬 Send WhatsApp Confirmation
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Link
+                      href={`/dashboard/users/${contact.id}`}
+                      className="text-primary text-sm no-underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View
+                    </Link>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
