@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { confirmAttendance } from '@/lib/confirm-attendance';
 import { getGeneralSettings } from '@/lib/settings';
+import { ConfirmButton } from './confirm-button';
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -42,7 +42,6 @@ export default async function ConfirmPage({ params }: PageProps) {
           width: '100%',
           textAlign: 'center',
         }}>
-          {/* Logo */}
           <img
             src="https://raw.githubusercontent.com/lacrypta/branding/refs/heads/main/title/512-white-transparent.png"
             alt="La Crypta"
@@ -75,14 +74,7 @@ export default async function ConfirmPage({ params }: PageProps) {
     );
   }
 
-  // Auto-confirm
-  if (!attendee.attendance_confirmed) {
-    try {
-      await confirmAttendance(attendee.id);
-    } catch (e) {
-      console.error('Auto-confirm error:', e);
-    }
-  }
+  const alreadyConfirmed = attendee.attendance_confirmed;
 
   const settings = await getGeneralSettings();
   const tz = settings.timezone;
@@ -128,7 +120,7 @@ export default async function ConfirmPage({ params }: PageProps) {
 
       <div style={{ maxWidth: '460px', width: '100%', position: 'relative', zIndex: 1 }}>
 
-        {/* Header: La Crypta logo + OpenClaw badge */}
+        {/* Header */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -164,51 +156,84 @@ export default async function ConfirmPage({ params }: PageProps) {
           overflow: 'hidden',
         }}>
 
-          {/* Success banner */}
+          {/* Banner */}
           <div style={{
             background: 'linear-gradient(135deg, rgba(255, 140, 0, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%)',
             padding: '2rem 2rem 1.75rem',
             textAlign: 'center',
             borderBottom: '1px solid rgba(255, 140, 0, 0.08)',
           }}>
-            {/* Checkmark circle */}
-            <div style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #ff8c00 0%, #e67a00 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.25rem',
-              boxShadow: '0 4px 24px rgba(255, 140, 0, 0.3)',
-            }}>
-              <span style={{ fontSize: '2rem', lineHeight: 1 }}>✓</span>
-            </div>
-
-            <h1 style={{
-              color: '#f8fafc',
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              margin: '0 0 0.4rem',
-              letterSpacing: '-0.02em',
-            }}>
-              ¡Estás adentro, {firstName}!
-            </h1>
-            <p style={{
-              color: '#94a3b8',
-              fontSize: '0.9rem',
-              margin: 0,
-              lineHeight: 1.5,
-            }}>
-              Tu asistencia a <strong style={{ color: '#cbd5e1' }}>{eventData.name}</strong> está confirmada.
-            </p>
+            {alreadyConfirmed ? (
+              <>
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #ff8c00 0%, #e67a00 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                  boxShadow: '0 4px 24px rgba(255, 140, 0, 0.3)',
+                }}>
+                  <span style={{ fontSize: '2rem', lineHeight: 1 }}>✓</span>
+                </div>
+                <h1 style={{
+                  color: '#f8fafc',
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  margin: '0 0 0.4rem',
+                  letterSpacing: '-0.02em',
+                }}>
+                  ¡Estás adentro, {firstName}!
+                </h1>
+                <p style={{
+                  color: '#94a3b8',
+                  fontSize: '0.9rem',
+                  margin: 0,
+                  lineHeight: 1.5,
+                }}>
+                  Tu asistencia a <strong style={{ color: '#cbd5e1' }}>{eventData.name}</strong> ya está confirmada.
+                </p>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #1e3a5f 0%, #1a2e4a 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem',
+                  boxShadow: '0 4px 24px rgba(37, 99, 235, 0.2)',
+                }}>
+                  <span style={{ fontSize: '2rem', lineHeight: 1 }}>👋</span>
+                </div>
+                <h1 style={{
+                  color: '#f8fafc',
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  margin: '0 0 0.4rem',
+                  letterSpacing: '-0.02em',
+                }}>
+                  ¡Hola {firstName}!
+                </h1>
+                <p style={{
+                  color: '#94a3b8',
+                  fontSize: '0.9rem',
+                  margin: 0,
+                  lineHeight: 1.5,
+                }}>
+                  Confirmá tu asistencia a <strong style={{ color: '#cbd5e1' }}>{eventData.name}</strong>
+                </p>
+              </>
+            )}
           </div>
 
           {/* Event details */}
           <div style={{ padding: '1.75rem 2rem' }}>
-
-            {/* Date/Time/Location */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -276,29 +301,42 @@ export default async function ConfirmPage({ params }: PageProps) {
               )}
             </div>
 
-            {/* Divider */}
-            <div style={{
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.15), transparent)',
-              margin: '1.5rem 0',
-            }} />
+            {/* Confirm button (only if not yet confirmed) */}
+            {!alreadyConfirmed && (
+              <>
+                <div style={{
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.15), transparent)',
+                  margin: '1.5rem 0',
+                }} />
+                <ConfirmButton token={token} />
+              </>
+            )}
 
-            {/* What to bring / tips */}
-            <div style={{
-              background: 'rgba(255, 140, 0, 0.04)',
-              borderRadius: '12px',
-              padding: '1rem 1.25rem',
-              border: '1px solid rgba(255, 140, 0, 0.06)',
-            }}>
-              <p style={{
-                color: '#94a3b8',
-                fontSize: '0.85rem',
-                lineHeight: 1.7,
-                margin: 0,
-              }}>
-                💻 Traé tu laptop si querés probar en vivo
-              </p>
-            </div>
+            {alreadyConfirmed && (
+              <>
+                <div style={{
+                  height: '1px',
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.15), transparent)',
+                  margin: '1.5rem 0',
+                }} />
+                <div style={{
+                  background: 'rgba(255, 140, 0, 0.04)',
+                  borderRadius: '12px',
+                  padding: '1rem 1.25rem',
+                  border: '1px solid rgba(255, 140, 0, 0.06)',
+                }}>
+                  <p style={{
+                    color: '#94a3b8',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.7,
+                    margin: 0,
+                  }}>
+                    💻 Traé tu laptop si querés probar en vivo
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
