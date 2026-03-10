@@ -7,7 +7,6 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://openclaw.lacrypta.ar');
 
   // Find attendee by token
   const { data: attendee } = await supabase
@@ -17,7 +16,7 @@ export async function POST(
     .maybeSingle();
 
   if (!attendee) {
-    return NextResponse.redirect(new URL(`/confirm/${token}`, baseUrl), { status: 303 });
+    return NextResponse.json({ error: 'Token not found' }, { status: 404 });
   }
 
   // Use unified confirmation flow (DB + Luma sync)
@@ -25,9 +24,10 @@ export async function POST(
 
   if (!result.success) {
     console.error('Confirm error:', result.error);
+    return NextResponse.json({ error: 'Confirmation failed' }, { status: 500 });
   }
 
-  return NextResponse.redirect(new URL(`/confirm/${token}`, baseUrl), { status: 303 });
+  return NextResponse.json({ success: true });
 }
 
 export async function GET(
