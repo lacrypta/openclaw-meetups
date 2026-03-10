@@ -76,7 +76,7 @@ export function HeroSection() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-between max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 gap-12">
+      <div className="relative z-10 flex-1 flex flex-col lg:flex-row items-start justify-between max-w-[1400px] mx-auto px-6 md:px-12 py-16 md:py-24 gap-12">
         {/* Left side - Brand */}
         <div className="flex-1">
           {/* Event badge */}
@@ -85,7 +85,7 @@ export function HeroSection() {
             <span className="text-[#C04040] text-sm font-semibold tracking-wide">2do Meetup · 27 Marzo</span>
           </div>
 
-          <h1 className="text-white font-bold leading-[0.95] tracking-[-0.04em] text-[56px] sm:text-[90px] md:text-[130px] lg:text-[170px]">
+          <h1 className="text-white font-bold leading-[0.95] tracking-[-0.04em] text-[56px] sm:text-[80px] md:text-[100px] lg:text-[130px] xl:text-[170px]">
             OpenClaw
             <br />
             <span className="text-[0.55em] font-bold text-white/80">Meetups.</span>
@@ -124,7 +124,7 @@ export function HeroSection() {
         </div>
 
         {/* Right side */}
-        <div className="flex flex-col gap-8 md:items-end md:text-right w-full md:w-[340px] md:flex-shrink-0">
+        <div className="flex flex-col gap-8 lg:items-end lg:text-right w-full lg:w-[340px] lg:flex-shrink-0">
           {/* Countdown */}
           <div className="grid grid-cols-4 gap-2">
             {[
