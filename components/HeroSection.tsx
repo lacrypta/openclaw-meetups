@@ -124,16 +124,16 @@ export function HeroSection() {
         </div>
 
         {/* Right side */}
-        <div className="flex flex-col gap-8 md:items-end md:text-right w-full md:w-auto">
+        <div className="flex flex-col gap-8 md:items-end md:text-right w-full md:w-[340px] md:flex-shrink-0">
           {/* Countdown */}
-          <div className="grid grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-4 gap-2">
             {[
               { value: countdown.days, label: "días" },
               { value: countdown.hours, label: "hs" },
               { value: countdown.minutes, label: "min" },
               { value: countdown.seconds, label: "seg" },
             ].map(({ value, label }) => (
-              <div key={label} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl px-4 py-3 md:px-5 md:py-4 min-w-[70px]">
+              <div key={label} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl px-3 py-3">
                 <span className="text-white text-2xl md:text-3xl font-bold font-['Fragment_Mono',monospace] tabular-nums">
                   {String(value).padStart(2, "0")}
                 </span>
@@ -150,7 +150,7 @@ export function HeroSection() {
           </div>
 
           {/* Next event card */}
-          <div className="bg-white rounded-2xl p-6 w-full max-w-xs">
+          <div className="bg-white rounded-2xl p-6 w-full">
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-full bg-[#f5f5f5] flex items-center justify-center flex-shrink-0">
                 <img
