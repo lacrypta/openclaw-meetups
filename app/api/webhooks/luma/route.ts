@@ -284,10 +284,28 @@ export async function POST(request: NextRequest) {
 
       sessionId = session?.id || null;
 
-      // 7. Save sent message in history
+      // 7. Save sent message in history (must match the actual WhatsApp message)
       if (sessionId && phone) {
-        const eventLabel = eventName ? ` a *${eventName}*` : ' al próximo OpenClaw Meetup';
-        const savedMsg = `Mensaje de confirmación enviado por WhatsApp para registro${eventLabel}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+        const { data: eaForHistory } = await supabase
+          .from('event_attendees')
+          .select('confirmation_token')
+          .eq('event_id', internalEventId!)
+          .eq('user_id', userId)
+          .maybeSingle();
+        const historyConfirmLink = eaForHistory?.confirmation_token
+          ? `${baseUrl}/confirm/${eaForHistory.confirmation_token}`
+          : null;
+        const historyEventLabel = eventName ? ` a *${eventName}*` : ' al próximo OpenClaw Meetup';
+        const historyFirstName = name?.split(' ')[0] || name || '';
+        const savedMsg = historyConfirmLink
+          ? `¡Hola ${historyFirstName}! 👋\n\n` +
+            `Te registraste${historyEventLabel}. 🎉\n\n` +
+            `Confirmá tu asistencia acá:\n${historyConfirmLink}\n\n` +
+            `O respondé *si* a este mensaje. ¡Te esperamos! ⚡`
+          : `¡Hola ${historyFirstName}! 👋\n\n` +
+            `Te registraste${historyEventLabel}. 🎉\n\n` +
+            `Respondé *si* para confirmar tu asistencia. ¡Te esperamos! ⚡`;
         await supabase.from('messages').insert({
           session_id: sessionId,
           role: 'assistant',
