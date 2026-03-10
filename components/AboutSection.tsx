@@ -1,5 +1,7 @@
 "use client";
 
+const LUMA_URL = "https://luma.com/openclaw2";
+
 export function AboutSection() {
   return (
     <section id="about" className="py-24 md:py-32 bg-[#f5f5f5]">
@@ -24,13 +26,13 @@ export function AboutSection() {
           {/* Right column */}
           <div className="flex flex-col gap-6">
             <p className="text-[#737373] text-base md:text-lg leading-relaxed">
-              OpenClaw es tu asistente de IA personal, open-source, que corre localmente en tu maquina. No necesitas depender de servicios de terceros ni entregar tus datos a nadie.
+              OpenClaw es tu asistente de IA personal, open-source, que corre localmente en tu máquina. No necesitás depender de servicios de terceros ni entregar tus datos a nadie.
             </p>
             <p className="text-[#737373] text-base md:text-lg leading-relaxed">
-              La Crypta es un espacio comunitario en Buenos Aires dedicado a Bitcoin, Nostr y tecnologias libres. Juntos creamos encuentros donde la tecnologia se vive en primera persona.
+              La Crypta es un espacio comunitario en Buenos Aires dedicado a Bitcoin, Nostr y tecnologías libres. Juntos creamos encuentros donde la tecnología se vive en primera persona.
             </p>
             <a href="#experiencias" className="btn-pill w-fit">
-              Ver experiencias <span className="dot" />
+              Ver agenda <span className="dot" />
             </a>
           </div>
         </div>
@@ -38,21 +40,21 @@ export function AboutSection() {
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 border-t border-[#e5e5e5]">
           <div>
-            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">1</span>
+            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">2</span>
             <p className="text-[#737373] text-[13px] mt-2 leading-snug">
-              Meetup realizado exitosamente
+              Meetups organizados
             </p>
           </div>
           <div>
-            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">4+</span>
+            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">5+</span>
             <p className="text-[#737373] text-[13px] mt-2 leading-snug">
-              Charlas y presentaciones realizadas
+              Charlas y demos realizadas
             </p>
           </div>
           <div>
             <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">75</span>
             <p className="text-[#737373] text-[13px] mt-2 leading-snug">
-              Personas participaron en el primer evento
+              Personas en el primer evento
             </p>
           </div>
           <div>
@@ -63,7 +65,29 @@ export function AboutSection() {
           </div>
         </div>
 
-        {/* Clients / Logos */}
+        {/* Speaker highlight */}
+        <div className="mt-20 bg-[#121212] rounded-3xl p-8 md:p-12 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(192,64,64,0.1)_0%,transparent_70%)] pointer-events-none" />
+          <div className="relative z-10">
+            <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speaker destacado</span>
+            <h3 className="text-white text-3xl md:text-4xl font-bold mt-3 mb-4">
+              &quot;Humano Digital&quot;
+            </h3>
+            <p className="text-white/60 text-base md:text-lg max-w-xl leading-relaxed mb-6">
+              Agustin Kassis — Fundador de La Crypta. De asistente a entidad: el camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa. Demo en vivo con Claudio.
+            </p>
+            <a
+              href={LUMA_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 bg-[#C04040] text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:bg-[#d04848] hover:shadow-[0_0_24px_rgba(192,64,64,0.35)]"
+            >
+              No te lo pierdas ⚡
+            </a>
+          </div>
+        </div>
+
+        {/* Logos */}
         <div className="mt-20">
           <div className="flex items-center justify-between mb-8">
             <div className="section-label">Organizan</div>
