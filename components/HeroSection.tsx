@@ -144,7 +144,7 @@ export function HeroSection() {
 
           <div className="flex flex-col gap-3">
             <span className="text-white text-base font-medium">🎤 Charla: &quot;Humano Digital&quot;</span>
-            <span className="text-white text-base font-medium">💻 Demo en vivo</span>
+            <span className="text-white text-base font-medium">🦞 &quot;La Era de la Langosta&quot;</span>
             <span className="text-white text-base font-medium">⚡ Lightning talks</span>
             <span className="text-white text-base font-medium">🤝 Networking</span>
           </div>

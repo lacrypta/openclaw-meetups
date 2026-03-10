@@ -99,12 +99,12 @@ export function ScheduleSection() {
               <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
                 <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">20:15</span>
                 <div>
-                  <span className="text-white text-base font-semibold">Demo en vivo: Claudio en acción</span>
+                  <span className="text-white text-base font-semibold">&quot;La Era de la Langosta&quot; — Cami Velasco</span>
                   <p className="text-white/40 text-sm mt-1">
-                    Demostración práctica de un agente AI autónomo corriendo en producción.
+                    Charla sobre el ecosistema OpenClaw, la comunidad y el futuro de los agentes AI.
                   </p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-white/50 text-xs font-semibold bg-white/5 px-3 py-1 rounded-full">
-                    💻 Demo
+                  <span className="inline-flex items-center gap-1.5 mt-2 text-[#C04040] text-xs font-semibold bg-[#C04040]/10 px-3 py-1 rounded-full">
+                    🎤 Charla
                   </span>
                 </div>
               </div>
