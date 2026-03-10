@@ -110,7 +110,7 @@ export function HeroSection() {
             </a>
             <a
               href="#experiencias"
-              className="inline-flex items-center justify-center gap-3 bg-white/10 text-white/80 px-6 py-4 rounded-full text-base font-medium transition-all hover:bg-white/15 border border-white/10"
+              className="inline-flex items-center justify-center gap-3 bg-white/10 text-white px-6 py-4 rounded-full text-base font-medium transition-all hover:bg-white/15 border border-white/10"
             >
               Ver agenda
             </a>
