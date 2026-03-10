@@ -216,10 +216,10 @@ export async function POST(request: NextRequest) {
           ? `¡Hola ${firstName}! 👋\n\n` +
             `Te registraste${eventLabel}. 🎉\n\n` +
             `Confirmá tu asistencia acá:\n${confirmLink}\n\n` +
-            `O respondé *si* a este mensaje. ¡Te esperamos! ⚡`
+            `¡Te esperamos! ⚡`
           : `¡Hola ${firstName}! 👋\n\n` +
             `Te registraste${eventLabel}. 🎉\n\n` +
-            `Respondé *si* para confirmar tu asistencia. ¡Te esperamos! ⚡`;
+            `¡Te esperamos! ⚡`;
 
         await sendWhatsAppMessage(phone, confirmationMessage);
       } catch (err) {
@@ -302,10 +302,10 @@ export async function POST(request: NextRequest) {
           ? `¡Hola ${historyFirstName}! 👋\n\n` +
             `Te registraste${historyEventLabel}. 🎉\n\n` +
             `Confirmá tu asistencia acá:\n${historyConfirmLink}\n\n` +
-            `O respondé *si* a este mensaje. ¡Te esperamos! ⚡`
+            `¡Te esperamos! ⚡`
           : `¡Hola ${historyFirstName}! 👋\n\n` +
             `Te registraste${historyEventLabel}. 🎉\n\n` +
-            `Respondé *si* para confirmar tu asistencia. ¡Te esperamos! ⚡`;
+            `¡Te esperamos! ⚡`;
         await supabase.from('messages').insert({
           session_id: sessionId,
           role: 'assistant',
