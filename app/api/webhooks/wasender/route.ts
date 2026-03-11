@@ -1,7 +1,8 @@
 /**
  * POST /api/webhooks/wasender
  *
- * DEBUG MODE: AI disabled — log everything, save messages to session.
+ * Handles incoming WhatsApp messages from WaSender.
+ * Saves messages to session and generates AI responses when enabled.
  * Sessions indexed by PHONE (not user_id).
  */
 
@@ -9,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { logWebhook } from '@/lib/webhook-logger';
 import { getWaSenderConfig } from '@/lib/integrations';
+import { generateAIResponse } from '@/lib/ai-chat';
+import { sendWhatsAppMessage } from '@/lib/wasender';
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -147,6 +150,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: msgErr.message }, { status: 500 });
     }
 
+    // Generate AI response
+    let aiResponseSent = false;
+    try {
+      const aiResponse = await generateAIResponse(messageText, {
+        userName: firstUser?.name || senderName,
+        eventName: undefined, // could fetch from session
+      });
+
+      if (aiResponse) {
+        // Send via WhatsApp
+        await sendWhatsAppMessage(normalizedPhone, aiResponse);
+        
+        // Save AI response to session
+        await supabase.from('messages').insert({
+          session_id: session!.id,
+          role: 'assistant',
+          content: aiResponse,
+        });
+        
+        aiResponseSent = true;
+      }
+    } catch (aiError: any) {
+      console.error('AI response failed:', aiError);
+      // Don't fail the whole webhook if AI fails
+    }
+
     await log.update({
       status: 'success',
       metadata: {
@@ -155,6 +184,7 @@ export async function POST(request: NextRequest) {
         matching_users: userCount,
         assigned_user_id: session!.user_id,
         session_id: session!.id,
+        ai_response_sent: aiResponseSent,
         note: userCount > 1
           ? `message saved — ${userCount} users share this phone (unassigned)`
           : userCount === 1
@@ -170,7 +200,7 @@ export async function POST(request: NextRequest) {
       matching_users: userCount,
       assigned: session!.user_id ? true : false,
       message_saved: true,
-      ai_disabled: true,
+      ai_response_sent: aiResponseSent,
     });
 
   } catch (error: any) {

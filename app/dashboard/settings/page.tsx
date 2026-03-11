@@ -5,6 +5,7 @@ import { GeneralSettingsTab } from "@/components/GeneralSettingsTab";
 import { EmailIntegrationsTab } from "@/components/EmailIntegrationsTab";
 import { LumaIntegrationTab } from "@/components/LumaIntegrationTab";
 import { WhatsAppIntegrationTab } from "@/components/WhatsAppIntegrationTab";
+import { AISettingsTab } from "@/components/AISettingsTab";
 
 export default function SettingsPage() {
   return (
@@ -22,6 +23,7 @@ export default function SettingsPage() {
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="luma">Luma</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          <TabsTrigger value="ai">AI</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
           <GeneralSettingsTab />
@@ -34,6 +36,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="whatsapp">
           <WhatsAppIntegrationTab />
+        </TabsContent>
+        <TabsContent value="ai">
+          <AISettingsTab />
         </TabsContent>
       </Tabs>
     </div>

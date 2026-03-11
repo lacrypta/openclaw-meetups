@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import type { Integration, LumaConfig, WaSenderConfig } from '@/lib/types';
+import type { Integration, LumaConfig, WaSenderConfig, AIConfig } from '@/lib/types';
 
 /**
  * Fetch an active integration config by provider name.
@@ -71,5 +71,19 @@ export async function getWaSenderConfig(): Promise<WaSenderConfig> {
     api_key: process.env.WASENDER_API_KEY || '',
     webhook_secret: process.env.WASENDER_WEBHOOK_SECRET,
     phone_number: process.env.WASENDER_PHONE_NUMBER || '',
+  };
+}
+
+/**
+ * Returns typed AI config from the integrations table.
+ */
+export async function getAIConfig(): Promise<AIConfig> {
+  const integration = await getIntegration('ai');
+  const cfg = integration?.config as Partial<AIConfig> || {};
+  return {
+    api_key: cfg.api_key || '',
+    default_model: cfg.default_model || 'anthropic/claude-haiku-4-5',
+    master_prompt: cfg.master_prompt || 'Sos Claudio, asistente de eventos de La Crypta. Respondé en español argentino, corto y directo.',
+    enabled: cfg.enabled ?? false,
   };
 }

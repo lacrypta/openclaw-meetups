@@ -13,8 +13,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.0.15",
     "@aws-sdk/client-ses": "^3.998.0",
     "@supabase/supabase-js": "^2.97.0",
+    "ai": "^4.1.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",

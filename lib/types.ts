@@ -210,6 +210,13 @@ export interface WaSenderConfig {
   send_whatsapp_on_new_guest?: boolean;
 }
 
+export interface AIConfig {
+  api_key: string;
+  default_model: string;
+  master_prompt: string;
+  enabled: boolean;
+}
+
 export interface LumaWebhookPayload {
   type: string; // e.g. 'guest.registered'
   data: {

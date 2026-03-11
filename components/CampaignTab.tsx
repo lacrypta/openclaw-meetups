@@ -58,10 +58,15 @@ export function CampaignTab({ eventId }: CampaignTabProps) {
     integration_id: string;
   }) => {
     const campaign = await createCampaign(params);
-    // Auto-send after creation
-    setSendingId(campaign.id);
+    // Expand the new campaign to show recipients
+    setExpandedId(campaign.id);
+  };
+
+  const handleSend = async (id: string) => {
+    setSendingId(id);
     try {
-      await sendCampaign(campaign.id);
+      await sendCampaign(id);
+      refetchDetail();
     } finally {
       setSendingId(null);
     }
@@ -74,13 +79,7 @@ export function CampaignTab({ eventId }: CampaignTabProps) {
 
   const handleRetry = async (id: string) => {
     await retryCampaign(id);
-    // Auto-send after retry
-    setSendingId(id);
-    try {
-      await sendCampaign(id);
-    } finally {
-      setSendingId(null);
-    }
+    refetchDetail();
   };
 
   const handleRefreshDetail = useCallback(() => {
@@ -141,6 +140,8 @@ export function CampaignTab({ eventId }: CampaignTabProps) {
               }
               sends={expandedId === campaign.id ? sends : []}
               onRetry={handleRetry}
+              onSend={handleSend}
+              sending={sendingId === campaign.id}
             />
           ))}
         </div>
@@ -163,12 +164,16 @@ function CampaignHistoryRow({
   onToggle,
   sends,
   onRetry,
+  onSend,
+  sending,
 }: {
   campaign: EmailJob;
   expanded: boolean;
   onToggle: () => void;
   sends: import("@/lib/types").EmailSend[];
   onRetry: (id: string) => void;
+  onSend: (id: string) => void;
+  sending: boolean;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -195,7 +200,28 @@ function CampaignHistoryRow({
       </button>
 
       {expanded && (
-        <div className="border-t p-4">
+        <div className="border-t p-4 space-y-4">
+          {/* Send button for pending campaigns */}
+          {campaign.status === "pending" && (
+            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Campaña lista para enviar
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {campaign.total_contacts} destinatarios · Revisá la lista abajo antes de enviar
+                </p>
+              </div>
+              <Button
+                onClick={(e) => { e.stopPropagation(); onSend(campaign.id); }}
+                disabled={sending}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {sending ? "Enviando..." : "📧 Enviar campaña"}
+              </Button>
+            </div>
+          )}
+
           <CampaignResults
             campaign={campaign}
             sends={sends}

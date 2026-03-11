@@ -39,11 +39,16 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<voi
 }
 
 /**
- * Verify WaSender API key by fetching account info.
+ * Verify WaSender API key by testing the sessions endpoint.
+ * The /api/account endpoint is deprecated, so we use /api/sessions instead.
  */
 export async function verifyWaSenderApiKey(apiKey: string): Promise<boolean> {
-  const res = await fetch('https://wasenderapi.com/api/account', {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  });
-  return res.ok;
+  try {
+    const res = await fetch('https://wasenderapi.com/api/sessions', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
