@@ -72,22 +72,6 @@ export function AboutSection() {
             <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speakers destacados</span>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Agustin */}
-              <div className="flex gap-5 items-start">
-                <img
-                  src="/speaker-agustin.jpg"
-                  alt="Agustin Kassis"
-                  className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-white/10"
-                />
-                <div>
-                  <p className="text-white font-bold text-lg leading-tight">Agustin Kassis</p>
-                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Fundador de La Crypta</p>
-                  <p className="text-white/50 text-sm leading-relaxed mt-2">
-                    &quot;Humano Digital&quot; — De asistente a entidad: el camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa. Demo en vivo con Claudio.
-                  </p>
-                </div>
-              </div>
-
               {/* Cami */}
               <div className="flex gap-5 items-start">
                 <img
@@ -100,6 +84,22 @@ export function AboutSection() {
                   <p className="text-[#C04040] text-sm font-semibold mt-0.5">Fundadora de Spark101</p>
                   <p className="text-white/50 text-sm leading-relaxed mt-2">
                     &quot;La Era de la Langosta&quot; — Ecosistema OpenClaw, comunidad y el futuro de los agentes de IA desde una perspectiva humana.
+                  </p>
+                </div>
+              </div>
+
+              {/* Agustin */}
+              <div className="flex gap-5 items-start">
+                <img
+                  src="/speaker-agustin.jpg"
+                  alt="Agustin Kassis"
+                  className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-white/10"
+                />
+                <div>
+                  <p className="text-white font-bold text-lg leading-tight">Agustin Kassis</p>
+                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Fundador de La Crypta</p>
+                  <p className="text-white/50 text-sm leading-relaxed mt-2">
+                    &quot;Humano Digital&quot; — De asistente a entidad: el camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa. Demo en vivo con Claudio.
                   </p>
                 </div>
               </div>
