@@ -26,6 +26,18 @@ interface AttendeeEvent {
   registered_at: string;
 }
 
+interface UserEmail {
+  id: string;
+  email: string;
+  status: string;
+  error: string | null;
+  sent_at: string | null;
+  created_at: string;
+  attempts: number;
+  job_id: string;
+  email_jobs: { id: string; name: string | null; subject: string; status: string } | null;
+}
+
 interface AttendeeProfileProps {
   attendeeId: string;
 }
@@ -39,6 +51,7 @@ const statusVariant: Record<string, string> = {
 export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
   const [attendee, setAttendee] = useState<User | null>(null);
   const [events, setEvents] = useState<AttendeeEvent[]>([]);
+  const [userEmails, setUserEmails] = useState<UserEmail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -97,6 +110,15 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
             }
           }
           setEvents(attendeeEvents);
+        }
+
+        // Fetch email history
+        const emailsRes = await fetch(`/api/users/${attendeeId}/emails`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (emailsRes.ok) {
+          const { emails } = await emailsRes.json();
+          setUserEmails(emails);
         }
       } catch (err) {
         console.error("Failed to load attendee profile:", err);
@@ -206,6 +228,74 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(evt.registered_at).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* Email History */}
+      <Card className="p-6 mt-6">
+        <h2 className="text-lg font-semibold mb-4">📧 Emails Enviados</h2>
+
+        {userEmails.length === 0 ? (
+          <div className="text-muted-foreground py-4">No se enviaron emails a este usuario.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaña</TableHead>
+                  <TableHead>Asunto</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Intentos</TableHead>
+                  <TableHead>Error</TableHead>
+                  <TableHead>Fecha</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {userEmails.map((em) => (
+                  <TableRow key={em.id}>
+                    <TableCell className="text-sm">
+                      {em.email_jobs ? (
+                        <Link
+                          href={`/dashboard/campaigns/${em.email_jobs.id}`}
+                          className="text-primary no-underline"
+                        >
+                          {em.email_jobs.name || "—"}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {em.email_jobs?.subject || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          "text-xs font-semibold",
+                          em.status === "sent" ? "bg-green-500/20 text-green-400" :
+                          em.status === "failed" ? "bg-red-500/20 text-red-400" :
+                          em.status === "bounced" ? "bg-orange-500/20 text-orange-400" :
+                          "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {em.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-center">{em.attempts}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                      {em.error || "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {em.sent_at
+                        ? new Date(em.sent_at).toLocaleString()
+                        : new Date(em.created_at).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))}

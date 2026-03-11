@@ -9,6 +9,7 @@ const navItems = [
   { label: "Events", href: "/dashboard/events", icon: "📅" },
   { label: "Users", href: "/dashboard/users", icon: "👥" },
   { label: "Campaigns", href: "/dashboard/campaigns", icon: "📨" },
+  { label: "Email Log", href: "/dashboard/emails", icon: "📧" },
   { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬" },
   { label: "Templates", href: "/dashboard/templates", icon: "✉️" },
   { label: "Logs", href: "/dashboard/logs", icon: "📋" },
