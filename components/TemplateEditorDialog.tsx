@@ -64,6 +64,7 @@ interface TemplateEditorDialogProps {
 }
 
 const SEGMENT_LABELS: Record<EmailJobSegment, string> = {
+  all: "Todos",
   "checked-in": "Checked In",
   "no-show": "No Show",
   waitlist: "Waitlist",

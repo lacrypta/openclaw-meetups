@@ -21,21 +21,12 @@ import {
 } from "@/components/ui/select";
 import { useTemplates } from "@/hooks/useTemplates";
 import { useEmailIntegrations } from "@/hooks/useEmailIntegrations";
-import type { EmailJobSegment } from "@/lib/types";
-
-const SEGMENT_OPTIONS: { value: EmailJobSegment; label: string }[] = [
-  { value: "checked-in", label: "Checked In" },
-  { value: "no-show", label: "No Show" },
-  { value: "waitlist", label: "Waitlist" },
-];
 
 interface CampaignCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  eventId: string;
   onSubmit: (params: {
-    event_id: string;
-    segment: EmailJobSegment;
+    name: string;
     template_id: string;
     subject: string;
     integration_id: string;
@@ -45,19 +36,16 @@ interface CampaignCreateDialogProps {
 export function CampaignCreateDialog({
   open,
   onOpenChange,
-  eventId,
   onSubmit,
 }: CampaignCreateDialogProps) {
-  const [segment, setSegment] = useState<EmailJobSegment | "">("");
+  const [name, setName] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [subject, setSubject] = useState("");
   const [integrationId, setIntegrationId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { templates } = useTemplates(
-    segment ? { segment: segment as EmailJobSegment } : undefined
-  );
+  const { templates } = useTemplates();
   const { integrations } = useEmailIntegrations();
 
   // Pre-fill subject when template changes
@@ -79,7 +67,7 @@ export function CampaignCreateDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setSegment("");
+      setName("");
       setTemplateId("");
       setSubject("");
       setIntegrationId("");
@@ -88,15 +76,14 @@ export function CampaignCreateDialog({
   }, [open]);
 
   const handleSubmit = async () => {
-    if (!segment || !templateId || !subject || !integrationId) return;
+    if (!name.trim() || !templateId || !subject || !integrationId) return;
 
     setSubmitting(true);
     setError(null);
 
     try {
       await onSubmit({
-        event_id: eventId,
-        segment: segment as EmailJobSegment,
+        name: name.trim(),
         template_id: templateId,
         subject,
         integration_id: integrationId,
@@ -109,58 +96,39 @@ export function CampaignCreateDialog({
     }
   };
 
-  const isValid = segment && templateId && subject.trim() && integrationId;
+  const isValid = name.trim() && templateId && subject.trim() && integrationId;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>New Campaign</DialogTitle>
+          <DialogTitle>Nueva Campaña</DialogTitle>
           <DialogDescription>
-            Send an email campaign to a segment of attendees.
+            Creá una campaña de email. Los destinatarios se importan después.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Segment */}
+          {/* Name */}
           <div className="space-y-2">
-            <Label>Segment</Label>
-            <Select
-              value={segment}
-              onValueChange={(v) => {
-                setSegment(v as EmailJobSegment);
-                setTemplateId("");
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select segment..." />
-              </SelectTrigger>
-              <SelectContent>
-                {SEGMENT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Nombre</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Invitación meetup marzo..."
+            />
           </div>
 
           {/* Template */}
           <div className="space-y-2">
             <Label>Template</Label>
-            <Select
-              value={templateId}
-              onValueChange={setTemplateId}
-              disabled={!segment}
-            >
+            <Select value={templateId} onValueChange={setTemplateId}>
               <SelectTrigger>
                 <SelectValue
                   placeholder={
-                    !segment
-                      ? "Select segment first"
-                      : templates.length === 0
-                        ? "No templates for this segment"
-                        : "Select template..."
+                    templates.length === 0
+                      ? "No hay templates"
+                      : "Seleccionar template..."
                   }
                 />
               </SelectTrigger>
@@ -176,20 +144,20 @@ export function CampaignCreateDialog({
 
           {/* Subject */}
           <div className="space-y-2">
-            <Label>Subject</Label>
+            <Label>Asunto</Label>
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Email subject line..."
+              placeholder="Asunto del email..."
             />
           </div>
 
           {/* Integration */}
           <div className="space-y-2">
-            <Label>Email Provider</Label>
+            <Label>Proveedor de Email</Label>
             <Select value={integrationId} onValueChange={setIntegrationId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select provider..." />
+                <SelectValue placeholder="Seleccionar proveedor..." />
               </SelectTrigger>
               <SelectContent>
                 {integrations.map((i) => (
@@ -212,13 +180,13 @@ export function CampaignCreateDialog({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!isValid || submitting}
           >
-            {submitting ? "Creating..." : "Create Campaign"}
+            {submitting ? "Creando..." : "Crear Campaña"}
           </Button>
         </DialogFooter>
       </DialogContent>

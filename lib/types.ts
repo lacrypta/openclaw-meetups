@@ -75,14 +75,15 @@ export interface AttendeeWithEvents extends Attendee {
 // Email campaigns
 
 export type EmailJobStatus = 'pending' | 'running' | 'partial' | 'completed' | 'failed' | 'cancelled';
-export type EmailJobSegment = 'checked-in' | 'no-show' | 'waitlist' | 'custom';
+export type EmailJobSegment = 'all' | 'checked-in' | 'no-show' | 'waitlist' | 'custom';
 export type EmailSendStatus = 'pending' | 'sent' | 'failed' | 'bounced';
 export type EmailEventType = 'open' | 'click' | 'bounce' | 'complaint';
 
 export interface EmailJob {
   id: string;
-  event_id: string;
-  segment: EmailJobSegment;
+  event_id: string | null;
+  segment: string | null;
+  name: string | null;
   template_id: string | null;
   subject: string;
   status: EmailJobStatus;

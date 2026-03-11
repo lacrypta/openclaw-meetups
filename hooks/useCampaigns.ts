@@ -2,22 +2,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getToken } from '../lib/auth';
-import type { EmailJob, EmailSend, EmailJobSegment } from '../lib/types';
+import type { EmailJob, EmailSend } from '../lib/types';
 
-export function useCampaigns(eventId: string) {
+export function useCampaigns(eventId?: string) {
   const [campaigns, setCampaigns] = useState<EmailJob[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCampaigns = useCallback(async () => {
     const token = getToken();
-    if (!token || !eventId) return;
+    if (!token) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/campaigns?event_id=${eventId}`, {
+      const params = eventId ? `?event_id=${eventId}` : '';
+      const response = await fetch(`/api/campaigns${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -37,11 +38,12 @@ export function useCampaigns(eventId: string) {
   }, [fetchCampaigns]);
 
   const createCampaign = async (params: {
-    event_id: string;
-    segment: EmailJobSegment;
+    name?: string;
     template_id: string;
     subject: string;
     integration_id: string;
+    event_id?: string;
+    segment?: string;
   }) => {
     const token = getToken();
     if (!token) throw new Error('Not authenticated');
@@ -121,7 +123,29 @@ export function useCampaigns(eventId: string) {
     await fetchCampaigns();
   };
 
-  return { campaigns, loading, error, refetch: fetchCampaigns, createCampaign, cancelCampaign, sendCampaign, retryCampaign };
+  const importRecipients = async (campaignId: string, eventId: string, segment: string) => {
+    const token = getToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(`/api/campaigns/${campaignId}/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ event_id: eventId, segment }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Failed to import recipients');
+    }
+
+    await fetchCampaigns();
+    return await response.json();
+  };
+
+  return { campaigns, loading, error, refetch: fetchCampaigns, createCampaign, cancelCampaign, sendCampaign, retryCampaign, importRecipients };
 }
 
 export function useCampaignDetail(campaignId: string | null) {

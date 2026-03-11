@@ -99,7 +99,7 @@ export async function POST(
     // 5. Query pending sends
     const { data: pendingSends, error: sendsError } = await supabase
       .from('email_sends')
-      .select('*, attendees!inner(id, name, email)')
+      .select('*, users!inner(id, name, email)')
       .eq('job_id', id)
       .eq('status', 'pending')
       .order('created_at');
@@ -133,9 +133,9 @@ export async function POST(
       const batch = sends.slice(i, i + BATCH_SIZE);
 
       for (const send of batch) {
-        const attendee = send.attendees as Record<string, unknown>;
-        const attendeeName = (attendee.name as string) || '';
-        const attendeeEmail = (attendee.email as string) || send.email;
+        const user = send.users as Record<string, unknown> | null;
+        const attendeeName = (user?.name as string) || '';
+        const attendeeEmail = (user?.email as string) || send.email;
         const firstName = attendeeName.split(' ')[0] || attendeeName;
 
         const variables: Record<string, string> = {
