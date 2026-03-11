@@ -22,30 +22,47 @@ export default function HomePage() {
   const { isAuthenticated, recheckAuth } = useAuth();
   const router = useRouter();
 
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const handleLoginSuccess = async () => {
     setShowLogin(false);
+    setAuthError(null);
     try {
       await authLogin();
       recheckAuth();
       router.push("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Dashboard auth failed after Nostr login:", err);
+      setAuthError(err?.message || "Error de autenticación con el servidor");
+      setShowLogin(true);
     }
   };
 
   const handleNip07 = async () => {
-    await loginNip07();
-    await handleLoginSuccess();
+    try {
+      await loginNip07();
+      await handleLoginSuccess();
+    } catch {
+      // Error already handled in useNostr hook (displayed in UI)
+    }
   };
 
   const handleNsec = async (nsec: string) => {
-    await loginNsec(nsec);
-    await handleLoginSuccess();
+    try {
+      await loginNsec(nsec);
+      await handleLoginSuccess();
+    } catch {
+      // Error already handled in useNostr hook
+    }
   };
 
   const handleBunker = async (url: string) => {
-    await loginBunker(url);
-    await handleLoginSuccess();
+    try {
+      await loginBunker(url);
+      await handleLoginSuccess();
+    } catch {
+      // Error already handled in useNostr hook
+    }
   };
 
   return (
@@ -68,7 +85,7 @@ export default function HomePage() {
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}
         loading={loading}
-        error={error}
+        error={authError || error}
         onNip07={handleNip07}
         onNsec={handleNsec}
         onBunker={handleBunker}

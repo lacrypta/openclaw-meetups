@@ -143,6 +143,7 @@ export function useNostr() {
       setState({ pubkey, method: 'nip07', loading: false, error: null });
     } catch (e: any) {
       setState((s) => ({ ...s, loading: false, error: e.message }));
+      throw e;
     }
   }, []);
 
@@ -159,6 +160,7 @@ export function useNostr() {
       setState({ pubkey, method: 'nsec', loading: false, error: null });
     } catch (e: any) {
       setState((s) => ({ ...s, loading: false, error: e.message }));
+      throw e;
     }
   }, []);
 
@@ -194,7 +196,10 @@ export function useNostr() {
       saveState(pubkey, 'bunker');
       setState({ pubkey, method: 'bunker', loading: false, error: null });
     } catch (e: any) {
+      clearActiveSigner();
+      clearBunkerState();
       setState((s) => ({ ...s, loading: false, error: e.message }));
+      throw e; // Re-throw so callers know login failed
     }
   }, []);
 
