@@ -65,22 +65,51 @@ export function AboutSection() {
           </div>
         </div>
 
-        {/* Speaker highlight */}
+        {/* Speakers highlight */}
         <div className="mt-20 bg-[#121212] rounded-3xl p-8 md:p-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(192,64,64,0.1)_0%,transparent_70%)] pointer-events-none" />
           <div className="relative z-10">
-            <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speaker destacado</span>
-            <h3 className="text-white text-3xl md:text-4xl font-bold mt-3 mb-4">
-              &quot;Humano Digital&quot;
-            </h3>
-            <p className="text-white/60 text-base md:text-lg max-w-xl leading-relaxed mb-6">
-              Agustin Kassis — Fundador de La Crypta. De asistente a entidad: el camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa. Demo en vivo con Claudio.
-            </p>
+            <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speakers destacados</span>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Agustin */}
+              <div className="flex gap-5 items-start">
+                <img
+                  src="/speaker-agustin.jpg"
+                  alt="Agustin Kassis"
+                  className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-white/10"
+                />
+                <div>
+                  <p className="text-white font-bold text-lg leading-tight">Agustin Kassis</p>
+                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Fundador de La Crypta</p>
+                  <p className="text-white/50 text-sm leading-relaxed mt-2">
+                    &quot;Humano Digital&quot; — De asistente a entidad: el camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa. Demo en vivo con Claudio.
+                  </p>
+                </div>
+              </div>
+
+              {/* Cami */}
+              <div className="flex gap-5 items-start">
+                <img
+                  src="/speaker-cami.jpg"
+                  alt="Camila Velasco"
+                  className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 border border-white/10"
+                />
+                <div>
+                  <p className="text-white font-bold text-lg leading-tight">Camila Velasco</p>
+                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Co-fundadora de Spark101</p>
+                  <p className="text-white/50 text-sm leading-relaxed mt-2">
+                    &quot;La Era de la Langosta&quot; — Ecosistema OpenClaw, comunidad y el futuro de los agentes de IA desde una perspectiva humana.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <a
               href={LUMA_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 bg-[#C04040] text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:bg-[#d04848] hover:shadow-[0_0_24px_rgba(192,64,64,0.35)]"
+              className="inline-flex items-center gap-3 bg-[#C04040] text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:bg-[#d04848] hover:shadow-[0_0_24px_rgba(192,64,64,0.35)] mt-8"
             >
               No te lo pierdas ⚡
             </a>
