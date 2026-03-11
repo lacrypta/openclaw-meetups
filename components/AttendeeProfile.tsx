@@ -6,6 +6,8 @@ import { getToken } from "../lib/auth";
 import type { User, AttendeeStatus } from "../lib/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -25,6 +27,12 @@ interface AttendeeEvent {
   status: AttendeeStatus;
   checked_in: boolean;
   registered_at: string;
+}
+
+interface WhatsAppSession {
+  id: string;
+  phone: string | null;
+  status: string;
 }
 
 interface WhatsAppMessage {
@@ -61,8 +69,35 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
   const [attendee, setAttendee] = useState<User | null>(null);
   const [events, setEvents] = useState<AttendeeEvent[]>([]);
   const [userEmails, setUserEmails] = useState<UserEmail[]>([]);
+  const [waSessions, setWaSessions] = useState<WhatsAppSession[]>([]);
   const [waMessages, setWaMessages] = useState<WhatsAppMessage[]>([]);
+  const [sendText, setSendText] = useState("");
+  const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const handleSendWa = async () => {
+    if (!sendText.trim() || sending) return;
+    const activeSession = waSessions.find(s => s.status === "active" && s.phone);
+    if (!activeSession) return;
+    setSending(true);
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/messaging-sessions/${activeSession.id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: sendText.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.message) {
+          setWaMessages(prev => [...prev, data.message]);
+        }
+        setSendText("");
+      }
+    } finally {
+      setSending(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -136,7 +171,8 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (waRes.ok) {
-          const { messages } = await waRes.json();
+          const { sessions: waSess, messages } = await waRes.json();
+          setWaSessions(waSess || []);
           setWaMessages(messages);
         }
       } catch (err) {
@@ -359,6 +395,28 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
                     <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Send message */}
+            {waSessions.length > 0 && waSessions.some(s => s.status === "active" && s.phone) && (
+              <div className="border-t mt-4 pt-4 flex gap-2">
+                <Input
+                  value={sendText}
+                  onChange={(e) => setSendText(e.target.value)}
+                  placeholder="Escribir mensaje..."
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendWa();
+                    }
+                  }}
+                  disabled={sending}
+                />
+                <Button onClick={handleSendWa} disabled={sending || !sendText.trim()} size="sm">
+                  {sending ? "..." : "Enviar"}
+                </Button>
               </div>
             )}
           </Card>

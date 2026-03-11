@@ -195,6 +195,47 @@ function AssignPanel({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
+function SendMessageBar({ sessionId, onSent }: { sessionId: string; onSent: (msg: Message) => void }) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!text.trim() || sending) return;
+    setSending(true);
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/messaging-sessions/${sessionId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: text.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.message) onSent(data.message);
+        setText("");
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="border-t p-3 flex gap-2">
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Escribir mensaje..."
+        className="flex-1"
+        onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+        disabled={sending}
+      />
+      <Button onClick={handleSend} disabled={sending || !text.trim()} size="sm">
+        {sending ? "..." : "Enviar"}
+      </Button>
+    </div>
+  );
+}
+
 export default function WhatsAppPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
@@ -382,6 +423,16 @@ export default function WhatsAppPage() {
               )}
               <div ref={bottomRef} />
             </div>
+
+            {/* Send message input */}
+            {activeSession.status === "active" && activeSession.phone && (
+              <SendMessageBar
+                sessionId={activeSession.id}
+                onSent={(msg) => {
+                  setMessages((prev) => [...prev, msg]);
+                }}
+              />
+            )}
           </>
         )}
       </div>
