@@ -26,6 +26,14 @@ interface AttendeeEvent {
   registered_at: string;
 }
 
+interface WhatsAppMessage {
+  id: string;
+  session_id: string;
+  role: string;
+  content: string;
+  created_at: string;
+}
+
 interface UserEmail {
   id: string;
   email: string;
@@ -52,6 +60,7 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
   const [attendee, setAttendee] = useState<User | null>(null);
   const [events, setEvents] = useState<AttendeeEvent[]>([]);
   const [userEmails, setUserEmails] = useState<UserEmail[]>([]);
+  const [waMessages, setWaMessages] = useState<WhatsAppMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -119,6 +128,15 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
         if (emailsRes.ok) {
           const { emails } = await emailsRes.json();
           setUserEmails(emails);
+        }
+
+        // Fetch WhatsApp conversations
+        const waRes = await fetch(`/api/users/${attendeeId}/whatsapp`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (waRes.ok) {
+          const { messages } = await waRes.json();
+          setWaMessages(messages);
         }
       } catch (err) {
         console.error("Failed to load attendee profile:", err);
@@ -301,6 +319,41 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* WhatsApp Conversations */}
+      <Card className="p-6 mt-6">
+        <h2 className="text-lg font-semibold mb-4">💬 WhatsApp</h2>
+
+        {waMessages.length === 0 ? (
+          <div className="text-muted-foreground py-4">No hay conversaciones de WhatsApp con este usuario.</div>
+        ) : (
+          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+            {waMessages.map((msg) => (
+              <div
+                key={msg.id}
+                className={cn(
+                  "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                  msg.role === "user"
+                    ? "bg-muted ml-0 mr-auto"
+                    : msg.role === "assistant"
+                    ? "bg-primary/20 ml-auto mr-0"
+                    : "bg-muted/50 mx-auto text-xs italic text-muted-foreground"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    {msg.role === "user" ? "👤" : msg.role === "assistant" ? "🤖" : "⚙️"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(msg.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+              </div>
+            ))}
           </div>
         )}
       </Card>
