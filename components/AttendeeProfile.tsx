@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 interface AttendeeEvent {
@@ -199,164 +200,170 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
         </div>
       </Card>
 
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Event Activity</h2>
+      <Tabs defaultValue="events">
+        <TabsList>
+          <TabsTrigger value="events">📅 Eventos ({events.length})</TabsTrigger>
+          <TabsTrigger value="emails">📧 Emails ({userEmails.length})</TabsTrigger>
+          <TabsTrigger value="whatsapp">💬 WhatsApp ({waMessages.length})</TabsTrigger>
+        </TabsList>
 
-        {events.length === 0 ? (
-          <div className="text-muted-foreground py-4">No event registrations found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Checked In</TableHead>
-                  <TableHead>Registered</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.map((evt) => (
-                  <TableRow key={evt.event_id}>
-                    <TableCell>
-                      <Link
-                        href={`/dashboard/events/${evt.event_id}`}
-                        className="text-primary no-underline"
-                      >
-                        {evt.event_name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(evt.event_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-xs font-semibold",
-                          statusVariant[evt.status] || "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {evt.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {evt.checked_in ? "✅" : "❌"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(evt.registered_at).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
-
-      {/* Email History */}
-      <Card className="p-6 mt-6">
-        <h2 className="text-lg font-semibold mb-4">📧 Emails Enviados</h2>
-
-        {userEmails.length === 0 ? (
-          <div className="text-muted-foreground py-4">No se enviaron emails a este usuario.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campaña</TableHead>
-                  <TableHead>Asunto</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Intentos</TableHead>
-                  <TableHead>Error</TableHead>
-                  <TableHead>Fecha</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {userEmails.map((em) => (
-                  <TableRow key={em.id}>
-                    <TableCell className="text-sm">
-                      {em.email_jobs ? (
-                        <Link
-                          href={`/dashboard/campaigns/${em.email_jobs.id}`}
-                          className="text-primary no-underline"
-                        >
-                          {em.email_jobs.name || "—"}
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {em.email_jobs?.subject || "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-xs font-semibold",
-                          em.status === "sent" ? "bg-green-500/20 text-green-400" :
-                          em.status === "failed" ? "bg-red-500/20 text-red-400" :
-                          em.status === "bounced" ? "bg-orange-500/20 text-orange-400" :
-                          "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {em.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-center">{em.attempts}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
-                      {em.error || "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {em.sent_at
-                        ? new Date(em.sent_at).toLocaleString()
-                        : new Date(em.created_at).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </Card>
-
-      {/* WhatsApp Conversations */}
-      <Card className="p-6 mt-6">
-        <h2 className="text-lg font-semibold mb-4">💬 WhatsApp</h2>
-
-        {waMessages.length === 0 ? (
-          <div className="text-muted-foreground py-4">No hay conversaciones de WhatsApp con este usuario.</div>
-        ) : (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
-            {waMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "max-w-[80%] rounded-lg px-3 py-2 text-sm",
-                  msg.role === "user"
-                    ? "bg-muted ml-0 mr-auto"
-                    : msg.role === "assistant"
-                    ? "bg-primary/20 ml-auto mr-0"
-                    : "bg-muted/50 mx-auto text-xs italic text-muted-foreground"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[10px] font-medium text-muted-foreground">
-                    {msg.role === "user" ? "👤" : msg.role === "assistant" ? "🤖" : "⚙️"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {new Date(msg.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+        <TabsContent value="events">
+          <Card className="p-6">
+            {events.length === 0 ? (
+              <div className="text-muted-foreground py-4">No event registrations found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-center">Checked In</TableHead>
+                      <TableHead>Registered</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((evt) => (
+                      <TableRow key={evt.event_id}>
+                        <TableCell>
+                          <Link
+                            href={`/dashboard/events/${evt.event_id}`}
+                            className="text-primary no-underline"
+                          >
+                            {evt.event_name}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(evt.event_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-xs font-semibold",
+                              statusVariant[evt.status] || "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {evt.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {evt.checked_in ? "✅" : "❌"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(evt.registered_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            ))}
-          </div>
-        )}
-      </Card>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emails">
+          <Card className="p-6">
+            {userEmails.length === 0 ? (
+              <div className="text-muted-foreground py-4">No se enviaron emails a este usuario.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Campaña</TableHead>
+                      <TableHead>Asunto</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Intentos</TableHead>
+                      <TableHead>Error</TableHead>
+                      <TableHead>Fecha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {userEmails.map((em) => (
+                      <TableRow key={em.id}>
+                        <TableCell className="text-sm">
+                          {em.email_jobs ? (
+                            <Link
+                              href={`/dashboard/campaigns/${em.email_jobs.id}`}
+                              className="text-primary no-underline"
+                            >
+                              {em.email_jobs.name || "—"}
+                            </Link>
+                          ) : (
+                            "—"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {em.email_jobs?.subject || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-xs font-semibold",
+                              em.status === "sent" ? "bg-green-500/20 text-green-400" :
+                              em.status === "failed" ? "bg-red-500/20 text-red-400" :
+                              em.status === "bounced" ? "bg-orange-500/20 text-orange-400" :
+                              "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {em.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-center">{em.attempts}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                          {em.error || "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {em.sent_at
+                            ? new Date(em.sent_at).toLocaleString()
+                            : new Date(em.created_at).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="whatsapp">
+          <Card className="p-6">
+            {waMessages.length === 0 ? (
+              <div className="text-muted-foreground py-4">No hay conversaciones de WhatsApp con este usuario.</div>
+            ) : (
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                {waMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                      msg.role === "user"
+                        ? "bg-muted ml-0 mr-auto"
+                        : msg.role === "assistant"
+                        ? "bg-primary/20 ml-auto mr-0"
+                        : "bg-muted/50 mx-auto text-xs italic text-muted-foreground"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {msg.role === "user" ? "👤" : msg.role === "assistant" ? "🤖" : "⚙️"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(msg.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
