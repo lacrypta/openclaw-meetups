@@ -97,7 +97,7 @@ export function AboutSection() {
                 />
                 <div>
                   <p className="text-white font-bold text-lg leading-tight">Camila Velasco</p>
-                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Co-fundadora de Spark101</p>
+                  <p className="text-[#C04040] text-sm font-semibold mt-0.5">Fundadora de Spark101</p>
                   <p className="text-white/50 text-sm leading-relaxed mt-2">
                     &quot;La Era de la Langosta&quot; — Ecosistema OpenClaw, comunidad y el futuro de los agentes de IA desde una perspectiva humana.
                   </p>
