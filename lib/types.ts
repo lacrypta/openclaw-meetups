@@ -110,6 +110,7 @@ export interface EmailSend {
   error: string | null;
   sent_at: string | null;
   created_at: string;
+  users?: { name: string; email: string } | null;
 }
 
 export interface EmailEvent {

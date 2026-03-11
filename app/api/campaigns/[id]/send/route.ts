@@ -68,12 +68,16 @@ export async function POST(
       return NextResponse.json({ error: 'Email integration not found' }, { status: 400 });
     }
 
-    // 4. Load template + layout
+    // 4. Load template + layout (custom_html overrides template)
+    const jobConfig = (job.config || {}) as Record<string, unknown>;
     let templateHtml = '';
     let templateSubject = job.subject;
     let layoutHtml: string | null = null;
 
-    if (job.template_id) {
+    if (typeof jobConfig.custom_html === 'string' && jobConfig.custom_html) {
+      // Use custom HTML from campaign config — skip template
+      templateHtml = jobConfig.custom_html;
+    } else if (job.template_id) {
       const { data: template } = await supabase
         .from('email_templates')
         .select('*, email_layouts(*)')

@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -18,6 +25,7 @@ import { CampaignResults } from "@/components/CampaignResults";
 import { useCampaignDetail } from "@/hooks/useCampaigns";
 import { useEvents } from "@/hooks/useEvents";
 import { getToken } from "@/lib/auth";
+import { composeEmail, AVAILABLE_VARIABLES, getSampleVariables } from "@/lib/email-composer";
 
 const statusColor: Record<string, string> = {
   pending: "bg-muted-foreground/20 text-muted-foreground",
@@ -50,6 +58,146 @@ export default function CampaignDetailPage() {
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+
+  // HTML editor state
+  const [htmlContent, setHtmlContent] = useState("");
+  const [templateLoaded, setTemplateLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [layoutHtml, setLayoutHtml] = useState<string | null>(null);
+  const [templateSubject, setTemplateSubject] = useState("");
+  const previewRef = useRef<HTMLIFrameElement>(null);
+
+  // Test email state
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testSending, setTestSending] = useState(false);
+  const [testMessage, setTestMessage] = useState<string | null>(null);
+
+  // Load template HTML when campaign loads
+  useEffect(() => {
+    if (!campaign || templateLoaded) return;
+
+    const loadTemplate = async () => {
+      const config = (campaign.config || {}) as Record<string, unknown>;
+      const subject = campaign.subject || "";
+      setTemplateSubject(subject);
+
+      // Check for custom HTML first
+      if (typeof config.custom_html === "string" && config.custom_html) {
+        setHtmlContent(config.custom_html);
+        setTemplateLoaded(true);
+      } else if (campaign.template_id) {
+        // Fetch template from API
+        try {
+          const token = getToken();
+          const res = await fetch(`/api/templates/${campaign.template_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setHtmlContent(data.template?.html_content || "");
+            if (data.template?.email_layouts?.html_content) {
+              setLayoutHtml(data.template.email_layouts.html_content);
+            }
+          }
+        } catch {
+          // Template fetch failed, leave empty
+        }
+        setTemplateLoaded(true);
+      } else {
+        setTemplateLoaded(true);
+      }
+    };
+
+    loadTemplate();
+  }, [campaign, templateLoaded]);
+
+  // Generate preview HTML with sample variables
+  const getPreviewHtml = useCallback(() => {
+    if (!htmlContent) return "";
+    const variableNames = AVAILABLE_VARIABLES.map((v) => v.name);
+    const variables = {
+      ...getSampleVariables(variableNames),
+      subject: templateSubject || campaign?.subject || "",
+    };
+    const composed = composeEmail({
+      template: { html_content: htmlContent, subject: templateSubject || campaign?.subject || "" },
+      layout: layoutHtml ? { html_content: layoutHtml } : null,
+      variables,
+    });
+    return composed.html;
+  }, [htmlContent, layoutHtml, templateSubject, campaign?.subject]);
+
+  // Update preview iframe
+  useEffect(() => {
+    if (previewRef.current) {
+      previewRef.current.srcdoc = getPreviewHtml();
+    }
+  }, [getPreviewHtml]);
+
+  const handleCopyVariable = async (varName: string) => {
+    try {
+      await navigator.clipboard.writeText(`{{${varName}}}`);
+    } catch {
+      // Fallback: just ignore
+    }
+  };
+
+  const handleSaveHtml = async () => {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ custom_html: htmlContent }),
+      });
+      if (res.ok) {
+        setSaveMessage("✅ HTML guardado");
+        refetch();
+      } else {
+        const data = await res.json();
+        setSaveMessage(`❌ ${data.error || "Error al guardar"}`);
+      }
+    } catch {
+      setSaveMessage("❌ Error al guardar");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmail) return;
+    setTestSending(true);
+    setTestMessage(null);
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/campaigns/${campaignId}/test`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: testEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTestMessage("✅ Email de prueba enviado");
+      } else {
+        setTestMessage(`❌ ${data.error || "Error al enviar"}`);
+      }
+    } catch {
+      setTestMessage("❌ Error al enviar");
+    } finally {
+      setTestSending(false);
+    }
+  };
 
   const handleImport = async () => {
     if (!selectedEventId || !selectedSegment) return;
@@ -142,7 +290,7 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Back + title */}
+      {/* Back + title + test button */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/campaigns")}>
           ← Volver
@@ -151,6 +299,16 @@ export default function CampaignDetailPage() {
           <h1 className="text-2xl font-bold">{campaign.name || campaign.subject}</h1>
           <p className="text-sm text-muted-foreground">{campaign.subject}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setTestMessage(null);
+            setTestDialogOpen(true);
+          }}
+        >
+          🧪 Test Email
+        </Button>
         <Badge
           variant="secondary"
           className={`text-sm ${statusColor[campaign.status] || ""}`}
@@ -242,6 +400,65 @@ export default function CampaignDetailPage() {
         </Card>
       )}
 
+      {/* Email Content Editor */}
+      {templateLoaded && (
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">✉️ Contenido del Email</h2>
+            <div className="flex items-center gap-2">
+              {saveMessage && <span className="text-sm">{saveMessage}</span>}
+              <Button onClick={handleSaveHtml} disabled={saving} size="sm">
+                {saving ? "Guardando..." : "💾 Guardar HTML"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Available variables */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Variables disponibles (click para copiar):</p>
+            <div className="flex flex-wrap gap-2">
+              {[...AVAILABLE_VARIABLES, { name: "subject", description: "Asunto del email", sample: "OpenClaw Meetup" }].map((v) => (
+                <Badge
+                  key={v.name}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-muted transition-colors text-xs"
+                  onClick={() => handleCopyVariable(v.name)}
+                  title={v.description}
+                >
+                  {`{{${v.name}}}`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Editor + Preview side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* HTML Editor */}
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Editor HTML</label>
+              <textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                className="w-full h-[400px] rounded-md border bg-zinc-950 text-zinc-100 font-mono text-xs p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                spellCheck={false}
+              />
+            </div>
+
+            {/* Live Preview */}
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Vista previa (con datos de ejemplo)</label>
+              <iframe
+                ref={previewRef}
+                sandbox=""
+                srcDoc={getPreviewHtml()}
+                className="w-full h-[400px] rounded-md border bg-white"
+                title="Email preview"
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Recipients / Results */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">
@@ -250,6 +467,9 @@ export default function CampaignDetailPage() {
         <CampaignResults
           campaign={campaign}
           sends={sends}
+          templateHtml={htmlContent || undefined}
+          templateSubject={templateSubject || campaign.subject}
+          layoutHtml={layoutHtml}
           onRetry={async (id) => {
             const token = getToken();
             await fetch(`/api/campaigns/${id}/retry`, {
@@ -258,8 +478,44 @@ export default function CampaignDetailPage() {
             });
             refetch();
           }}
+          onRemoveRecipient={async (sendId) => {
+            const token = getToken();
+            const res = await fetch(`/api/campaigns/${campaignId}/recipients/${sendId}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) refetch();
+          }}
         />
       </Card>
+
+      {/* Test Email Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>🧪 Enviar Email de Prueba</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Se enviará el email con datos de ejemplo al email indicado.
+            </p>
+            <Input
+              type="email"
+              placeholder="email@ejemplo.com"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+            />
+            {testMessage && <p className="text-sm">{testMessage}</p>}
+            <Button
+              onClick={handleTestEmail}
+              disabled={!testEmail || testSending}
+              className="w-full"
+            >
+              {testSending ? "Enviando..." : "📧 Enviar Test"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

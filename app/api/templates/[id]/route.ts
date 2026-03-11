@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth-server';
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const pubkey = verifyToken(request);
+  if (!pubkey) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const { data, error } = await supabase
+      .from('email_templates')
+      .select('*, email_layouts(*)')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ template: data });
+  } catch (error) {
+    console.error('Template GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

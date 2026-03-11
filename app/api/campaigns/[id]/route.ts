@@ -26,7 +26,7 @@ export async function GET(
 
     const { data: sends, error: sendsError } = await supabase
       .from('email_sends')
-      .select('*')
+      .select('*, users(name, email)')
       .eq('job_id', id)
       .order('created_at');
 
@@ -56,8 +56,38 @@ export async function PATCH(
   try {
     const body = await request.json();
 
+    // Handle custom_html update
+    if (body.custom_html !== undefined) {
+      const { data: existing, error: fetchError } = await supabase
+        .from('email_jobs')
+        .select('config')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !existing) {
+        return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      }
+
+      const currentConfig = (existing.config || {}) as Record<string, unknown>;
+      const newConfig = { ...currentConfig, custom_html: body.custom_html };
+
+      const { data: campaign, error: updateError } = await supabase
+        .from('email_jobs')
+        .update({ config: newConfig })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Campaign update error:', updateError);
+        return NextResponse.json({ error: 'Failed to update campaign' }, { status: 500 });
+      }
+
+      return NextResponse.json({ campaign });
+    }
+
     if (body.status !== 'cancelled') {
-      return NextResponse.json({ error: 'Only cancellation is supported' }, { status: 400 });
+      return NextResponse.json({ error: 'Only cancellation or custom_html update is supported' }, { status: 400 });
     }
 
     // Check current status
