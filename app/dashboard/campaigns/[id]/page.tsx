@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampaignProgress } from "@/components/CampaignProgress";
 import { CampaignResults } from "@/components/CampaignResults";
 import { useCampaignDetail } from "@/hooks/useCampaigns";
@@ -400,94 +401,101 @@ export default function CampaignDetailPage() {
         </Card>
       )}
 
-      {/* Email Content Editor */}
-      {templateLoaded && (
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">✉️ Contenido del Email</h2>
-            <div className="flex items-center gap-2">
-              {saveMessage && <span className="text-sm">{saveMessage}</span>}
-              <Button onClick={handleSaveHtml} disabled={saving} size="sm">
-                {saving ? "Guardando..." : "💾 Guardar HTML"}
-              </Button>
-            </div>
-          </div>
+      {/* Tabs: Contenido + Destinatarios */}
+      <Tabs defaultValue="content">
+        <TabsList>
+          <TabsTrigger value="content">✉️ Contenido del Email</TabsTrigger>
+          <TabsTrigger value="recipients">👥 Destinatarios ({sends.length})</TabsTrigger>
+        </TabsList>
 
-          {/* Available variables */}
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Variables disponibles (click para copiar):</p>
-            <div className="flex flex-wrap gap-2">
-              {[...AVAILABLE_VARIABLES, { name: "subject", description: "Asunto del email", sample: "OpenClaw Meetup" }].map((v) => (
-                <Badge
-                  key={v.name}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted transition-colors text-xs"
-                  onClick={() => handleCopyVariable(v.name)}
-                  title={v.description}
-                >
-                  {`{{${v.name}}}`}
-                </Badge>
-              ))}
-            </div>
-          </div>
+        <TabsContent value="content">
+          {templateLoaded && (
+            <Card className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Contenido del Email</h2>
+                <div className="flex items-center gap-2">
+                  {saveMessage && <span className="text-sm">{saveMessage}</span>}
+                  <Button onClick={handleSaveHtml} disabled={saving} size="sm">
+                    {saving ? "Guardando..." : "💾 Guardar HTML"}
+                  </Button>
+                </div>
+              </div>
 
-          {/* Editor + Preview side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* HTML Editor */}
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Editor HTML</label>
-              <textarea
-                value={htmlContent}
-                onChange={(e) => setHtmlContent(e.target.value)}
-                className="w-full h-[400px] rounded-md border bg-zinc-950 text-zinc-100 font-mono text-xs p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                spellCheck={false}
-              />
-            </div>
+              {/* Available variables */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Variables disponibles (click para copiar):</p>
+                <div className="flex flex-wrap gap-2">
+                  {[...AVAILABLE_VARIABLES, { name: "subject", description: "Asunto del email", sample: "OpenClaw Meetup" }].map((v) => (
+                    <Badge
+                      key={v.name}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-muted transition-colors text-xs"
+                      onClick={() => handleCopyVariable(v.name)}
+                      title={v.description}
+                    >
+                      {`{{${v.name}}}`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
 
-            {/* Live Preview */}
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Vista previa (con datos de ejemplo)</label>
-              <iframe
-                ref={previewRef}
-                sandbox=""
-                srcDoc={getPreviewHtml()}
-                className="w-full h-[400px] rounded-md border bg-white"
-                title="Email preview"
-              />
-            </div>
-          </div>
-        </Card>
-      )}
+              {/* Editor + Preview side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* HTML Editor */}
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Editor HTML</label>
+                  <textarea
+                    value={htmlContent}
+                    onChange={(e) => setHtmlContent(e.target.value)}
+                    className="w-full h-[400px] rounded-md border bg-zinc-950 text-zinc-100 font-mono text-xs p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    spellCheck={false}
+                  />
+                </div>
 
-      {/* Recipients / Results */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">
-          Destinatarios ({sends.length})
-        </h2>
-        <CampaignResults
-          campaign={campaign}
-          sends={sends}
-          templateHtml={htmlContent || undefined}
-          templateSubject={templateSubject || campaign.subject}
-          layoutHtml={layoutHtml}
-          onRetry={async (id) => {
-            const token = getToken();
-            await fetch(`/api/campaigns/${id}/retry`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            refetch();
-          }}
-          onRemoveRecipient={async (sendId) => {
-            const token = getToken();
-            const res = await fetch(`/api/campaigns/${campaignId}/recipients/${sendId}`, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) refetch();
-          }}
-        />
-      </Card>
+                {/* Live Preview */}
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Vista previa (con datos de ejemplo)</label>
+                  <iframe
+                    ref={previewRef}
+                    sandbox=""
+                    srcDoc={getPreviewHtml()}
+                    className="w-full h-[400px] rounded-md border bg-white"
+                    title="Email preview"
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="recipients">
+          <Card className="p-6">
+            <CampaignResults
+              campaign={campaign}
+              sends={sends}
+              templateHtml={htmlContent || undefined}
+              templateSubject={templateSubject || campaign.subject}
+              layoutHtml={layoutHtml}
+              onRetry={async (id) => {
+                const token = getToken();
+                await fetch(`/api/campaigns/${id}/retry`, {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                refetch();
+              }}
+              onRemoveRecipient={async (sendId) => {
+                const token = getToken();
+                const res = await fetch(`/api/campaigns/${campaignId}/recipients/${sendId}`, {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) refetch();
+              }}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Test Email Dialog */}
       <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
