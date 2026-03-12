@@ -186,5 +186,11 @@ export function useCampaignDetail(campaignId: string | null) {
     fetchDetail();
   }, [fetchDetail]);
 
-  return { campaign, sends, loading, error, refetch: fetchDetail };
+  const removeSends = useCallback((ids: string[]) => {
+    const idSet = new Set(ids);
+    setSends((prev) => prev.filter((s) => !idSet.has(s.id)));
+    setCampaign((prev) => prev ? { ...prev, total_contacts: Math.max(0, (prev.total_contacts || 0) - ids.length) } : prev);
+  }, []);
+
+  return { campaign, sends, loading, error, refetch: fetchDetail, removeSends };
 }

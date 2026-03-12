@@ -52,7 +52,7 @@ export default function CampaignDetailPage() {
   const router = useRouter();
   const campaignId = params.id as string;
 
-  const { campaign, sends, loading, refetch } = useCampaignDetail(campaignId);
+  const { campaign, sends, loading, refetch, removeSends } = useCampaignDetail(campaignId);
   const { events } = useEvents();
 
   const [selectedEventId, setSelectedEventId] = useState("");
@@ -613,7 +613,7 @@ export default function CampaignDetailPage() {
                   method: "DELETE",
                   headers: { Authorization: `Bearer ${token}` },
                 });
-                if (res.ok) refetch();
+                if (res.ok) removeSends([sendId]);
               }}
               onBulkRemove={async (sendIds) => {
                 const token = getToken();
@@ -622,7 +622,7 @@ export default function CampaignDetailPage() {
                   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                   body: JSON.stringify({ send_ids: sendIds }),
                 });
-                if (res.ok) refetch();
+                if (res.ok) removeSends(sendIds);
               }}
             />
           </Card>
