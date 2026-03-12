@@ -102,8 +102,27 @@ export async function POST(
 
     // 4. Compose with provided variables or sample fallback
     const variableNames = AVAILABLE_VARIABLES.map(v => v.name);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+
+    // Try to find real user for proper unsubscribe link
+    const { data: testUser } = await supabase
+      .from('users')
+      .select('name, email, unsubscribe_token')
+      .eq('email', testEmail)
+      .single();
+
+    const unsubscribeToken = testUser?.unsubscribe_token || '';
+    const unsubscribeUrl = unsubscribeToken ? `${appUrl}/unsubscribe?token=${unsubscribeToken}` : '';
+    const firstName = testUser?.name?.split(' ')[0] || 'Juan';
+    const fullName = testUser?.name || 'Juan Perez';
+
     const variables = {
       ...getSampleVariables(variableNames),
+      firstname: firstName,
+      fullname: fullName,
+      email: testEmail,
+      unsubscribe_token: unsubscribeToken,
+      unsubscribe_url: unsubscribeUrl,
       ...(body.variables || {}),
       subject: templateSubject,
     };
