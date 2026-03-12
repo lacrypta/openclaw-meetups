@@ -88,9 +88,15 @@ export function buildUserVariables(
   const unsubscribeToken = user.unsubscribe_token || '';
   const unsubscribeUrl = unsubscribeToken ? `${appUrl}/unsubscribe?token=${unsubscribeToken}` : '';
 
+  const lastName = fullName.split(' ').slice(1).join(' ');
+
   return {
     firstname: firstName,
+    first_name: firstName,
+    lastname: lastName,
+    last_name: lastName,
     fullname: fullName,
+    name: fullName,
     email: user.email,
     subject,
     unsubscribe_token: unsubscribeToken,

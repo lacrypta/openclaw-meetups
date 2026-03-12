@@ -43,10 +43,13 @@ export function composeEmail({ template, layout, variables = {} }: ComposeEmailP
  * Available template variables with descriptions and sample values.
  */
 export const AVAILABLE_VARIABLES: { name: string; description: string; sample: string }[] = [
-  { name: 'firstname', description: 'Nombre del asistente', sample: 'Juan' },
-  { name: 'lastname', description: 'Apellido del asistente', sample: 'Perez' },
+  { name: 'firstname', description: 'Nombre', sample: 'Juan' },
+  { name: 'first_name', description: 'Nombre (alias)', sample: 'Juan' },
+  { name: 'lastname', description: 'Apellido', sample: 'Perez' },
+  { name: 'last_name', description: 'Apellido (alias)', sample: 'Perez' },
   { name: 'fullname', description: 'Nombre completo', sample: 'Juan Perez' },
-  { name: 'email', description: 'Email del asistente', sample: 'juan@example.com' },
+  { name: 'name', description: 'Nombre completo (alias)', sample: 'Juan Perez' },
+  { name: 'email', description: 'Email', sample: 'juan@example.com' },
   { name: 'unsubscribe_url', description: 'Link de desuscripción', sample: 'https://openclaw.lacrypta.ar/unsubscribe?token=xxx' },
   { name: 'unsubscribe_token', description: 'Token de desuscripción', sample: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
 ];
