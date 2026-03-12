@@ -288,7 +288,7 @@ export function CampaignResults({
                           <DropdownMenuItem onClick={() => openPreview(send)}>
                             👁 Preview
                           </DropdownMenuItem>
-                          {isPending && onSendOne && send.status === 'pending' && (
+                          {onSendOne && (send.status === 'pending' || send.status === 'sent' || send.status === 'failed') && (
                             <DropdownMenuItem
                               disabled={sendingId === send.id}
                               onClick={async () => {
@@ -300,7 +300,7 @@ export function CampaignResults({
                                 }
                               }}
                             >
-                              {sendingId === send.id ? "⏳ Enviando..." : "📧 Enviar"}
+                              {sendingId === send.id ? "⏳ Enviando..." : send.status === 'pending' ? "📧 Enviar" : "🔄 Reenviar"}
                             </DropdownMenuItem>
                           )}
                           {isPending && onRemoveRecipient && (
