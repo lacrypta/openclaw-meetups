@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { requireRole } from '@/lib/auth-server';
 import { sendEmail } from '@/lib/email-sender';
 import { composeEmail } from '@/lib/email-composer';
+import { loadCampaignEmailData, buildUserVariables } from '@/lib/campaign-loader';
 import type { EmailIntegration, EmailSendStatus } from '@/lib/types';
 
 const BATCH_SIZE = 10;
@@ -68,51 +69,8 @@ export async function POST(
       return NextResponse.json({ error: 'Email integration not found' }, { status: 400 });
     }
 
-    // 4. Load template + layout (custom_html overrides template)
-    const jobConfig = (job.config || {}) as Record<string, unknown>;
-    let templateHtml = '';
-    let templateSubject = job.subject;
-    let layoutHtml: string | null = null;
-
-    if (typeof jobConfig.custom_html === 'string' && jobConfig.custom_html) {
-      // Use custom HTML from campaign config — skip template
-      templateHtml = jobConfig.custom_html;
-    } else if (job.template_id) {
-      const { data: template } = await supabase
-        .from('email_templates')
-        .select('*, email_layouts(*)')
-        .eq('id', job.template_id)
-        .single();
-
-      if (template) {
-        templateHtml = template.html_content;
-        templateSubject = job.subject || template.subject;
-        if (template.email_layouts) {
-          layoutHtml = template.email_layouts.html_content;
-        } else if (template.layout_id) {
-          const { data: layout } = await supabase
-            .from('email_layouts')
-            .select('html_content')
-            .eq('id', template.layout_id)
-            .single();
-          if (layout) layoutHtml = layout.html_content;
-        }
-      }
-    }
-
-    // Apply layout from campaign config (overrides template layout)
-    if (typeof jobConfig.layout_id === 'string') {
-      if (jobConfig.layout_id === 'blank') {
-        layoutHtml = null;
-      } else {
-        const { data: layout } = await supabase
-          .from('email_layouts')
-          .select('html_content')
-          .eq('id', jobConfig.layout_id)
-          .single();
-        if (layout) layoutHtml = layout.html_content;
-      }
-    }
+    // 4. Load template + layout (shared with test flow)
+    const { templateHtml, templateSubject, layoutHtml } = await loadCampaignEmailData(id);
 
     // 5. Query pending sends (including unsubscribe token and subscription status)
     const { data: pendingSends, error: sendsError } = await supabase
@@ -162,23 +120,18 @@ export async function POST(
           continue;
         }
 
-        const attendeeName = (user?.name as string) || '';
         const attendeeEmail = (user?.email as string) || send.email;
-        const firstName = attendeeName.split(' ')[0] || attendeeName;
-        const unsubscribeToken = (user?.unsubscribe_token as string) || '';
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
-        const unsubscribeUrl = unsubscribeToken ? `${appUrl}/unsubscribe?token=${unsubscribeToken}` : '';
 
-        const variables: Record<string, string> = {
-          name: attendeeName,
-          firstname: firstName,
-          first_name: firstName,
-          fullname: attendeeName,
-          email: attendeeEmail,
-          subject: templateSubject,
-          unsubscribe_token: unsubscribeToken,
-          unsubscribe_url: unsubscribeUrl,
-        };
+        const variables = buildUserVariables(
+          {
+            name: (user?.name as string) || null,
+            email: attendeeEmail,
+            unsubscribe_token: (user?.unsubscribe_token as string) || null,
+          },
+          templateSubject,
+          appUrl
+        );
 
         try {
           const composed = composeEmail({
@@ -191,8 +144,8 @@ export async function POST(
             to: attendeeEmail,
             subject: composed.subject,
             html: composed.html,
-            headers: unsubscribeUrl ? {
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+            headers: variables.unsubscribe_url ? {
+              'List-Unsubscribe': `<${variables.unsubscribe_url}>`,
               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
             } : undefined,
           });

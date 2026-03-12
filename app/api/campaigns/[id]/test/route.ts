@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireRole } from '@/lib/auth-server';
 import { sendEmail } from '@/lib/email-sender';
-import { composeEmail, getSampleVariables, AVAILABLE_VARIABLES } from '@/lib/email-composer';
+import { composeEmail } from '@/lib/email-composer';
+import { loadCampaignEmailData, buildUserVariables } from '@/lib/campaign-loader';
 import type { EmailIntegration } from '@/lib/types';
 
 export async function POST(
@@ -24,20 +25,13 @@ export async function POST(
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // 1. Load campaign
-    const { data: job, error: jobError } = await supabase
-      .from('email_jobs')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (jobError || !job) {
-      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-    }
+    // 1. Load campaign email data (same as send flow)
+    const { templateHtml, templateSubject, layoutHtml, integrationId } = await loadCampaignEmailData(id);
 
     // 2. Load integration
-    const jobConfig = (job.config || {}) as Record<string, unknown>;
-    const integrationId = jobConfig.integration_id as string;
+    if (!integrationId) {
+      return NextResponse.json({ error: 'Email integration not configured' }, { status: 400 });
+    }
 
     const { data: rawIntegration } = await supabase
       .from('integrations')
@@ -56,84 +50,29 @@ export async function POST(
       is_default: Boolean((rawIntegration.config as Record<string, unknown>).is_default),
     } as EmailIntegration;
 
-    // 3. Load template + layout, respecting custom_html
-    let templateHtml = '';
-    let templateSubject = job.subject;
-    let layoutHtml: string | null = null;
-
-    if (typeof jobConfig.custom_html === 'string' && jobConfig.custom_html) {
-      templateHtml = jobConfig.custom_html;
-    } else if (job.template_id) {
-      const { data: template } = await supabase
-        .from('email_templates')
-        .select('*, email_layouts(*)')
-        .eq('id', job.template_id)
-        .single();
-
-      if (template) {
-        templateHtml = template.html_content;
-        templateSubject = job.subject || template.subject;
-        if (template.email_layouts) {
-          layoutHtml = template.email_layouts.html_content;
-        } else if (template.layout_id) {
-          const { data: layout } = await supabase
-            .from('email_layouts')
-            .select('html_content')
-            .eq('id', template.layout_id)
-            .single();
-          if (layout) layoutHtml = layout.html_content;
-        }
-      }
-    }
-
-    // Apply layout from campaign config (overrides template layout)
-    if (typeof jobConfig.layout_id === 'string') {
-      if (jobConfig.layout_id === 'blank') {
-        layoutHtml = null;
-      } else {
-        const { data: layout } = await supabase
-          .from('email_layouts')
-          .select('html_content')
-          .eq('id', jobConfig.layout_id)
-          .single();
-        if (layout) layoutHtml = layout.html_content;
-      }
-    }
-
-    // 4. Compose with provided variables or sample fallback
-    const variableNames = AVAILABLE_VARIABLES.map(v => v.name);
+    // 3. Build variables (same as send flow — look up real user if exists)
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
 
-    // Try to find real user for proper unsubscribe link
     const { data: testUser } = await supabase
       .from('users')
       .select('name, email, unsubscribe_token')
       .eq('email', testEmail)
       .single();
 
-    const unsubscribeToken = testUser?.unsubscribe_token || '';
-    const unsubscribeUrl = unsubscribeToken ? `${appUrl}/unsubscribe?token=${unsubscribeToken}` : '';
-    const firstName = testUser?.name?.split(' ')[0] || 'Juan';
-    const fullName = testUser?.name || 'Juan Perez';
+    const variables = buildUserVariables(
+      testUser || { email: testEmail },
+      templateSubject,
+      appUrl
+    );
 
-    const variables = {
-      ...getSampleVariables(variableNames),
-      firstname: firstName,
-      fullname: fullName,
-      email: testEmail,
-      unsubscribe_token: unsubscribeToken,
-      unsubscribe_url: unsubscribeUrl,
-      ...(body.variables || {}),
-      subject: templateSubject,
-    };
-
+    // 4. Compose (same function as send flow)
     const composed = composeEmail({
       template: { html_content: templateHtml, subject: templateSubject },
       layout: layoutHtml ? { html_content: layoutHtml } : null,
       variables,
     });
 
-    // 5. Send test email
+    // 5. Send
     await sendEmail(integration, {
       to: testEmail,
       subject: `[TEST] ${composed.subject}`,
