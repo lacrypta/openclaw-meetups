@@ -143,13 +143,14 @@ export default function CampaignDetailPage() {
 
   const handleAiGenerate = async () => {
     if (!aiPrompt.trim() || aiGenerating) return;
+    setAiModalOpen(false);
     setAiGenerating(true);
     setAiError(null);
     setAiProgress(10);
 
     const progressInterval = setInterval(() => {
-      setAiProgress((prev) => Math.min(prev + Math.random() * 15, 90));
-    }, 800);
+      setAiProgress((prev) => Math.min(prev + Math.random() * 12, 90));
+    }, 600);
 
     try {
       const token = getToken();
@@ -163,7 +164,6 @@ export default function CampaignDetailPage() {
         setAiError(data.error || "Error generando email");
       } else if (data.html) {
         setHtmlContent(data.html);
-        setAiModalOpen(false);
         setAiPrompt("");
       }
     } catch {
@@ -174,7 +174,7 @@ export default function CampaignDetailPage() {
       setTimeout(() => {
         setAiGenerating(false);
         setAiProgress(0);
-      }, 300);
+      }, 500);
     }
   };
 
@@ -432,7 +432,7 @@ export default function CampaignDetailPage() {
               </div>
               <Button
                 onClick={handleSend}
-                disabled={sending}
+                disabled={sending || aiGenerating}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 {sending ? "Enviando..." : "📧 Enviar Campaña"}
@@ -456,14 +456,29 @@ export default function CampaignDetailPage() {
                 <h2 className="text-lg font-semibold">Contenido del Email</h2>
                 <div className="flex items-center gap-2">
                   {saveMessage && <span className="text-sm">{saveMessage}</span>}
-                  <Button onClick={() => setAiModalOpen(true)} variant="outline" size="sm">
-                    🤖 Generar con AI
-                  </Button>
+                  {aiGenerating ? (
+                    <div className="flex items-center gap-2 bg-muted rounded-md px-3 py-1.5">
+                      <svg className="animate-spin h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="text-xs text-muted-foreground">Generando con AI...</span>
+                      <Progress value={aiProgress} className="h-1.5 w-24" />
+                    </div>
+                  ) : (
+                    <Button onClick={() => setAiModalOpen(true)} variant="outline" size="sm">
+                      🤖 Generar con AI
+                    </Button>
+                  )}
                   <Button onClick={handleSaveHtml} disabled={saving} size="sm">
                     {saving ? "Guardando..." : "💾 Guardar HTML"}
                   </Button>
                 </div>
               </div>
+
+              {aiError && !aiModalOpen && (
+                <p className="text-sm text-red-400">❌ {aiError}</p>
+              )}
 
               {/* Available variables */}
               <div className="space-y-2">
@@ -491,8 +506,9 @@ export default function CampaignDetailPage() {
                   <textarea
                     value={htmlContent}
                     onChange={(e) => setHtmlContent(e.target.value)}
-                    className="w-full h-[400px] rounded-md border bg-zinc-950 text-zinc-100 font-mono text-xs p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full h-[400px] rounded-md border bg-zinc-950 text-zinc-100 font-mono text-xs p-3 resize-none focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                     spellCheck={false}
+                    disabled={aiGenerating}
                   />
                 </div>
 
