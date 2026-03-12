@@ -28,11 +28,6 @@ export function composeEmail({ template, layout, variables = {} }: ComposeEmailP
   // Replace variables in template content
   let html = replaceVariables(template.html_content, variables);
 
-  // Auto-append unsubscribe footer if template doesn't include it
-  if (variables.unsubscribe_url && !template.html_content.includes('{{unsubscribe_url}}')) {
-    html += `<div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #333;font-size:12px;color:#666;"><a href="${variables.unsubscribe_url}" style="color:#888;">Desuscribirme</a></div>`;
-  }
-
   if (layout) {
     // Inject composed content into layout's {{content}} placeholder
     let layoutHtml = layout.html_content.replace('{{content}}', html);

@@ -58,6 +58,7 @@ ESTILO:
 - Jerarquía clara: título grande, cuerpo legible (16px), espaciado generoso.
 - Si hay un CTA, usá un botón HTML con padding, fondo de color, texto blanco, centrado.
 - No uses imágenes. No uses backgrounds de color en secciones. Limpio y directo.
+- NO incluyas link de desuscripción — ya está en el footer del layout.
 
 TONO:
 - Profesional pero cercano. Directo, sin relleno.
