@@ -17,9 +17,9 @@ interface AIIntegration {
 }
 
 const MODELS = [
-  { value: 'anthropic/claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
-  { value: 'anthropic/claude-haiku-4-5', label: 'Claude Haiku 4.5' },
-  { value: 'anthropic/claude-opus-4-5', label: 'Claude Opus 4.5' },
+  { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
+  { value: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5' },
+  { value: 'anthropic/claude-opus-4.5', label: 'Claude Opus 4.5' },
   { value: 'openai/gpt-4o', label: 'GPT-4o' },
   { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
   { value: 'openai/gpt-4.1', label: 'GPT-4.1' },
@@ -40,7 +40,7 @@ export function AISettingsTab() {
   const [integration, setIntegration] = useState<AIIntegration | null>(null);
   const [loading, setLoading] = useState(true);
   const [apiKey, setApiKey] = useState("");
-  const [defaultModel, setDefaultModel] = useState("anthropic/claude-haiku-4-5");
+  const [defaultModel, setDefaultModel] = useState("anthropic/claude-haiku-4.5");
   const [masterPrompt, setMasterPrompt] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -58,7 +58,7 @@ export function AISettingsTab() {
       const { integration: data } = await res.json();
       setIntegration(data);
       if (data?.config) {
-        setDefaultModel(data.config.default_model || "anthropic/claude-haiku-4-5");
+        setDefaultModel(data.config.default_model || "anthropic/claude-haiku-4.5");
         setMasterPrompt(data.config.master_prompt || "");
         setEnabled(data.config.enabled ?? false);
       }
@@ -134,7 +134,7 @@ export function AISettingsTab() {
       });
       setIntegration(null);
       setApiKey("");
-      setDefaultModel("anthropic/claude-haiku-4-5");
+      setDefaultModel("anthropic/claude-haiku-4.5");
       setMasterPrompt("");
       setEnabled(false);
       setMessage({ type: "success", text: "Integración de AI desconectada" });

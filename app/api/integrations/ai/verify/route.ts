@@ -17,11 +17,11 @@ export async function POST(request: NextRequest) {
     // Test the key with a simple completion
     const provider = createOpenAI({
       apiKey: api_key,
-      baseURL: 'https://api.vercel.ai/v1',
+      baseURL: 'https://ai-gateway.vercel.sh/v1',
     });
 
     await generateText({
-      model: provider('anthropic/claude-haiku-4-5'),
+      model: provider('anthropic/claude-haiku-4.5'),
       prompt: 'Test',
       maxTokens: 5,
     });

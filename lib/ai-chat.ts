@@ -19,12 +19,12 @@ export async function generateAIResponse(
   
   const provider = createOpenAI({
     apiKey: config.api_key,
-    baseURL: 'https://api.vercel.ai/v1',
+    baseURL: 'https://ai-gateway.vercel.sh/v1',
   });
   
   try {
     const { text } = await generateText({
-      model: provider(config.default_model || 'anthropic/claude-haiku-4-5'),
+      model: provider(config.default_model || 'anthropic/claude-haiku-4.5'),
       system: config.master_prompt || 'You are a helpful event assistant.',
       prompt: userMessage,
     });
