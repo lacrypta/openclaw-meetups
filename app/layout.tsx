@@ -21,12 +21,13 @@ export const metadata: Metadata = {
     description:
       "Meetups mensuales de OpenClaw AI en La Crypta, Belgrano, Buenos Aires.",
     type: "website",
-    url: "https://github.com/lacrypta/openclaw-meetups",
+    url: "https://openclaw.lacrypta.ar",
     images: [
       {
-        url: "https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,background=white,quality=75,width=400,height=400/event-covers/5m/430a67d8-047b-4a35-b57c-65441a39ecc9.png",
-        width: 800,
-        height: 800,
+        url: "https://openclaw.lacrypta.ar/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "OpenClaw Meetups — La Crypta Buenos Aires",
       },
     ],
     siteName: "OpenClaw Meetups",
@@ -36,9 +37,7 @@ export const metadata: Metadata = {
     title: "OpenClaw Meetups | La Crypta Buenos Aires",
     description:
       "Meetups mensuales de OpenClaw AI en La Crypta, Belgrano, Buenos Aires.",
-    images: [
-      "https://images.lumacdn.com/cdn-cgi/image/format=auto,fit=cover,dpr=2,background=white,quality=75,width=400,height=400/event-covers/5m/430a67d8-047b-4a35-b57c-65441a39ecc9.png",
-    ],
+    images: ["https://openclaw.lacrypta.ar/og-image.jpg"],
   },
 };
 
