@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { CampaignProgress } from "@/components/CampaignProgress";
 import { CampaignResults } from "@/components/CampaignResults";
 import { useCampaignDetail } from "@/hooks/useCampaigns";
@@ -65,6 +67,12 @@ export default function CampaignDetailPage() {
   const [templateLoaded, setTemplateLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiModel, setAiModel] = useState("anthropic/claude-sonnet-4.5");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiProgress, setAiProgress] = useState(0);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [layoutHtml, setLayoutHtml] = useState<string | null>(null);
   const [templateSubject, setTemplateSubject] = useState("");
 
@@ -132,6 +140,43 @@ export default function CampaignDetailPage() {
 
   // Memoize preview HTML for iframe srcDoc
   const previewHtml = getPreviewHtml();
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim() || aiGenerating) return;
+    setAiGenerating(true);
+    setAiError(null);
+    setAiProgress(10);
+
+    const progressInterval = setInterval(() => {
+      setAiProgress((prev) => Math.min(prev + Math.random() * 15, 90));
+    }, 800);
+
+    try {
+      const token = getToken();
+      const res = await fetch(`/api/campaigns/${campaignId}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prompt: aiPrompt, model: aiModel }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data.error || "Error generando email");
+      } else if (data.html) {
+        setHtmlContent(data.html);
+        setAiModalOpen(false);
+        setAiPrompt("");
+      }
+    } catch {
+      setAiError("Error de conexión");
+    } finally {
+      clearInterval(progressInterval);
+      setAiProgress(100);
+      setTimeout(() => {
+        setAiGenerating(false);
+        setAiProgress(0);
+      }, 300);
+    }
+  };
 
   const handleCopyVariable = async (varName: string) => {
     try {
@@ -411,6 +456,9 @@ export default function CampaignDetailPage() {
                 <h2 className="text-lg font-semibold">Contenido del Email</h2>
                 <div className="flex items-center gap-2">
                   {saveMessage && <span className="text-sm">{saveMessage}</span>}
+                  <Button onClick={() => setAiModalOpen(true)} variant="outline" size="sm">
+                    🤖 Generar con AI
+                  </Button>
                   <Button onClick={handleSaveHtml} disabled={saving} size="sm">
                     {saving ? "Guardando..." : "💾 Guardar HTML"}
                   </Button>
@@ -516,6 +564,63 @@ export default function CampaignDetailPage() {
               className="w-full"
             >
               {testSending ? "Enviando..." : "📧 Enviar Test"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* AI Generate Modal */}
+      <Dialog open={aiModalOpen} onOpenChange={(open) => { if (!aiGenerating) setAiModalOpen(open); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>🤖 Generar Email con AI</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Modelo</label>
+              <Select value={aiModel} onValueChange={setAiModel} disabled={aiGenerating}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</SelectItem>
+                  <SelectItem value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</SelectItem>
+                  <SelectItem value="anthropic/claude-opus-4.5">Claude Opus 4.5</SelectItem>
+                  <SelectItem value="openai/gpt-4.1">GPT-4.1</SelectItem>
+                  <SelectItem value="openai/gpt-4.1-mini">GPT-4.1 Mini</SelectItem>
+                  <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro</SelectItem>
+                  <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Prompt</label>
+              <Textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ej: Email de invitación al OpenClaw Meetup 2, 27 de marzo en La Crypta. Tono profesional pero cercano, con agenda del evento y CTA para registrarse en luma.com/openclaw2"
+                rows={5}
+                disabled={aiGenerating}
+              />
+            </div>
+
+            {aiGenerating && (
+              <div className="space-y-2">
+                <Progress value={aiProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">Generando email...</p>
+              </div>
+            )}
+
+            {aiError && (
+              <p className="text-sm text-red-400">❌ {aiError}</p>
+            )}
+
+            <Button
+              onClick={handleAiGenerate}
+              disabled={aiGenerating || !aiPrompt.trim()}
+              className="w-full"
+            >
+              {aiGenerating ? "Generando..." : "🤖 Generar"}
             </Button>
           </div>
         </DialogContent>
