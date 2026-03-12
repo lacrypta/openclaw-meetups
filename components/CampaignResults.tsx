@@ -230,7 +230,7 @@ export function CampaignResults({
                     />
                   </TableHead>
                 )}
-                <TableHead>Nombre</TableHead>
+                <TableHead>Nombre completo</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Error</TableHead>
@@ -252,7 +252,13 @@ export function CampaignResults({
                       </TableCell>
                     )}
                     <TableCell className="text-sm">
-                      {send.users?.name || "—"}
+                      {send.user_id ? (
+                        <a href={`/dashboard/attendees/${send.user_id}`} className="text-primary hover:underline">
+                          {send.users?.name || "—"}
+                        </a>
+                      ) : (
+                        send.users?.name || "—"
+                      )}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
                       {send.email}
