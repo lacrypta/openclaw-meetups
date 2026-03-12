@@ -253,7 +253,7 @@ export function CampaignResults({
                     )}
                     <TableCell className="text-sm">
                       {send.user_id ? (
-                        <a href={`/dashboard/attendees/${send.user_id}`} className="text-primary hover:underline">
+                        <a href={`/dashboard/users/${send.user_id}`} className="text-primary hover:underline">
                           {send.users?.name || "—"}
                         </a>
                       ) : (
