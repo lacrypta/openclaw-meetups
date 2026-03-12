@@ -79,6 +79,7 @@ export default function CampaignDetailPage() {
   const [templateSubject, setTemplateSubject] = useState("");
   const [campaignName, setCampaignName] = useState("");
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState("");
 
 
   // Test email state
@@ -120,6 +121,7 @@ export default function CampaignDetailPage() {
       // Check for custom HTML first
       if (typeof config.custom_html === "string" && config.custom_html) {
         setHtmlContent(config.custom_html);
+        setSavedSnapshot(JSON.stringify({ html: config.custom_html, name: campaign.name || "", subject, layout: config.layout_id || "" }));
         setTemplateLoaded(true);
       } else if (campaign.template_id) {
         // Fetch template from API
@@ -138,8 +140,10 @@ export default function CampaignDetailPage() {
         } catch {
           // Template fetch failed, leave empty
         }
+        setSavedSnapshot(JSON.stringify({ html: "", name: campaign.name || "", subject, layout: config.layout_id || "" }));
         setTemplateLoaded(true);
       } else {
+        setSavedSnapshot(JSON.stringify({ html: "", name: campaign.name || "", subject, layout: config.layout_id || "" }));
         setTemplateLoaded(true);
       }
     };
@@ -236,6 +240,9 @@ export default function CampaignDetailPage() {
     }
   };
 
+  const currentSnapshot = JSON.stringify({ html: htmlContent, name: campaignName, subject: templateSubject, layout: selectedLayoutId });
+  const hasChanges = currentSnapshot !== savedSnapshot;
+
   const handleSaveHtml = async () => {
     setSaving(true);
     setSaveMessage(null);
@@ -250,7 +257,8 @@ export default function CampaignDetailPage() {
         body: JSON.stringify({ custom_html: htmlContent, layout_id: selectedLayoutId, name: campaignName, subject: templateSubject }),
       });
       if (res.ok) {
-        setSaveMessage("✅ HTML guardado");
+        setSaveMessage("✅ Guardado");
+        setSavedSnapshot(currentSnapshot);
         refetch();
       } else {
         const data = await res.json();
@@ -494,8 +502,8 @@ export default function CampaignDetailPage() {
                       🤖 Generar con AI
                     </Button>
                   )}
-                  <Button onClick={handleSaveHtml} disabled={saving} size="sm">
-                    {saving ? "Guardando..." : "💾 Guardar HTML"}
+                  <Button onClick={handleSaveHtml} disabled={saving || !hasChanges} size="sm">
+                    {saving ? "Guardando..." : "💾 Guardar"}
                   </Button>
                 </div>
               </div>
