@@ -77,6 +77,8 @@ export default function CampaignDetailPage() {
   const [layouts, setLayouts] = useState<{ id: string; name: string; html_content: string }[]>([]);
   const [selectedLayoutId, setSelectedLayoutId] = useState<string>("blank");
   const [templateSubject, setTemplateSubject] = useState("");
+  const [campaignName, setCampaignName] = useState("");
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
 
   // Test email state
@@ -108,6 +110,7 @@ export default function CampaignDetailPage() {
       const config = (campaign.config || {}) as Record<string, unknown>;
       const subject = campaign.subject || "";
       setTemplateSubject(subject);
+      setCampaignName(campaign.name || "");
 
       // Restore selected layout from config
       if (typeof config.layout_id === "string") {
@@ -244,7 +247,7 @@ export default function CampaignDetailPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ custom_html: htmlContent, layout_id: selectedLayoutId }),
+        body: JSON.stringify({ custom_html: htmlContent, layout_id: selectedLayoutId, name: campaignName, subject: templateSubject }),
       });
       if (res.ok) {
         setSaveMessage("✅ HTML guardado");
@@ -317,6 +320,7 @@ export default function CampaignDetailPage() {
           `✅ ${data.imported} importados${data.skipped ? `, ${data.skipped} duplicados omitidos` : ""}`
         );
         refetch();
+        setImportModalOpen(false);
       }
     } catch {
       setImportMessage("❌ Error al importar");
@@ -415,62 +419,35 @@ export default function CampaignDetailPage() {
         />
       )}
 
-      {/* Audience builder — only for pending campaigns */}
+      {/* General — name + subject */}
       {campaign.status === "pending" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">🎯 Audiencia</h2>
-          <p className="text-sm text-muted-foreground">
-            Importá contactos desde eventos. Podés importar de múltiples eventos (se deduplica por email).
-          </p>
-
-          <div className="flex items-end gap-3">
-            <div className="flex-1 space-y-1">
-              <label className="text-xs text-muted-foreground">Evento</label>
-              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar evento..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {events.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <h2 className="text-lg font-semibold">⚙️ General</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Título (nombre interno de la campaña)</label>
+              <Input
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder="Ej: Invitación Meetup 2 — Marzo"
+              />
             </div>
-
-            <div className="w-48 space-y-1">
-              <label className="text-xs text-muted-foreground">Segmento</label>
-              <Select value={selectedSegment} onValueChange={setSelectedSegment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Segmento..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {SEGMENT_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Asunto (lo que recibe el destinatario)</label>
+              <Input
+                value={templateSubject}
+                onChange={(e) => setTemplateSubject(e.target.value)}
+                placeholder="Ej: {{firstname}}, te invitamos al OpenClaw Meetup 2"
+              />
+              <p className="text-xs text-muted-foreground">
+                Variables: {"{{"}<span>firstname</span>{"}}"}, {"{{"}<span>fullname</span>{"}}"}, {"{{"}<span>email</span>{"}}"}
+              </p>
             </div>
-
-            <Button
-              onClick={handleImport}
-              disabled={!selectedEventId || !selectedSegment || importing}
-            >
-              {importing ? "Importando..." : "Importar"}
-            </Button>
           </div>
-
-          {importMessage && (
-            <p className="text-sm">{importMessage}</p>
-          )}
 
           {/* Send button */}
           {sends.length > 0 && (
-            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mt-4">
+            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mt-2">
               <div>
                 <p className="text-sm font-medium">Campaña lista para enviar</p>
                 <p className="text-xs text-muted-foreground">
@@ -592,7 +569,15 @@ export default function CampaignDetailPage() {
         </TabsContent>
 
         <TabsContent value="recipients">
-          <Card className="p-6">
+          <Card className="p-6 space-y-4">
+            {campaign.status === "pending" && (
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">👥 Destinatarios</h2>
+                <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
+                  📥 Importar desde evento
+                </Button>
+              </div>
+            )}
             <CampaignResults
               campaign={campaign}
               sends={sends}
@@ -656,6 +641,56 @@ export default function CampaignDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Import Modal */}
+      <Dialog open={importModalOpen} onOpenChange={(open) => !importing && setImportModalOpen(open)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>📥 Importar destinatarios</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Importá contactos desde un evento. Se deduplica por email.
+          </p>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Evento</label>
+              <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar evento..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {events.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Segmento</label>
+              <Select value={selectedSegment} onValueChange={setSelectedSegment}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Segmento..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEGMENT_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {importMessage && <p className="text-sm">{importMessage}</p>}
+            <Button
+              onClick={async () => {
+                await handleImport();
+              }}
+              disabled={!selectedEventId || !selectedSegment || importing}
+              className="w-full"
+            >
+              {importing ? "Importando..." : "Importar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* AI Generate Modal */}
       <Dialog open={aiModalOpen} onOpenChange={(open) => { if (!aiGenerating) setAiModalOpen(open); }}>
         <DialogContent className="max-w-lg">

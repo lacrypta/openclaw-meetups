@@ -74,9 +74,13 @@ export async function PATCH(
         newConfig.layout_id = body.layout_id;
       }
 
+      const updatePayload: Record<string, unknown> = { config: newConfig };
+      if (typeof body.name === 'string') updatePayload.name = body.name;
+      if (typeof body.subject === 'string') updatePayload.subject = body.subject;
+
       const { data: campaign, error: updateError } = await supabase
         .from('email_jobs')
-        .update({ config: newConfig })
+        .update(updatePayload)
         .eq('id', id)
         .select()
         .single();
