@@ -15,7 +15,6 @@ const navItems: { label: string; href: string; icon: string; minRole: UserRole }
   { label: "Templates", href: "/dashboard/templates", icon: "✉️", minRole: "manager" },
   { label: "Logs", href: "/dashboard/logs", icon: "📋", minRole: "admin" },
   { label: "Settings", href: "/dashboard/settings", icon: "⚙️", minRole: "admin" },
-  { label: "Mi Perfil", href: "/dashboard/profile", icon: "👤", minRole: "guest" },
 ];
 
 const roleHierarchy: Record<UserRole, number> = { guest: 0, manager: 1, admin: 2 };

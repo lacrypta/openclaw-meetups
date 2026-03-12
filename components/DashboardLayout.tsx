@@ -7,7 +7,13 @@ import { useProfile } from "../hooks/useProfile";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -44,26 +50,37 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Spacer for desktop (sidebar visible, no hamburger) */}
           <div className="hidden lg:block" />
 
-          <div className="flex gap-2 items-center">
-            <Avatar className="w-8 h-8">
-              {profile?.picture ? (
-                <AvatarImage src={profile.picture} alt="" />
-              ) : null}
-              <AvatarFallback className="text-base">👤</AvatarFallback>
-            </Avatar>
-            {profile?.display_name || profile?.name ? (
-              <span className="text-muted-foreground text-sm hidden sm:inline">
-                {profile.display_name || profile.name}
-              </span>
-            ) : pubkey ? (
-              <span className="text-muted-foreground text-sm hidden sm:inline">
-                {pubkey.slice(0, 8)}...{pubkey.slice(-8)}
-              </span>
-            ) : null}
-            <Button variant="outline" size="sm" className="text-xs" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex gap-2 items-center cursor-pointer bg-transparent border-none outline-none hover:opacity-80 transition-opacity">
+                <Avatar className="w-8 h-8">
+                  {profile?.picture ? (
+                    <AvatarImage src={profile.picture} alt="" />
+                  ) : null}
+                  <AvatarFallback className="text-base">👤</AvatarFallback>
+                </Avatar>
+                {profile?.display_name || profile?.name ? (
+                  <span className="text-muted-foreground text-sm hidden sm:inline">
+                    {profile.display_name || profile.name}
+                  </span>
+                ) : pubkey ? (
+                  <span className="text-muted-foreground text-sm hidden sm:inline">
+                    {pubkey.slice(0, 8)}...{pubkey.slice(-8)}
+                  </span>
+                ) : null}
+                <span className="text-muted-foreground text-xs">▼</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>
+                👤 Mi Perfil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-400">
+                🚪 Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
         {/* Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 text-foreground overflow-x-hidden">{children}</main>
