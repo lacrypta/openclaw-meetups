@@ -159,6 +159,16 @@ export async function POST(
             })
             .eq('id', send.id);
 
+          // Log to email_log
+          await supabase.from('email_log').insert({
+            to_email: attendeeEmail,
+            subject: composed.subject,
+            status: 'sent',
+            provider: (integration as EmailIntegration).type,
+            campaign_id: id,
+            user_id: (user as Record<string, unknown>).id as string,
+          }); // best-effort, ignore errors
+
           sentCount++;
         } catch (err) {
           const errorMsg = err instanceof Error ? err.message : 'Unknown error';
@@ -171,6 +181,17 @@ export async function POST(
               attempts: (send.attempts || 0) + 1,
             })
             .eq('id', send.id);
+
+          // Log failure
+          await supabase.from('email_log').insert({
+            to_email: attendeeEmail,
+            subject: templateSubject,
+            status: 'failed',
+            provider: (integration as EmailIntegration).type,
+            campaign_id: id,
+            user_id: (user as Record<string, unknown>).id as string,
+            error: errorMsg,
+          }); // best-effort, ignore errors
 
           failedCount++;
         }
