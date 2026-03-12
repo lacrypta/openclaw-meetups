@@ -45,6 +45,7 @@ interface CampaignResultsProps {
   sends: EmailSend[];
   onRetry?: (id: string) => void;
   onRemoveRecipient?: (sendId: string) => void;
+  onBulkRemove?: (sendIds: string[]) => Promise<void>;
   templateHtml?: string;
   templateSubject?: string;
   layoutHtml?: string | null;
@@ -62,6 +63,7 @@ export function CampaignResults({
   sends,
   onRetry,
   onRemoveRecipient,
+  onBulkRemove,
   templateHtml,
   templateSubject,
   layoutHtml,
@@ -94,12 +96,10 @@ export function CampaignResults({
   };
 
   const handleBulkDelete = async () => {
-    if (!onRemoveRecipient || selected.size === 0) return;
+    if (!onBulkRemove || selected.size === 0) return;
     setBulkDeleting(true);
     try {
-      for (const id of selected) {
-        await onRemoveRecipient(id);
-      }
+      await onBulkRemove(Array.from(selected));
       setSelected(new Set());
     } finally {
       setBulkDeleting(false);

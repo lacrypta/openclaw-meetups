@@ -552,6 +552,15 @@ export default function CampaignDetailPage() {
                 });
                 if (res.ok) refetch();
               }}
+              onBulkRemove={async (sendIds) => {
+                const token = getToken();
+                const res = await fetch(`/api/campaigns/${campaignId}/recipients`, {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ send_ids: sendIds }),
+                });
+                if (res.ok) refetch();
+              }}
             />
           </Card>
         </TabsContent>

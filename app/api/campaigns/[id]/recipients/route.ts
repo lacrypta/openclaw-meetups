@@ -4,14 +4,19 @@ import { requireRole } from '@/lib/auth-server';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; sendId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireRole(request, 'admin');
   if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id, sendId } = await params;
+  const { id } = await params;
+  const { send_ids } = await request.json();
+
+  if (!Array.isArray(send_ids) || send_ids.length === 0) {
+    return NextResponse.json({ error: 'send_ids array is required' }, { status: 400 });
+  }
 
   // Verify campaign is pending
   const { data: job } = await supabase
@@ -28,11 +33,11 @@ export async function DELETE(
     return NextResponse.json({ error: 'Solo se pueden eliminar destinatarios de campañas pendientes' }, { status: 400 });
   }
 
-  // Delete the send
+  // Bulk delete
   const { error } = await supabase
     .from('email_sends')
     .delete()
-    .eq('id', sendId)
+    .in('id', send_ids)
     .eq('job_id', id);
 
   if (error) {
@@ -50,5 +55,5 @@ export async function DELETE(
     .update({ total_contacts: count || 0 })
     .eq('id', id);
 
-  return NextResponse.json({ success: true, total_contacts: count || 0 });
+  return NextResponse.json({ success: true, deleted: send_ids.length, total_contacts: count || 0 });
 }
