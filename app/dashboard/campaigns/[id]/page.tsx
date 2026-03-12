@@ -74,6 +74,8 @@ export default function CampaignDetailPage() {
   const [aiProgress, setAiProgress] = useState(0);
   const [aiError, setAiError] = useState<string | null>(null);
   const [layoutHtml, setLayoutHtml] = useState<string | null>(null);
+  const [layouts, setLayouts] = useState<{ id: string; name: string; html_content: string }[]>([]);
+  const [selectedLayoutId, setSelectedLayoutId] = useState<string>("blank");
   const [templateSubject, setTemplateSubject] = useState("");
 
 
@@ -83,6 +85,21 @@ export default function CampaignDetailPage() {
   const [testSending, setTestSending] = useState(false);
   const [testMessage, setTestMessage] = useState<string | null>(null);
 
+  // Fetch available layouts
+  useEffect(() => {
+    const fetchLayouts = async () => {
+      try {
+        const token = getToken();
+        const res = await fetch("/api/layouts", { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+          const data = await res.json();
+          setLayouts(data.layouts || []);
+        }
+      } catch {}
+    };
+    fetchLayouts();
+  }, []);
+
   // Load template HTML when campaign loads
   useEffect(() => {
     if (!campaign || templateLoaded) return;
@@ -91,6 +108,11 @@ export default function CampaignDetailPage() {
       const config = (campaign.config || {}) as Record<string, unknown>;
       const subject = campaign.subject || "";
       setTemplateSubject(subject);
+
+      // Restore selected layout from config
+      if (typeof config.layout_id === "string") {
+        setSelectedLayoutId(config.layout_id);
+      }
 
       // Check for custom HTML first
       if (typeof config.custom_html === "string" && config.custom_html) {
@@ -121,6 +143,31 @@ export default function CampaignDetailPage() {
 
     loadTemplate();
   }, [campaign, templateLoaded]);
+
+  // Set default layout once layouts are fetched (if no explicit selection yet)
+  useEffect(() => {
+    if (layouts.length === 0) return;
+    if (selectedLayoutId === "blank") {
+      // Check if campaign has a saved layout_id
+      const config = (campaign?.config || {}) as Record<string, unknown>;
+      if (typeof config.layout_id === "string") {
+        setSelectedLayoutId(config.layout_id);
+      } else {
+        // Default to first layout
+        setSelectedLayoutId(layouts[0].id);
+      }
+    }
+  }, [layouts, campaign]);
+
+  // Sync layoutHtml when selection changes
+  useEffect(() => {
+    if (selectedLayoutId === "blank") {
+      setLayoutHtml(null);
+    } else {
+      const found = layouts.find((l) => l.id === selectedLayoutId);
+      setLayoutHtml(found?.html_content || null);
+    }
+  }, [selectedLayoutId, layouts]);
 
   // Generate preview HTML with sample variables
   const getPreviewHtml = useCallback(() => {
@@ -197,7 +244,7 @@ export default function CampaignDetailPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ custom_html: htmlContent }),
+        body: JSON.stringify({ custom_html: htmlContent, layout_id: selectedLayoutId }),
       });
       if (res.ok) {
         setSaveMessage("✅ HTML guardado");
@@ -523,6 +570,22 @@ export default function CampaignDetailPage() {
                     title="Email preview"
                   />
                 </div>
+              </div>
+
+              {/* Layout selector */}
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Layout</label>
+                <Select value={selectedLayoutId} onValueChange={setSelectedLayoutId}>
+                  <SelectTrigger className="w-[300px]">
+                    <SelectValue placeholder="Seleccionar layout" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blank">Sin layout (Blank)</SelectItem>
+                    {layouts.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </Card>
           )}

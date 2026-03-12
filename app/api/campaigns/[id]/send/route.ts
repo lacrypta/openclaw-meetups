@@ -100,6 +100,20 @@ export async function POST(
       }
     }
 
+    // Apply layout from campaign config (overrides template layout)
+    if (typeof jobConfig.layout_id === 'string') {
+      if (jobConfig.layout_id === 'blank') {
+        layoutHtml = null;
+      } else {
+        const { data: layout } = await supabase
+          .from('email_layouts')
+          .select('html_content')
+          .eq('id', jobConfig.layout_id)
+          .single();
+        if (layout) layoutHtml = layout.html_content;
+      }
+    }
+
     // 5. Query pending sends (including unsubscribe token and subscription status)
     const { data: pendingSends, error: sendsError } = await supabase
       .from('email_sends')

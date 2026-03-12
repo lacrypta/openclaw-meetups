@@ -54,7 +54,7 @@ export async function PATCH(
   const { id } = await params;
 
   try {
-    const body = await request.json();
+    const body: Record<string, unknown> = await request.json();
 
     // Handle custom_html update
     if (body.custom_html !== undefined) {
@@ -69,7 +69,10 @@ export async function PATCH(
       }
 
       const currentConfig = (existing.config || {}) as Record<string, unknown>;
-      const newConfig = { ...currentConfig, custom_html: body.custom_html };
+      const newConfig: Record<string, unknown> = { ...currentConfig, custom_html: body.custom_html };
+      if (body.layout_id !== undefined) {
+        newConfig.layout_id = body.layout_id;
+      }
 
       const { data: campaign, error: updateError } = await supabase
         .from('email_jobs')
