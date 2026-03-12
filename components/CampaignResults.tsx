@@ -46,6 +46,7 @@ interface CampaignResultsProps {
   onRetry?: (id: string) => void;
   onRemoveRecipient?: (sendId: string) => void;
   onBulkRemove?: (sendIds: string[]) => Promise<void>;
+  onSendOne?: (sendId: string) => Promise<void>;
   templateHtml?: string;
   templateSubject?: string;
   layoutHtml?: string | null;
@@ -64,6 +65,7 @@ export function CampaignResults({
   onRetry,
   onRemoveRecipient,
   onBulkRemove,
+  onSendOne,
   templateHtml,
   templateSubject,
   layoutHtml,
@@ -74,6 +76,7 @@ export function CampaignResults({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState("");
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -285,6 +288,21 @@ export function CampaignResults({
                           <DropdownMenuItem onClick={() => openPreview(send)}>
                             👁 Preview
                           </DropdownMenuItem>
+                          {isPending && onSendOne && send.status === 'pending' && (
+                            <DropdownMenuItem
+                              disabled={sendingId === send.id}
+                              onClick={async () => {
+                                setSendingId(send.id);
+                                try {
+                                  await onSendOne(send.id);
+                                } finally {
+                                  setSendingId(null);
+                                }
+                              }}
+                            >
+                              {sendingId === send.id ? "⏳ Enviando..." : "📧 Enviar"}
+                            </DropdownMenuItem>
+                          )}
                           {isPending && onRemoveRecipient && (
                             <DropdownMenuItem
                               className="text-red-400 focus:text-red-400"

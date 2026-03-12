@@ -608,6 +608,19 @@ export default function CampaignDetailPage() {
                 });
                 refetch();
               }}
+              onSendOne={async (sendId) => {
+                const token = getToken();
+                const res = await fetch(`/api/campaigns/${campaignId}/send-one`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ send_id: sendId }),
+                });
+                if (res.ok) refetch();
+                else {
+                  const data = await res.json();
+                  alert(data.error || "Error al enviar");
+                }
+              }}
               onRemoveRecipient={async (sendId) => {
                 const token = getToken();
                 const res = await fetch(`/api/campaigns/${campaignId}/recipients/${sendId}`, {
