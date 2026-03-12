@@ -243,6 +243,23 @@ export default function CampaignDetailPage() {
   const currentSnapshot = JSON.stringify({ html: htmlContent, name: campaignName, subject: templateSubject, layout: selectedLayoutId });
   const hasChanges = currentSnapshot !== savedSnapshot;
 
+  // Validate dynamic variables
+  const validVarNames = new Set(AVAILABLE_VARIABLES.map((v) => v.name));
+  validVarNames.add("subject");
+  validVarNames.add("content");
+
+  const findInvalidVars = (text: string): string[] => {
+    const matches = text.match(/\{\{(\w+)\}\}/g) || [];
+    return [...new Set(matches
+      .map((m) => m.replace(/\{\{|\}\}/g, ""))
+      .filter((name) => !validVarNames.has(name))
+    )];
+  };
+
+  const invalidSubjectVars = findInvalidVars(templateSubject);
+  const invalidHtmlVars = findInvalidVars(htmlContent);
+  const hasInvalidVars = invalidSubjectVars.length > 0 || invalidHtmlVars.length > 0;
+
   const handleSaveHtml = async () => {
     setSaving(true);
     setSaveMessage(null);
@@ -434,7 +451,7 @@ export default function CampaignDetailPage() {
             <h2 className="text-lg font-semibold">⚙️ General</h2>
             <div className="flex items-center gap-2">
               {saveMessage && <span className="text-sm">{saveMessage}</span>}
-              <Button onClick={handleSaveHtml} disabled={saving || !hasChanges} size="sm">
+              <Button onClick={handleSaveHtml} disabled={saving || !hasChanges || hasInvalidVars} size="sm">
                 {saving ? "Guardando..." : "💾 Guardar"}
               </Button>
             </div>
@@ -458,6 +475,11 @@ export default function CampaignDetailPage() {
               <p className="text-xs text-muted-foreground">
                 Variables: {"{{"}<span>firstname</span>{"}}"}, {"{{"}<span>fullname</span>{"}}"}, {"{{"}<span>email</span>{"}}"}
               </p>
+              {invalidSubjectVars.length > 0 && (
+                <p className="text-xs text-red-400">
+                  ⚠️ Variables inválidas en asunto: {invalidSubjectVars.map((v) => `{{${v}}}`).join(", ")}
+                </p>
+              )}
             </div>
           </div>
 
@@ -472,7 +494,7 @@ export default function CampaignDetailPage() {
               </div>
               <Button
                 onClick={handleSend}
-                disabled={sending || aiGenerating}
+                disabled={sending || aiGenerating || hasInvalidVars}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 {sending ? "Enviando..." : "📧 Enviar Campaña"}
@@ -510,7 +532,7 @@ export default function CampaignDetailPage() {
                       🤖 Generar con AI
                     </Button>
                   )}
-                  <Button onClick={handleSaveHtml} disabled={saving || !hasChanges} size="sm">
+                  <Button onClick={handleSaveHtml} disabled={saving || !hasChanges || hasInvalidVars} size="sm">
                     {saving ? "Guardando..." : "💾 Guardar"}
                   </Button>
                 </div>
@@ -550,6 +572,11 @@ export default function CampaignDetailPage() {
                     spellCheck={false}
                     disabled={aiGenerating}
                   />
+                  {invalidHtmlVars.length > 0 && (
+                    <p className="text-xs text-red-400">
+                      ⚠️ Variables inválidas: {invalidHtmlVars.map((v) => `{{${v}}}`).join(", ")}
+                    </p>
+                  )}
                 </div>
 
                 {/* Live Preview */}
