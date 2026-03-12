@@ -42,9 +42,10 @@ const statusBadge: Record<string, { className: string; label: string }> = {
   failed: { className: "bg-red-500/20 text-red-400", label: "Fallido" },
   pending: { className: "bg-muted-foreground/20 text-muted-foreground", label: "Pendiente" },
   bounced: { className: "bg-orange-500/20 text-orange-400", label: "Rebotado" },
+  skipped: { className: "bg-yellow-500/20 text-yellow-400", label: "Omitido" },
 };
 
-export default function EmailsPage() {
+export default function EmailLogTab() {
   const [emails, setEmails] = useState<EmailRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -75,27 +76,22 @@ export default function EmailsPage() {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">📧 Email Log</h1>
-          <p className="text-sm text-muted-foreground">Historial de todos los emails enviados</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{total} emails</span>
-          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="sent">Enviados</SelectItem>
-              <SelectItem value="failed">Fallidos</SelectItem>
-              <SelectItem value="pending">Pendientes</SelectItem>
-              <SelectItem value="bounced">Rebotados</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <span className="text-sm text-muted-foreground">{total} emails</span>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="sent">Enviados</SelectItem>
+            <SelectItem value="failed">Fallidos</SelectItem>
+            <SelectItem value="pending">Pendientes</SelectItem>
+            <SelectItem value="bounced">Rebotados</SelectItem>
+            <SelectItem value="skipped">Omitidos</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card className="p-0">
@@ -176,7 +172,6 @@ export default function EmailsPage() {
         )}
       </Card>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <Button
