@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'manager');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const phone = searchParams.get('phone');
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'manager');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   let body: { name?: string; email?: string; phone?: string };
   try {

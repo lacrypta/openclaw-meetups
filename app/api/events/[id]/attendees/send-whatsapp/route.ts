@@ -7,15 +7,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 import { sendWhatsAppMessage } from '@/lib/wasender';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'manager');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

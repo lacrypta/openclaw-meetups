@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 import type { EmailIntegration } from '@/lib/types';
 
 /** Map an integrations row (provider='email') to EmailIntegration shape */
@@ -22,8 +22,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'admin');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -103,8 +103,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'admin');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

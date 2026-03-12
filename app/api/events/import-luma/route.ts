@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 import { getLumaConfig, getIntegration } from '@/lib/integrations';
 import { supabase } from '@/lib/supabase';
 
@@ -29,8 +29,8 @@ interface LumaGuest {
 }
 
 export async function POST(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'manager');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         luma_url: lumaEvent.url || null,
         status: 'published',
         requires_confirmation: true,
-        created_by: pubkey,
+        created_by: auth.pubkey,
       })
       .select()
       .single();

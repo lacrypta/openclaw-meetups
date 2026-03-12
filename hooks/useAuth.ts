@@ -1,23 +1,34 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { login as authLogin, logout as authLogout, isAuthenticated, getPubkeyFromToken, getToken } from '../lib/auth';
+import { login as authLogin, logout as authLogout, isAuthenticated, getPubkeyFromToken, getToken, getUserFromToken, type UserRole } from '../lib/auth';
 
 export function useAuth() {
   const [isAuth, setIsAuth] = useState(false);
   const [ready, setReady] = useState(false);
   const [pubkey, setPubkey] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const syncState = () => {
     const authenticated = isAuthenticated();
     setIsAuth(authenticated);
     if (authenticated) {
-      setPubkey(getPubkeyFromToken());
+      const user = getUserFromToken();
+      setPubkey(user?.pubkey ?? null);
+      setRole(user?.role ?? null);
       setToken(getToken());
+    } else {
+      setPubkey(null);
+      setRole(null);
+      setToken(null);
     }
+  };
+
+  useEffect(() => {
+    syncState();
     setReady(true);
   }, []);
 
@@ -27,7 +38,9 @@ export function useAuth() {
     try {
       const result = await authLogin();
       setIsAuth(true);
-      setPubkey(result.pubkey);
+      const user = getUserFromToken();
+      setPubkey(user?.pubkey ?? result.pubkey);
+      setRole(user?.role ?? null);
       setToken(result.token);
       return result;
     } catch (err) {
@@ -43,21 +56,19 @@ export function useAuth() {
     authLogout();
     setIsAuth(false);
     setPubkey(null);
+    setRole(null);
     setToken(null);
   };
 
   const recheckAuth = () => {
-    const authenticated = isAuthenticated();
-    setIsAuth(authenticated);
-    if (authenticated) {
-      setPubkey(getPubkeyFromToken());
-    }
+    syncState();
   };
 
   return {
     isAuthenticated: isAuth,
     ready,
     pubkey,
+    role,
     token,
     login,
     logout,

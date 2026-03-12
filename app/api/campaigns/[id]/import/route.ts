@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'manager');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -45,8 +45,9 @@ export async function POST(
     // Query attendees based on segment
     let query = supabase
       .from('event_attendees')
-      .select('user_id, users!inner(id, name, email)')
-      .eq('event_id', event_id);
+      .select('user_id, users!inner(id, name, email, subscribed)')
+      .eq('event_id', event_id)
+      .eq('users.subscribed', true);
 
     switch (segment) {
       case 'all':

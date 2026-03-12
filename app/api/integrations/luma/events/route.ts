@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 import { getLumaConfig } from '@/lib/integrations';
 import { getIntegration } from '@/lib/integrations';
 
 export async function GET(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'admin');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

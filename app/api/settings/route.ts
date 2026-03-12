@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { data } = await supabase
     .from('integrations')
@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
   const { timezone } = body;

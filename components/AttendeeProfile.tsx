@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getToken } from "../lib/auth";
-import type { User, AttendeeStatus } from "../lib/types";
+import { getToken, getRoleFromToken } from "../lib/auth";
+import type { User, AttendeeStatus, UserRole } from "../lib/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -119,9 +119,13 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
               email: found.email,
               phone: found.phone || null,
               pubkey: found.pubkey || null,
+              role: found.role || 'guest',
               email_verified: found.email_verified || false,
               phone_verified: found.phone_verified || false,
               luma_id: found.luma_id || null,
+              subscribed: found.subscribed !== false,
+              unsubscribe_token: found.unsubscribe_token,
+              unsubscribed_at: found.unsubscribed_at || null,
             });
           }
         }
@@ -233,6 +237,44 @@ export function AttendeeProfile({ attendeeId }: AttendeeProfileProps) {
               </span>
             </div>
           )}
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Email: </span>
+            {attendee.subscribed !== false ? (
+              <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">🟢 Suscripto</Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-red-500/20 text-red-400 text-xs">
+                🔴 Desuscripto{attendee.unsubscribed_at ? ` (${new Date(attendee.unsubscribed_at).toLocaleDateString()})` : ''}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Rol: </span>
+            {getRoleFromToken() === 'admin' ? (
+              <select
+                value={attendee.role}
+                onChange={async (e) => {
+                  const newRole = e.target.value as UserRole;
+                  const token = getToken();
+                  if (!token) return;
+                  const res = await fetch(`/api/users/${attendee.id}/role`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ role: newRole }),
+                  });
+                  if (res.ok) {
+                    setAttendee({ ...attendee, role: newRole });
+                  }
+                }}
+                className="px-2 py-1 rounded-md text-xs font-semibold border cursor-pointer bg-transparent text-foreground"
+              >
+                <option value="guest">Guest</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+            ) : (
+              <Badge variant="secondary" className="text-xs">{attendee.role}</Badge>
+            )}
+          </div>
         </div>
       </Card>
 

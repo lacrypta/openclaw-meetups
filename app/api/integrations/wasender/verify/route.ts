@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { api_key } = await request.json();

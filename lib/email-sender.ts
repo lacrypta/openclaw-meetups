@@ -17,6 +17,7 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  headers?: Record<string, string>;
 }
 
 /**
@@ -29,7 +30,7 @@ export async function sendEmail(
 ): Promise<void> {
   // config is already a JSONB object (no JSON.parse needed)
   const config = integration.config;
-  const { to, subject, html } = options;
+  const { to, subject, html, headers: extraHeaders } = options;
 
   switch (integration.type) {
     case 'smtp': {
@@ -52,7 +53,7 @@ export async function sendEmail(
         greetingTimeout: 30000,
         socketTimeout: 30000,
       });
-      await transport.sendMail({ from: cfg.from_email, to, subject, html });
+      await transport.sendMail({ from: cfg.from_email, to, subject, html, headers: extraHeaders });
       break;
     }
 
@@ -65,6 +66,8 @@ export async function sendEmail(
           secretAccessKey: cfg.secret_access_key,
         },
       });
+      // Note: SES SendEmail doesn't support custom headers directly.
+      // For List-Unsubscribe headers, use SendRawEmail. For now, basic send.
       await ses.send(
         new SendEmailCommand({
           Source: cfg.from_email,
@@ -86,7 +89,7 @@ export async function sendEmail(
           'Content-Type': 'application/json',
           Authorization: `Bearer ${cfg.api_key}`,
         },
-        body: JSON.stringify({ from: cfg.from_email, to, subject, html }),
+        body: JSON.stringify({ from: cfg.from_email, to, subject, html, headers: extraHeaders }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 
 export async function GET(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { data } = await supabase
     .from('integrations')
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const { api_key, phone_number, send_whatsapp_on_new_guest } = await request.json();
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await requireRole(request, 'admin');
+  if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await supabase
     .from('integrations')

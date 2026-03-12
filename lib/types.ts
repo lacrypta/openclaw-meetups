@@ -1,3 +1,5 @@
+export type UserRole = 'guest' | 'manager' | 'admin';
+
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
 export type AttendeeStatus = 'approved' | 'waitlist' | 'declined';
 
@@ -53,9 +55,13 @@ export interface User {
   email: string;
   phone: string | null;
   pubkey: string | null;
+  role: UserRole;
   email_verified: boolean;
   phone_verified: boolean;
   luma_id: string | null;
+  subscribed: boolean;
+  unsubscribe_token?: string;
+  unsubscribed_at?: string | null;
 }
 
 /** @deprecated Use User instead */
@@ -76,7 +82,7 @@ export interface AttendeeWithEvents extends Attendee {
 
 export type EmailJobStatus = 'pending' | 'running' | 'partial' | 'completed' | 'failed' | 'cancelled';
 export type EmailJobSegment = 'all' | 'checked-in' | 'no-show' | 'waitlist' | 'custom';
-export type EmailSendStatus = 'pending' | 'sent' | 'failed' | 'bounced';
+export type EmailSendStatus = 'pending' | 'sent' | 'failed' | 'bounced' | 'skipped';
 export type EmailEventType = 'open' | 'click' | 'bounce' | 'complaint';
 
 export interface EmailJob {

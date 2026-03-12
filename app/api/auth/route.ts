@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEvent } from 'nostr-tools';
 import jwt from 'jsonwebtoken';
+import { supabase } from '@/lib/supabase';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-const ALLOWED_PUBKEYS = (process.env.ALLOWED_PUBKEYS || 'e5c1a30bfe9db1fc2ae3284da2cec7a3c3e67fb3ca699d4d05a3f1b3c64f862f').split(',');
 
 interface Nip98Event {
   id: string;
@@ -48,19 +48,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid method tag' }, { status: 400 });
     }
 
-    // Verify pubkey is in allowlist
-    if (!ALLOWED_PUBKEYS.includes(event.pubkey)) {
-      return NextResponse.json({ error: 'Pubkey not authorized' }, { status: 403 });
+    // Look up user by pubkey in DB
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('pubkey', event.pubkey)
+      .single();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Pubkey no registrada. Contactá al administrador.' }, { status: 403 });
     }
 
-    // Generate JWT
+    // Generate JWT with role and userId
     const token = jwt.sign(
-      { pubkey: event.pubkey },
+      { pubkey: event.pubkey, role: user.role, userId: user.id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    return NextResponse.json({ token, pubkey: event.pubkey });
+    return NextResponse.json({ token, pubkey: event.pubkey, role: user.role });
   } catch (error) {
     console.error('Auth error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

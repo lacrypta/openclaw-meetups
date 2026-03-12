@@ -80,3 +80,32 @@ export function getPubkeyFromToken(): string | null {
     return null;
   }
 }
+
+export type UserRole = 'guest' | 'manager' | 'admin';
+
+export interface TokenUser {
+  pubkey: string;
+  role: UserRole;
+  userId: string;
+}
+
+export function getUserFromToken(): TokenUser | null {
+  const token = getToken();
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return {
+      pubkey: payload.pubkey,
+      role: payload.role || 'guest',
+      userId: payload.userId,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function getRoleFromToken(): UserRole | null {
+  const user = getUserFromToken();
+  return user?.role ?? null;
+}

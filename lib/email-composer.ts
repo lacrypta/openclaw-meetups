@@ -28,6 +28,11 @@ export function composeEmail({ template, layout, variables = {} }: ComposeEmailP
   // Replace variables in template content
   let html = replaceVariables(template.html_content, variables);
 
+  // Auto-append unsubscribe footer if template doesn't include it
+  if (variables.unsubscribe_url && !template.html_content.includes('{{unsubscribe_url}}')) {
+    html += `<div style="text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #333;font-size:12px;color:#666;"><a href="${variables.unsubscribe_url}" style="color:#888;">Desuscribirme</a></div>`;
+  }
+
   if (layout) {
     // Inject composed content into layout's {{content}} placeholder
     let layoutHtml = layout.html_content.replace('{{content}}', html);
@@ -47,6 +52,8 @@ export const AVAILABLE_VARIABLES: { name: string; description: string; sample: s
   { name: 'lastname', description: 'Apellido del asistente', sample: 'Perez' },
   { name: 'fullname', description: 'Nombre completo', sample: 'Juan Perez' },
   { name: 'email', description: 'Email del asistente', sample: 'juan@example.com' },
+  { name: 'unsubscribe_url', description: 'Link de desuscripción', sample: 'https://openclaw.lacrypta.ar/unsubscribe?token=xxx' },
+  { name: 'unsubscribe_token', description: 'Token de desuscripción', sample: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
 ];
 
 /**

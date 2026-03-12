@@ -3,18 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getRoleFromToken, type UserRole } from "@/lib/auth";
 
-const navItems = [
-  { label: "Overview", href: "/dashboard", icon: "📊" },
-  { label: "Events", href: "/dashboard/events", icon: "📅" },
-  { label: "Users", href: "/dashboard/users", icon: "👥" },
-  { label: "Campaigns", href: "/dashboard/campaigns", icon: "📨" },
-  { label: "Email Log", href: "/dashboard/emails", icon: "📧" },
-  { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬" },
-  { label: "Templates", href: "/dashboard/templates", icon: "✉️" },
-  { label: "Logs", href: "/dashboard/logs", icon: "📋" },
-  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
+const navItems: { label: string; href: string; icon: string; minRole: UserRole }[] = [
+  { label: "Overview", href: "/dashboard", icon: "📊", minRole: "manager" },
+  { label: "Events", href: "/dashboard/events", icon: "📅", minRole: "manager" },
+  { label: "Users", href: "/dashboard/users", icon: "👥", minRole: "admin" },
+  { label: "Campaigns", href: "/dashboard/campaigns", icon: "📨", minRole: "manager" },
+  { label: "Email Log", href: "/dashboard/emails", icon: "📧", minRole: "manager" },
+  { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬", minRole: "manager" },
+  { label: "Templates", href: "/dashboard/templates", icon: "✉️", minRole: "manager" },
+  { label: "Logs", href: "/dashboard/logs", icon: "📋", minRole: "admin" },
+  { label: "Settings", href: "/dashboard/settings", icon: "⚙️", minRole: "admin" },
+  { label: "Mi Perfil", href: "/dashboard/profile", icon: "👤", minRole: "guest" },
 ];
+
+const roleHierarchy: Record<UserRole, number> = { guest: 0, manager: 1, admin: 2 };
 
 interface SidebarProps {
   open: boolean;
@@ -23,11 +27,16 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const userRole = getRoleFromToken() || 'guest';
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
+
+  const visibleItems = navItems.filter(
+    (item) => roleHierarchy[userRole] >= roleHierarchy[item.minRole]
+  );
 
   return (
     <>
@@ -59,7 +68,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             ✕
           </button>
         </div>
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

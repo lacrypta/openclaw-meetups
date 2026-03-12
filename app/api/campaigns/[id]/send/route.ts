@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { verifyToken } from '@/lib/auth-server';
+import { requireRole } from '@/lib/auth-server';
 import { sendEmail } from '@/lib/email-sender';
 import { composeEmail } from '@/lib/email-composer';
-import type { EmailIntegration } from '@/lib/types';
+import type { EmailIntegration, EmailSendStatus } from '@/lib/types';
 
 const BATCH_SIZE = 10;
 
@@ -11,8 +11,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const pubkey = verifyToken(request);
-  if (!pubkey) {
+  const auth = await requireRole(request, 'manager');
+  if (!auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -100,10 +100,10 @@ export async function POST(
       }
     }
 
-    // 5. Query pending sends
+    // 5. Query pending sends (including unsubscribe token and subscription status)
     const { data: pendingSends, error: sendsError } = await supabase
       .from('email_sends')
-      .select('*, users!inner(id, name, email)')
+      .select('*, users!inner(id, name, email, subscribed, unsubscribe_token)')
       .eq('job_id', id)
       .eq('status', 'pending')
       .order('created_at');
@@ -138,9 +138,22 @@ export async function POST(
 
       for (const send of batch) {
         const user = send.users as Record<string, unknown> | null;
+
+        // Skip unsubscribed users
+        if (user?.subscribed === false) {
+          await supabase
+            .from('email_sends')
+            .update({ status: 'skipped' as EmailSendStatus, attempts: (send.attempts || 0) + 1 })
+            .eq('id', send.id);
+          continue;
+        }
+
         const attendeeName = (user?.name as string) || '';
         const attendeeEmail = (user?.email as string) || send.email;
         const firstName = attendeeName.split(' ')[0] || attendeeName;
+        const unsubscribeToken = (user?.unsubscribe_token as string) || '';
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://openclaw.lacrypta.ar';
+        const unsubscribeUrl = unsubscribeToken ? `${appUrl}/unsubscribe?token=${unsubscribeToken}` : '';
 
         const variables: Record<string, string> = {
           name: attendeeName,
@@ -149,6 +162,8 @@ export async function POST(
           fullname: attendeeName,
           email: attendeeEmail,
           subject: templateSubject,
+          unsubscribe_token: unsubscribeToken,
+          unsubscribe_url: unsubscribeUrl,
         };
 
         try {
@@ -162,6 +177,10 @@ export async function POST(
             to: attendeeEmail,
             subject: composed.subject,
             html: composed.html,
+            headers: unsubscribeUrl ? {
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            } : undefined,
           });
 
           await supabase
