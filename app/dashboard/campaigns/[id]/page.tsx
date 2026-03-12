@@ -430,7 +430,15 @@ export default function CampaignDetailPage() {
       {/* General — name + subject */}
       {campaign.status === "pending" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-semibold">⚙️ General</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">⚙️ General</h2>
+            <div className="flex items-center gap-2">
+              {saveMessage && <span className="text-sm">{saveMessage}</span>}
+              <Button onClick={handleSaveHtml} disabled={saving || !hasChanges} size="sm">
+                {saving ? "Guardando..." : "💾 Guardar"}
+              </Button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Título (nombre interno de la campaña)</label>
