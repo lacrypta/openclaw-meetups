@@ -86,6 +86,20 @@ export async function POST(
       }
     }
 
+    // Apply layout from campaign config (overrides template layout)
+    if (typeof jobConfig.layout_id === 'string') {
+      if (jobConfig.layout_id === 'blank') {
+        layoutHtml = null;
+      } else {
+        const { data: layout } = await supabase
+          .from('email_layouts')
+          .select('html_content')
+          .eq('id', jobConfig.layout_id)
+          .single();
+        if (layout) layoutHtml = layout.html_content;
+      }
+    }
+
     // 4. Compose with provided variables or sample fallback
     const variableNames = AVAILABLE_VARIABLES.map(v => v.name);
     const variables = {
