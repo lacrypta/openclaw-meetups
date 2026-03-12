@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -68,9 +69,43 @@ export function CampaignResults({
   const [previewSend, setPreviewSend] = useState<EmailSend | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<EmailSend | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+
+  const allSelected = sends.length > 0 && selected.size === sends.length;
+  const someSelected = selected.size > 0 && selected.size < sends.length;
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(sends.map((s) => s.id)));
+  };
+
+  const handleBulkDelete = async () => {
+    if (!onRemoveRecipient || selected.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      for (const id of selected) {
+        await onRemoveRecipient(id);
+      }
+      setSelected(new Set());
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+    }
+  };
 
   const getVariablesForSend = (send: EmailSend): Record<string, string> => {
     const userName = send.users?.name || "";
@@ -164,12 +199,37 @@ export function CampaignResults({
         )}
       </div>
 
+      {/* Selection bar */}
+      {isPending && selected.size > 0 && (
+        <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2">
+          <span className="text-sm">{selected.size} seleccionado{selected.size > 1 ? "s" : ""}</span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            🗑 Eliminar ({selected.size})
+          </Button>
+        </div>
+      )}
+
       {/* Sends table */}
       {sends.length > 0 && (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                {isPending && onRemoveRecipient && (
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={allSelected}
+                      ref={(el) => {
+                        if (el) (el as unknown as HTMLButtonElement).dataset.indeterminate = someSelected ? "true" : "false";
+                      }}
+                      onCheckedChange={toggleAll}
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
@@ -183,6 +243,14 @@ export function CampaignResults({
                 const badge = statusBadge[send.status] || statusBadge.pending;
                 return (
                   <TableRow key={send.id}>
+                    {isPending && onRemoveRecipient && (
+                      <TableCell className="w-[40px]">
+                        <Checkbox
+                          checked={selected.has(send.id)}
+                          onCheckedChange={() => toggleOne(send.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-sm">
                       {send.users?.name || "—"}
                     </TableCell>
@@ -229,6 +297,28 @@ export function CampaignResults({
           </Table>
         </div>
       )}
+
+      {/* Bulk delete confirmation dialog */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={(open) => !bulkDeleting && setBulkDeleteOpen(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar {selected.size} destinatario{selected.size > 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán <strong>{selected.size}</strong> destinatario{selected.size > 1 ? "s" : ""} de esta campaña. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {bulkDeleting ? "Eliminando..." : `Eliminar (${selected.size})`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
