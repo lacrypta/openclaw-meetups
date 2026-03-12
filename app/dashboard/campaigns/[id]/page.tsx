@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +67,7 @@ export default function CampaignDetailPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [layoutHtml, setLayoutHtml] = useState<string | null>(null);
   const [templateSubject, setTemplateSubject] = useState("");
-  const previewRef = useRef<HTMLIFrameElement>(null);
+
 
   // Test email state
   const [testDialogOpen, setTestDialogOpen] = useState(false);
@@ -130,12 +130,8 @@ export default function CampaignDetailPage() {
     return composed.html;
   }, [htmlContent, layoutHtml, templateSubject, campaign?.subject]);
 
-  // Update preview iframe
-  useEffect(() => {
-    if (previewRef.current) {
-      previewRef.current.srcdoc = getPreviewHtml();
-    }
-  }, [getPreviewHtml]);
+  // Memoize preview HTML for iframe srcDoc
+  const previewHtml = getPreviewHtml();
 
   const handleCopyVariable = async (varName: string) => {
     try {
@@ -456,9 +452,9 @@ export default function CampaignDetailPage() {
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Vista previa (con datos de ejemplo)</label>
                   <iframe
-                    ref={previewRef}
+                    key={previewHtml.length}
                     sandbox=""
-                    srcDoc={getPreviewHtml()}
+                    srcDoc={previewHtml}
                     className="w-full h-[400px] rounded-md border bg-white"
                     title="Email preview"
                   />
