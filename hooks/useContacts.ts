@@ -12,6 +12,7 @@ export interface Contact {
   status: 'approved' | 'waitlist' | 'declined';
   checked_in: boolean;
   attendance_confirmed: boolean;
+  subscribed?: boolean;
   notes?: string;
   registered_at: string;
 }

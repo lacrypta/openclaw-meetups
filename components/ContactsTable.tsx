@@ -152,8 +152,6 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
     { field: "name", label: "Name" },
     { field: "email", label: "Email" },
     { field: "status", label: "Status" },
-    { field: "checked_in", label: "Checked In" },
-    { field: "attendance_confirmed", label: "Confirmed" },
     { field: "registered_at", label: "Registered" },
   ];
 
@@ -226,30 +224,6 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                     >
                       {contact.status}
                     </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {eventId ? (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onUpdateContact(contact.id, { checked_in: !contact.checked_in });
-                      }}
-                      className="bg-transparent border-none cursor-pointer text-base"
-                    >
-                      {contact.checked_in ? "✅" : "❌"}
-                    </button>
-                  ) : (
-                    <span>{contact.checked_in ? "✅" : "❌"}</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {contact.attendance_confirmed ? (
-                    <Badge variant="secondary" className="bg-success/20 text-success text-xs">
-                      ✅ Confirmed
-                    </Badge>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">—</span>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
