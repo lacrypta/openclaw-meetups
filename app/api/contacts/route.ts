@@ -9,22 +9,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    let query = supabase.from('users').select('*');
+    const query = supabase.from('users').select('*');
 
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const checkedIn = searchParams.get('checked_in');
-
-    if (status) {
-      query = query.eq('status', status);
-    }
-    if (checkedIn === 'true') {
-      query = query.eq('checked_in', true);
-    } else if (checkedIn === 'false') {
-      query = query.eq('checked_in', false);
-    }
-
-    const { data, error } = await query.order('registered_at', { ascending: false });
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('Supabase error:', error);
@@ -51,7 +38,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing contact ID' }, { status: 400 });
     }
 
-    const updates: Record<string, any> = {};
+    const updates: Record<string, unknown> = {};
     if (notes !== undefined) updates.notes = notes;
 
     const { data, error } = await supabase

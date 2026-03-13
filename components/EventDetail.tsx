@@ -56,6 +56,7 @@ export function EventDetail({ eventId }: EventDetailProps) {
       email: ea.email,
       phone: ea.phone || null,
       pubkey: ea.pubkey || undefined,
+      created_at: ea.registered_at,
       status: ea.status,
       checked_in: ea.checked_in,
       attendance_confirmed: ea.attendance_confirmed || false,
@@ -64,11 +65,11 @@ export function EventDetail({ eventId }: EventDetailProps) {
     }));
   }, [attendees]);
 
-  const handleUpdateContact = async (id: string, updates: Partial<Contact>) => {
+  const handleUpdateContact = async (id: string, updates: Record<string, unknown>) => {
     await updateAttendee(id, {
-      status: updates.status,
-      checked_in: updates.checked_in,
-      notes: updates.notes,
+      status: updates.status as string | undefined,
+      checked_in: updates.checked_in as boolean | undefined,
+      notes: updates.notes as string | undefined,
     });
   };
 

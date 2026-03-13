@@ -25,11 +25,11 @@ import { getToken } from "@/lib/auth";
 
 interface ContactsTableProps {
   contacts: Contact[];
-  onUpdateContact: (id: string, updates: Partial<Contact>) => Promise<void>;
+  onUpdateContact: (id: string, updates: Record<string, unknown>) => Promise<void>;
   eventId?: string;
 }
 
-type SortField = "name" | "email" | "status" | "registered_at" | "checked_in" | "attendance_confirmed";
+type SortField = "name" | "email" | "created_at";
 type SortDirection = "asc" | "desc";
 
 const statusVariant: Record<string, string> = {
@@ -102,7 +102,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
     }
   };
 
-  const [sortField, setSortField] = useState<SortField>("registered_at");
+  const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const handleSort = (field: SortField) => {
@@ -130,7 +130,7 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
       let aVal: any = a[sortField];
       let bVal: any = b[sortField];
 
-      if (sortField === "registered_at") {
+      if (sortField === "created_at") {
         aVal = new Date(aVal).getTime();
         bVal = new Date(bVal).getTime();
       }
@@ -149,10 +149,9 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
   }, [contacts, search, sortField, sortDirection]);
 
   const columns: { field: SortField; label: string }[] = [
-    { field: "name", label: "Name" },
+    { field: "name", label: "Nombre" },
     { field: "email", label: "Email" },
-    { field: "status", label: "Status" },
-    { field: "registered_at", label: "Registered" },
+    { field: "created_at", label: "Registrado" },
   ];
 
   return (
@@ -195,39 +194,8 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{contact.email}</TableCell>
-                <TableCell>
-                  {eventId ? (
-                    <select
-                      value={contact.status}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        onUpdateContact(contact.id, {
-                          status: e.target.value as Contact["status"],
-                        });
-                      }}
-                      className={cn(
-                        "px-2 py-1 rounded-md text-xs font-semibold border cursor-pointer bg-transparent",
-                        statusVariant[contact.status] || "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      <option value="approved">approved</option>
-                      <option value="waitlist">waitlist</option>
-                      <option value="declined">declined</option>
-                    </select>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "text-xs font-semibold",
-                        statusVariant[contact.status] || "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {contact.status}
-                    </Badge>
-                  )}
-                </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(contact.registered_at).toLocaleDateString()}
+                  {new Date(contact.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   {eventId ? (
@@ -252,14 +220,12 @@ export function ContactsTable({ contacts, onUpdateContact, eventId }: ContactsTa
                             👤 View Profile
                           </Link>
                         </DropdownMenuItem>
-                        {!contact.attendance_confirmed && (
-                          <DropdownMenuItem
+                        <DropdownMenuItem
                             onClick={() => handleSendConfirmation(contact)}
                             disabled={sendingAction === `email-${contact.id}`}
                           >
                             📧 Send Confirmation Email
                           </DropdownMenuItem>
-                        )}
                         {contact.phone && (
                           <DropdownMenuItem
                             onClick={() => handleSendWhatsApp(contact)}

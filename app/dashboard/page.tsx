@@ -49,7 +49,7 @@ export default function DashboardOverviewPage() {
 
   const recentRegistrations = useMemo(() => {
     return [...contacts]
-      .sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime())
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 8);
   }, [contacts]);
 
@@ -144,10 +144,9 @@ export default function DashboardOverviewPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
+                    <TableHead>Nombre</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Registered</TableHead>
+                    <TableHead>Registrado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -159,19 +158,8 @@ export default function DashboardOverviewPage() {
                         </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "text-xs font-semibold",
-                            statusVariant[c.status] || "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          {c.status}
-                        </Badge>
-                      </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {new Date(c.registered_at).toLocaleDateString()}
+                        {new Date(c.created_at).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
                   ))}

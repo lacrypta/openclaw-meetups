@@ -9,15 +9,18 @@ export interface Contact {
   email: string;
   phone?: string | null;
   pubkey?: string;
-  status: 'approved' | 'waitlist' | 'declined';
-  checked_in: boolean;
-  attendance_confirmed: boolean;
   subscribed?: boolean;
+  role?: string;
   notes?: string;
-  registered_at: string;
+  created_at: string;
+  // Event-context fields (populated when used from EventDetail)
+  status?: 'approved' | 'waitlist' | 'declined';
+  checked_in?: boolean;
+  attendance_confirmed?: boolean;
+  registered_at?: string;
 }
 
-export function useContacts(filters?: { status?: string; checked_in?: boolean }) {
+export function useContacts(filters?: Record<string, unknown>) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +37,6 @@ export function useContacts(filters?: { status?: string; checked_in?: boolean })
 
     try {
       const params = new URLSearchParams();
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.checked_in !== undefined) params.append('checked_in', String(filters.checked_in));
 
       const url = `/api/contacts${params.toString() ? '?' + params.toString() : ''}`;
       const response = await fetch(url, {
