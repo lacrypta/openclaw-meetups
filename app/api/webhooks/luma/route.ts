@@ -177,7 +177,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Link user to event in event_attendees
+    let isNewAttendee = false;
     if (internalEventId) {
+      // Check if attendee already exists (for deduplication)
+      const { data: existingAttendee } = await supabase
+        .from('event_attendees')
+        .select('id')
+        .eq('event_id', internalEventId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      isNewAttendee = !existingAttendee;
+
       const { error: attendeeError } = await supabase.from('event_attendees').upsert(
         {
           event_id: internalEventId,
@@ -193,9 +204,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Send WhatsApp confirmation with direct link
+    // 5. Send WhatsApp confirmation with direct link (only for new attendees)
     const wasenderConfig = await getWaSenderConfig();
-    if (wasenderConfig.send_whatsapp_on_new_guest && phone) {
+    if (isNewAttendee && wasenderConfig.send_whatsapp_on_new_guest && phone) {
       try {
         // Get confirmation token for this attendee
         const { data: eaForWa } = await supabase
@@ -227,10 +238,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5b. Send confirmation email with unique token link (if enabled in Luma settings)
+    // 5b. Send confirmation email with unique token link (only for new attendees)
     const lumaConfig = await getLumaConfig();
     const shouldSendEmail = lumaConfig.send_confirmation_email !== false;
-    if (shouldSendEmail && email && internalEventId) {
+    if (isNewAttendee && shouldSendEmail && email && internalEventId) {
       try {
         // Get the confirmation token for this attendee
         const { data: ea } = await supabase
