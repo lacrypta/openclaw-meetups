@@ -637,16 +637,21 @@ export default function CampaignDetailPage() {
               }}
               onSendOne={async (sendId) => {
                 const token = getToken();
-                const res = await fetch(`/api/campaigns/${campaignId}/send-one`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ send_id: sendId }),
-                });
-                if (res.ok) refetch();
-                else {
+                const doSend = async (resend = false) => {
+                  const res = await fetch(`/api/campaigns/${campaignId}/send-one`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ send_id: sendId, resend }),
+                  });
+                  if (res.ok) { refetch(); return; }
+                  if (res.status === 409 && !resend) {
+                    if (confirm("Email ya enviado. ¿Reenviar?")) return doSend(true);
+                    return;
+                  }
                   const data = await res.json();
                   alert(data.error || "Error al enviar");
-                }
+                };
+                await doSend();
               }}
               onRemoveRecipient={async (sendId) => {
                 const token = getToken();

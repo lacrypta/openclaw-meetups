@@ -18,7 +18,8 @@ export async function POST(
   const { id } = await params;
 
   try {
-    const { send_id } = await request.json();
+    const body = await request.json();
+    const { send_id, resend } = body;
 
     if (!send_id) {
       return NextResponse.json({ error: 'send_id is required' }, { status: 400 });
@@ -40,6 +41,14 @@ export async function POST(
 
     if (user.subscribed === false) {
       return NextResponse.json({ error: 'Usuario desuscripto' }, { status: 400 });
+    }
+
+    // Double-send protection: block if already sent (use resend flag to override)
+    if (send.status === 'sent' && !resend) {
+      return NextResponse.json(
+        { error: 'Email ya enviado. Usá resend: true para reenviar.' },
+        { status: 409 }
+      );
     }
 
     // 2. Load campaign email data (same flow as bulk send)
