@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampaignTab } from "./CampaignTab";
+import { LineupTab } from "./LineupTab";
 import { cn } from "@/lib/utils";
 
 interface EventDetailProps {
@@ -200,11 +201,12 @@ export function EventDetail({ eventId }: EventDetailProps) {
 
       <StatsBar stats={stats} loading={attendeesLoading} />
 
-      {/* Tabs: Attendees + Campaigns */}
+      {/* Tabs: Attendees + Campaigns + Lineup */}
       <Tabs defaultValue="attendees">
         <TabsList>
           <TabsTrigger value="attendees">Attendees</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+          <TabsTrigger value="lineup">🎤 Lineup</TabsTrigger>
         </TabsList>
 
         <TabsContent value="attendees">
@@ -234,6 +236,10 @@ export function EventDetail({ eventId }: EventDetailProps) {
 
         <TabsContent value="campaigns">
           <CampaignTab eventId={eventId} />
+        </TabsContent>
+
+        <TabsContent value="lineup">
+          <LineupTab eventId={eventId} />
         </TabsContent>
       </Tabs>
 

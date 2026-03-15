@@ -24,6 +24,7 @@ export function Navbar({ pubkey, profile, onLoginClick, onLogout, dashboardHref 
   const navLinks = [
     { href: "#about", label: "Nosotros" },
     { href: "#experiencias", label: "Experiencias" },
+    { href: "/speakers", label: "Speakers" },
     { href: "#contacto", label: "Contacto" },
   ];
 

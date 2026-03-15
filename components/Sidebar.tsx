@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { getRoleFromToken, type UserRole } from "@/lib/auth";
+import { getRoleFromToken, getUserFromToken, type UserRole } from "@/lib/auth";
 
-const navItems: { label: string; href: string; icon: string; minRole: UserRole }[] = [
+const navItems: { label: string; href: string; icon: string; minRole: UserRole; speakerOnly?: boolean }[] = [
   { label: "Overview", href: "/dashboard", icon: "📊", minRole: "manager" },
   { label: "Events", href: "/dashboard/events", icon: "📅", minRole: "manager" },
   { label: "Users", href: "/dashboard/users", icon: "👥", minRole: "admin" },
   { label: "Campaigns", href: "/dashboard/campaigns", icon: "📨", minRole: "manager" },
-
+  { label: "Talks", href: "/dashboard/talks", icon: "🎤", minRole: "guest", speakerOnly: true },
   { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬", minRole: "manager" },
   { label: "Templates", href: "/dashboard/templates", icon: "✉️", minRole: "manager" },
   { label: "Logs", href: "/dashboard/logs", icon: "📋", minRole: "admin" },
@@ -27,15 +27,24 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const userRole = getRoleFromToken() || 'guest';
+  // speakerOnly items are visible to managers/admins OR any logged-in user (speaker status checked client-side)
+  // We show Talks to anyone logged in (guest+) and also to managers/admins always
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
-  const visibleItems = navItems.filter(
-    (item) => roleHierarchy[userRole] >= roleHierarchy[item.minRole]
-  );
+  const isManagerOrAdmin = roleHierarchy[userRole] >= roleHierarchy['manager'];
+
+  const visibleItems = navItems.filter((item) => {
+    if (roleHierarchy[userRole] < roleHierarchy[item.minRole]) return false;
+    if (item.speakerOnly && !isManagerOrAdmin) {
+      // Show Talks link to all logged-in users (they'll see the page which handles speaker check)
+      return true;
+    }
+    return true;
+  });
 
   return (
     <>

@@ -62,6 +62,45 @@ export interface User {
   subscribed: boolean;
   unsubscribe_token?: string;
   unsubscribed_at?: string | null;
+  // Speaker fields
+  is_speaker?: boolean;
+  speaker_bio?: string | null;
+  speaker_tagline?: string | null;
+  speaker_photo?: string | null;
+  speaker_twitter?: string | null;
+  speaker_github?: string | null;
+  speaker_website?: string | null;
+  speaker_company?: string | null;
+}
+
+export type TalkFormat = 'talk' | 'workshop' | 'lightning' | 'panel' | 'fireside';
+export type TalkStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+
+export interface Talk {
+  id: string;
+  speaker_id: string;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  format: TalkFormat;
+  tags: string[] | null;
+  slides_url: string | null;
+  status: TalkStatus;
+  created_at: string;
+  updated_at: string;
+  // joined
+  speaker?: Pick<User, 'id' | 'name' | 'speaker_photo' | 'speaker_tagline'>;
+}
+
+export interface EventTalk {
+  id: string;
+  event_id: string;
+  talk_id: string;
+  start_time: string | null;
+  end_time: string | null;
+  room: string | null;
+  sort_order: number;
+  talk?: Talk;
 }
 
 /** @deprecated Use User instead */
