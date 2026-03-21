@@ -1,24 +1,57 @@
 {
-  "startTime": "21:00",
+  "startTime": "19:00",
   "slotDurationMinutes": 10,
   "talks": [
     {
       "id": "talk-001",
       "speaker": {
-        "name": "Francisco Calderón",
-        "alias": "Negrunch",
+        "name": "Agustin Kassis",
+        "alias": "",
+        "avatar": "",
+        "twitter": "agustinkassis",
+        "github": "agustinkassis",
+        "nostr": ""
+      },
+      "title": "Humano Digital",
+      "duration": 45,
+      "confirmed": true,
+      "order": 1,
+      "time": "19:30"
+    },
+    {
+      "id": "talk-002",
+      "speaker": {
+        "name": "Camila Velasco & Agustin Kassis",
+        "alias": "",
         "avatar": "",
         "twitter": "",
         "github": "",
         "nostr": ""
       },
-      "title": "Mi experiencia con OpenClaw: desarrollo rápido y workflows eficientes",
-      "duration": 15,
+      "title": "Digital Love",
+      "duration": 30,
       "confirmed": true,
-      "order": 1
+      "order": 2,
+      "time": "20:15"
     },
     {
-      "id": "talk-002",
+      "id": "talk-003",
+      "speaker": {
+        "name": "Camila Velasco",
+        "alias": "",
+        "avatar": "",
+        "twitter": "",
+        "github": "",
+        "nostr": ""
+      },
+      "title": "La Era de la langosta",
+      "duration": 30,
+      "confirmed": true,
+      "order": 3,
+      "time": "20:45"
+    },
+    {
+      "id": "talk-004",
       "speaker": {
         "name": "Matías Romeo",
         "alias": "",
@@ -27,10 +60,11 @@
         "github": "",
         "nostr": ""
       },
-      "title": "Hardware stack + OpenClaw orquestado (Kubernetes, Docker, multi-nodo)",
-      "duration": 15,
+      "title": "Adentro de los agentes",
+      "duration": 30,
       "confirmed": true,
-      "order": 2
+      "order": 4,
+      "time": "21:30"
     }
   ]
 }
