@@ -82,7 +82,7 @@ export function HeroSection() {
           {/* Event badge */}
           <div className="inline-flex items-center gap-2 bg-[#C04040]/15 border border-[#C04040]/30 rounded-full px-4 py-1.5 mb-8">
             <span className="w-2 h-2 rounded-full bg-[#C04040] animate-pulse" />
-            <span className="text-[#C04040] text-sm font-semibold tracking-wide">2do Meetup · 27 Marzo</span>
+            <span className="text-[#C04040] text-sm font-semibold tracking-wide">2do Meetup · 10 Abril</span>
           </div>
 
           <h1 className="text-white font-bold leading-[0.95] tracking-[-0.04em] text-[56px] sm:text-[80px] md:text-[100px] lg:text-[130px] xl:text-[170px]">
@@ -143,10 +143,10 @@ export function HeroSection() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <span className="text-white text-base font-medium">🎤 Charla: &quot;Humano Digital&quot;</span>
-            <span className="text-white text-base font-medium">🦞 &quot;La Era de la Langosta&quot;</span>
-            <span className="text-white text-base font-medium">⚡ Lightning talks</span>
-            <span className="text-white text-base font-medium">🤝 Networking</span>
+            <span className="text-white text-base font-medium">🎤 Bloque 1 — Charlas</span>
+            <span className="text-white text-base font-medium">🔧 Bloque 2 — Hardware</span>
+            <span className="text-white text-base font-medium">🥙 Shawarma & barra</span>
+            <span className="text-white text-base font-medium">🔥 Fogonero & networking</span>
           </div>
 
           {/* Next event card */}

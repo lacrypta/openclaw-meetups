@@ -47,7 +47,7 @@ export function ScheduleSection() {
             </div>
             <div>
               <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Horario</span>
-              <p className="text-white text-xl font-bold mt-1">19:00 - 22:00 hs (ART)</p>
+              <p className="text-white text-xl font-bold mt-1">19:00 - 23:00 hs (ART)</p>
             </div>
             <div>
               <span className="text-white/40 text-xs font-medium uppercase tracking-wide">Lugar</span>
@@ -80,49 +80,52 @@ export function ScheduleSection() {
                 <div>
                   <span className="text-white text-base font-semibold">Apertura & networking</span>
                   <p className="text-white/40 text-sm mt-1">
-                    Llegada, mate, birra, y conectar con la comunidad.
+                    Llegada, birra, y conectar con la comunidad.
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
-                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">19:30</span>
+                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">19:20</span>
                 <div>
-                  <span className="text-white text-base font-semibold">&quot;Humano Digital&quot; — Agustin Kassis</span>
+                  <span className="text-white text-base font-semibold">Bloque 1 — Charlas</span>
                   <p className="text-white/40 text-sm mt-1">
-                    De asistente a entidad. El camino desde mandar mails hasta construir un ser digital autónomo que trabaja, cobra y piensa.
+                    Charlas principales de la comunidad OpenClaw.
                   </p>
                   <span className="inline-flex items-center gap-1.5 mt-2 text-[#C04040] text-xs font-semibold bg-[#C04040]/10 px-3 py-1 rounded-full">
-                    🎤 Charla principal
+                    🎤 Charlas principales
                   </span>
                 </div>
               </div>
               <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
-                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">20:15</span>
+                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">21:00</span>
                 <div>
-                  <span className="text-white text-base font-semibold">&quot;La Era de la Langosta&quot; — Cami Velasco</span>
+                  <span className="text-white text-base font-semibold">Corte — Shawarma & barra</span>
                   <p className="text-white/40 text-sm mt-1">
-                    Charla sobre el ecosistema OpenClaw, la comunidad y el futuro de los agentes AI.
+                    45 minutos para comer, tomar algo y conectar.
                   </p>
                   <span className="inline-flex items-center gap-1.5 mt-2 text-[#C04040] text-xs font-semibold bg-[#C04040]/10 px-3 py-1 rounded-full">
-                    🎤 Charla
+                    🥙 Shawarma + 🍺 Barra
                   </span>
                 </div>
               </div>
               <div className="flex items-start gap-4 pb-6 border-b border-white/[0.08]">
-                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">20:45</span>
+                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">21:45</span>
                 <div>
-                  <span className="text-white text-base font-semibold">Lightning talks & proyectos</span>
+                  <span className="text-white text-base font-semibold">Bloque 2 — Hardware</span>
                   <p className="text-white/40 text-sm mt-1">
-                    Charlas cortas de la comunidad. Skills, experimentos, herramientas, lo que pinte.
+                    Segundo bloque de charlas enfocado en hardware y proyectos.
                   </p>
+                  <span className="inline-flex items-center gap-1.5 mt-2 text-[#C04040] text-xs font-semibold bg-[#C04040]/10 px-3 py-1 rounded-full">
+                    🔧 Hardware
+                  </span>
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">21:30</span>
+                <span className="text-[#C04040] text-sm font-bold font-['Fragment_Mono',monospace] min-w-[60px]">~23:00</span>
                 <div>
                   <span className="text-white text-base font-semibold">Cierre & networking</span>
                   <p className="text-white/40 text-sm mt-1">
-                    Conversar, preguntar, romper código, planear el próximo.
+                    Conversar, preguntar, romper código, planear el próximo. Fogonero encendido 🔥
                   </p>
                 </div>
               </div>
