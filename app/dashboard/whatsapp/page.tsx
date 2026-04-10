@@ -339,6 +339,7 @@ export default function WhatsAppPage() {
     setActiveSession(session);
     setShowChat(true);
     setLoadingMessages(true);
+    prevMessageCount.current = 0;
     const token = getToken();
     if (!token) return;
     try {
@@ -384,8 +385,13 @@ export default function WhatsAppPage() {
     }
   };
 
+  const prevMessageCount = useRef(0);
   useEffect(() => {
-    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (!bottomRef.current) return;
+    // Instant scroll on initial load, smooth on new messages
+    const isInitialLoad = prevMessageCount.current === 0 && messages.length > 0;
+    bottomRef.current.scrollIntoView({ behavior: isInitialLoad ? "instant" : "smooth" });
+    prevMessageCount.current = messages.length;
   }, [messages]);
 
   const displayName = (s: Session) => s.users?.name || s.phone || "Desconocido";
