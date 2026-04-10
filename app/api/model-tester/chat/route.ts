@@ -31,9 +31,12 @@ export async function POST(request: NextRequest) {
     }
 
     const aiConfig = await getAIConfig();
-    const apiKey = aiConfig.api_key || process.env.ANTHROPIC_API_KEY || '';
+    // Vercel AI Gateway key: check env var first, then DB config
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY || '';
+    const dbKey = aiConfig.api_key && !aiConfig.api_key.includes('KEEP_EXIST') ? aiConfig.api_key : '';
+    const apiKey = gatewayKey || dbKey || process.env.ANTHROPIC_API_KEY || '';
     if (!apiKey) {
-      return NextResponse.json({ error: 'No AI API key configured. Go to Settings > AI.' }, { status: 400 });
+      return NextResponse.json({ error: 'No AI API key configured. Set AI_GATEWAY_API_KEY env var or update Settings > AI.' }, { status: 400 });
     }
 
     const provider = createOpenAI({

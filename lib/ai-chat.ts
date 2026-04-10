@@ -13,12 +13,16 @@ export async function generateAIResponse(
 ): Promise<string> {
   const config = await getAIConfig();
   
-  if (!config.enabled || !config.api_key) {
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY || '';
+  const dbKey = config.api_key && !config.api_key.includes('KEEP_EXIST') ? config.api_key : '';
+  const apiKey = gatewayKey || dbKey;
+
+  if (!config.enabled || !apiKey) {
     return '';
   }
-  
+
   const provider = createOpenAI({
-    apiKey: config.api_key,
+    apiKey,
     baseURL: 'https://ai-gateway.vercel.sh/v1',
   });
   

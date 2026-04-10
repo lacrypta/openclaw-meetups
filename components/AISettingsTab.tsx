@@ -251,16 +251,6 @@ export function AISettingsTab() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Master Prompt</label>
-                <textarea
-                  value={masterPrompt}
-                  onChange={(e) => setMasterPrompt(e.target.value)}
-                  rows={6}
-                  placeholder="Sos Claudio, asistente de eventos de La Crypta. Respondé en español argentino, corto y directo."
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono resize-y"
-                />
-              </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSave} disabled={saving || !apiKey.trim()}>
                   {saving ? "Guardando..." : "Guardar"}
