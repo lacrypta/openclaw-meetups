@@ -52,6 +52,7 @@ interface Message {
   tokens_in: number | null;
   tokens_out: number | null;
   created_at: string;
+  pending?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,7 +125,7 @@ function MessageBubble({ msg }: { msg: Message }) {
   if (!isUser && !isAssistant) return null;
 
   return (
-    <div className={cn("flex mb-2", isUser ? "justify-start" : "justify-end")}>
+    <div className={cn("flex mb-2", isUser ? "justify-start" : "justify-end", msg.pending && "opacity-50")}>
       <div
         className={cn(
           "max-w-[72%] px-3 py-2 rounded-2xl text-sm",
@@ -195,25 +196,56 @@ function AssignPanel({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
-function SendMessageBar({ sessionId, onSent }: { sessionId: string; onSent: (msg: Message) => void }) {
+function SendMessageBar({
+  sessionId,
+  onPending,
+  onConfirm,
+  onFail,
+}: {
+  sessionId: string;
+  onPending: (tempId: string, msg: Message) => void;
+  onConfirm: (tempId: string, msg: Message) => void;
+  onFail: (tempId: string) => void;
+}) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     if (!text.trim() || sending) return;
+    const content = text.trim();
+    const tempId = `temp-${crypto.randomUUID()}`;
+
+    // Optimistic: add immediately as pending
+    onPending(tempId, {
+      id: tempId,
+      session_id: sessionId,
+      role: "assistant",
+      content,
+      model_used: null,
+      provider: "manual",
+      tokens_in: null,
+      tokens_out: null,
+      created_at: new Date().toISOString(),
+      pending: true,
+    });
+    setText("");
     setSending(true);
+
     try {
       const token = getToken();
       const res = await fetch(`/api/messaging-sessions/${sessionId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text.trim() }),
+        body: JSON.stringify({ message: content }),
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.message) onSent(data.message);
-        setText("");
+        if (data.message) onConfirm(tempId, data.message);
+      } else {
+        onFail(tempId);
       }
+    } catch {
+      onFail(tempId);
     } finally {
       setSending(false);
     }
@@ -296,6 +328,13 @@ export default function WhatsAppPage() {
       if (msg.session_id === selectedIdRef.current) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev; // dedup
+          // Replace pending temp message with the real one
+          const pendingIdx = prev.findIndex((m) => m.pending && m.content === msg.content && m.role === msg.role);
+          if (pendingIdx !== -1) {
+            const updated = [...prev];
+            updated[pendingIdx] = msg;
+            return updated;
+          }
           return [...prev, msg];
         });
       }
@@ -486,11 +525,19 @@ export default function WhatsAppPage() {
             {activeSession.status === "active" && activeSession.phone && (
               <SendMessageBar
                 sessionId={activeSession.id}
-                onSent={(msg) => {
+                onPending={(_tempId, msg) => {
+                  setMessages((prev) => [...prev, msg]);
+                }}
+                onConfirm={(tempId, msg) => {
                   setMessages((prev) => {
-                    if (prev.some((m) => m.id === msg.id)) return prev;
-                    return [...prev, msg];
+                    // Replace temp message with confirmed one, or dedup if SSE already delivered it
+                    const withoutTemp = prev.filter((m) => m.id !== tempId);
+                    if (withoutTemp.some((m) => m.id === msg.id)) return withoutTemp;
+                    return [...withoutTemp, msg];
                   });
+                }}
+                onFail={(tempId) => {
+                  setMessages((prev) => prev.filter((m) => m.id !== tempId));
                 }}
               />
             )}
