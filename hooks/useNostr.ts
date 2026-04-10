@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { checkNip07, getPublicKey } from '../lib/nostr';
+import { checkNip07, getPublicKey, RELAYS } from '../lib/nostr';
 import {
   NostrSigner,
   Nip07Signer,
@@ -203,7 +203,114 @@ export function useNostr() {
     }
   }, []);
 
+  const nostrConnectAbortRef = useRef<AbortController | null>(null);
+
+  const loginNostrConnect = useCallback(async (): Promise<{ uri: string; promise: Promise<void>; abort: () => void }> => {
+    const { generateSecretKey: genKey, getPublicKey: getPub } = await import('nostr-tools/pure');
+    const { createNostrConnectURI, BunkerSigner } = await import('nostr-tools/nip46');
+    const nip04 = await import('nostr-tools/nip04');
+    const { SimplePool } = await import('nostr-tools/pool');
+
+    const clientSecret = genKey();
+    const clientPubkey = getPub(clientSecret);
+    const secret = bytesToHex(genKey()).slice(0, 32);
+    const relays = RELAYS.slice(0, 2);
+
+    const uri = createNostrConnectURI({
+      clientPubkey,
+      relays,
+      secret,
+      name: 'OpenClaw',
+      url: typeof window !== 'undefined' ? window.location.origin : '',
+    });
+
+    const abortController = new AbortController();
+    nostrConnectAbortRef.current = abortController;
+
+    const promise = (async () => {
+      setState((s) => ({ ...s, loading: true, error: null }));
+      try {
+
+        // Custom subscription that handles both NIP-44 and NIP-04 encryption
+        // (BunkerSigner.fromURI only supports NIP-44, but many bunker apps use NIP-04)
+        const pool = new SimplePool();
+        const remotePubkey = await new Promise<string>((resolve, reject) => {
+          const sub = pool.subscribe(
+            relays,
+            {
+              kinds: [24133],
+              '#p': [clientPubkey],
+              limit: 0,
+            },
+            {
+              onevent: async (event) => {
+                try {
+                  let decrypted: string;
+                  try {
+                    // Try NIP-04 first (most bunker apps use this)
+                    decrypted = await nip04.decrypt(bytesToHex(clientSecret), event.pubkey, event.content);
+                  } catch {
+                    // Fall back to NIP-44 (nostr-tools native)
+                    const { decrypt: nip44decrypt } = await import('nostr-tools/nip44');
+                    const { getConversationKey } = await import('nostr-tools/nip44');
+                    const convKey = getConversationKey(clientSecret, event.pubkey);
+                    decrypted = nip44decrypt(event.content, convKey);
+                  }
+
+                  const response = JSON.parse(decrypted);
+
+                  if (response.result === secret) {
+                    sub.close();
+                    resolve(event.pubkey);
+                  }
+                } catch (e) {
+                }
+              },
+              onclose: () => {
+                reject(new Error('subscription closed'));
+              },
+              abort: abortController.signal,
+            },
+          );
+        });
+
+
+        // Now create a proper BunkerSigner for ongoing communication
+        const bp = { pubkey: remotePubkey, relays, secret };
+        const signer = BunkerSigner.fromBunker(clientSecret, bp);
+        const pubkey = await signer.getPublicKey();
+
+        const clientSecretHex = bytesToHex(clientSecret);
+        saveBunkerState({
+          clientSecretHex,
+          remotePubkey,
+          relays,
+          secret,
+        });
+
+        bunkerSignerRef.current = signer;
+        setActiveSigner(signer);
+        saveState(pubkey, 'bunker');
+        setState({ pubkey, method: 'bunker', loading: false, error: null });
+      } catch (e: any) {
+        if (e.name === 'AbortError') {
+          setState((s) => ({ ...s, loading: false, error: null }));
+          return;
+        }
+        clearActiveSigner();
+        clearBunkerState();
+        setState((s) => ({ ...s, loading: false, error: e.message }));
+        throw e;
+      } finally {
+        nostrConnectAbortRef.current = null;
+      }
+    })();
+
+    return { uri, promise, abort: () => abortController.abort() };
+  }, []);
+
   const logout = useCallback(() => {
+    nostrConnectAbortRef.current?.abort();
     clearActiveSigner();
     clearBunkerState();
     saveState(null, null);
@@ -214,5 +321,5 @@ export function useNostr() {
     setState({ pubkey: null, method: null, loading: false, error: null });
   }, []);
 
-  return { ...state, loginNip07, loginNsec, loginBunker, logout };
+  return { ...state, loginNip07, loginNsec, loginBunker, loginNostrConnect, logout };
 }

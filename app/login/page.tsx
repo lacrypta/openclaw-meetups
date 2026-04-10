@@ -8,7 +8,7 @@ import { login as authLogin } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loading, error, loginNip07, loginNsec, loginBunker } = useNostr();
+  const { loading, error, loginNip07, loginNsec, loginBunker, loginNostrConnect } = useNostr();
   const { recheckAuth } = useAuth();
 
   const handleLoginSuccess = async () => {
@@ -44,6 +44,8 @@ export default function LoginPage() {
         onNip07={handleNip07}
         onNsec={handleNsec}
         onBunker={handleBunker}
+        onNostrConnect={loginNostrConnect}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );
