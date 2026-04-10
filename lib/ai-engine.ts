@@ -1,17 +1,12 @@
 /**
- * AI Engine — generates responses for messaging sessions using Anthropic API.
- * Supports the [CONFIRMED] / [DECLINED] keyword protocol for intent detection.
+ * AI Engine — generates responses for messaging sessions.
+ * Uses Vercel AI Gateway with session's master prompt and message history.
  */
 
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { supabase } from '@/lib/supabase';
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-
-interface AnthropicMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { getAIConfig } from '@/lib/integrations';
 
 interface GenerateResponseResult {
   content: string;
@@ -46,8 +41,7 @@ export async function generateResponse(
     throw new Error(`Session not found: ${sessionId}`);
   }
 
-  const modelProvider = session.model_provider || 'anthropic';
-  const modelName = session.model_name || 'claude-sonnet-4-5';
+  const modelName = session.model_name || 'anthropic/claude-haiku-4-5';
   const systemPrompt = session.master_prompts?.content || '';
 
   // 2. Fetch message history ordered by created_at
@@ -62,51 +56,44 @@ export async function generateResponse(
     throw new Error(`Failed to fetch message history: ${historyError.message}`);
   }
 
-  // 3. Build message array for Anthropic API
-  const messages: AnthropicMessage[] = (history || [])
+  // 3. Build messages array
+  const messages = (history || [])
     .filter((m) => m.role === 'user' || m.role === 'assistant')
     .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
-  // Add the new user message
   messages.push({ role: 'user', content: userMessage });
 
-  // 4. Call Anthropic API
-  if (modelProvider !== 'anthropic') {
-    throw new Error(`Provider "${modelProvider}" is not yet supported`);
+  // 4. Get API key from config or env
+  const aiConfig = await getAIConfig();
+  const apiKey = process.env.AI_GATEWAY_API_KEY
+    || (aiConfig.api_key && !aiConfig.api_key.includes('KEEP_EXIST') ? aiConfig.api_key : '')
+    || process.env.ANTHROPIC_API_KEY
+    || '';
+
+  if (!apiKey) {
+    throw new Error('No AI API key configured');
   }
 
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: modelName,
-      max_tokens: 512,
-      system: systemPrompt,
-      messages,
-    }),
+  // 5. Call via Vercel AI Gateway
+  const provider = createOpenAI({
+    apiKey,
+    baseURL: 'https://ai-gateway.vercel.sh/v1',
   });
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Anthropic API error ${response.status}: ${err}`);
-  }
+  // Use gateway format: model name should include provider prefix
+  const gatewayModel = modelName.includes('/') ? modelName : `anthropic/${modelName}`;
 
-  const result = await response.json();
-
-  // 5. Extract response content and token usage
-  const content: string = result.content?.[0]?.text || '';
-  const tokensIn: number = result.usage?.input_tokens || 0;
-  const tokensOut: number = result.usage?.output_tokens || 0;
+  const { text, usage } = await generateText({
+    model: provider(gatewayModel),
+    system: systemPrompt,
+    messages,
+  });
 
   return {
-    content,
-    model: modelName,
-    provider: modelProvider,
-    tokensIn,
-    tokensOut,
+    content: text,
+    model: gatewayModel,
+    provider: 'vercel-ai-gateway',
+    tokensIn: usage?.promptTokens || 0,
+    tokensOut: usage?.completionTokens || 0,
   };
 }

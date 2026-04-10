@@ -204,9 +204,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Send WhatsApp confirmation with direct link (only for new attendees)
+    // Check capacity — skip confirmations if event is over capacity
+    let overCapacity = false;
+    if (internalEventId) {
+      const { data: evt } = await supabase.from('events').select('capacity').eq('id', internalEventId).single();
+      if (evt?.capacity) {
+        const { count } = await supabase.from('event_attendees').select('*', { count: 'exact', head: true }).eq('event_id', internalEventId);
+        overCapacity = (count ?? 0) > evt.capacity;
+      }
+    }
+
+    // 5. Send WhatsApp confirmation with direct link (only for new attendees, skip if over capacity)
     const wasenderConfig = await getWaSenderConfig();
-    if (isNewAttendee && wasenderConfig.send_whatsapp_on_new_guest && phone) {
+    if (isNewAttendee && !overCapacity && wasenderConfig.send_whatsapp_on_new_guest && phone) {
       try {
         // Get confirmation token for this attendee
         const { data: eaForWa } = await supabase
@@ -241,7 +251,7 @@ export async function POST(request: NextRequest) {
     // 5b. Send confirmation email with unique token link (only for new attendees)
     const lumaConfig = await getLumaConfig();
     const shouldSendEmail = lumaConfig.send_confirmation_email !== false;
-    if (isNewAttendee && shouldSendEmail && email && internalEventId) {
+    if (isNewAttendee && !overCapacity && shouldSendEmail && email && internalEventId) {
       try {
         // Get the confirmation token for this attendee
         const { data: ea } = await supabase

@@ -15,7 +15,7 @@ import { LoginModal } from "@/components/LoginModal";
 import { login as authLogin } from "@/lib/auth";
 
 export default function HomePage() {
-  const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, logout } =
+  const { pubkey, loading, error, loginNip07, loginNsec, loginBunker, loginNostrConnect, logout } =
     useNostr();
   const { profile } = useProfile(pubkey);
   const [showLogin, setShowLogin] = useState(false);
@@ -89,6 +89,8 @@ export default function HomePage() {
         onNip07={handleNip07}
         onNsec={handleNsec}
         onBunker={handleBunker}
+        onNostrConnect={loginNostrConnect}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );

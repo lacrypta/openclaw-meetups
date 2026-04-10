@@ -257,6 +257,16 @@ export interface WaSenderConfig {
   send_whatsapp_on_new_guest?: boolean;
 }
 
+export interface KapsoConfig {
+  api_key: string;
+  phone_number_id: string;
+  phone_number: string;
+  webhook_secret?: string;
+  send_whatsapp_on_new_guest?: boolean;
+}
+
+export type WhatsAppProvider = 'wasender' | 'kapso';
+
 export interface AIConfig {
   api_key: string;
   default_model: string;

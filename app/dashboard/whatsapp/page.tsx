@@ -52,6 +52,7 @@ interface Message {
   tokens_in: number | null;
   tokens_out: number | null;
   created_at: string;
+  pending?: boolean;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,7 +125,7 @@ function MessageBubble({ msg }: { msg: Message }) {
   if (!isUser && !isAssistant) return null;
 
   return (
-    <div className={cn("flex mb-2", isUser ? "justify-start" : "justify-end")}>
+    <div className={cn("flex mb-2", isUser ? "justify-start" : "justify-end", msg.pending && "opacity-50")}>
       <div
         className={cn(
           "max-w-[72%] px-3 py-2 rounded-2xl text-sm",
@@ -195,25 +196,56 @@ function AssignPanel({
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
-function SendMessageBar({ sessionId, onSent }: { sessionId: string; onSent: (msg: Message) => void }) {
+function SendMessageBar({
+  sessionId,
+  onPending,
+  onConfirm,
+  onFail,
+}: {
+  sessionId: string;
+  onPending: (tempId: string, msg: Message) => void;
+  onConfirm: (tempId: string, msg: Message) => void;
+  onFail: (tempId: string) => void;
+}) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     if (!text.trim() || sending) return;
+    const content = text.trim();
+    const tempId = `temp-${crypto.randomUUID()}`;
+
+    // Optimistic: add immediately as pending
+    onPending(tempId, {
+      id: tempId,
+      session_id: sessionId,
+      role: "assistant",
+      content,
+      model_used: null,
+      provider: "manual",
+      tokens_in: null,
+      tokens_out: null,
+      created_at: new Date().toISOString(),
+      pending: true,
+    });
+    setText("");
     setSending(true);
+
     try {
       const token = getToken();
       const res = await fetch(`/api/messaging-sessions/${sessionId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ message: text.trim() }),
+        body: JSON.stringify({ message: content }),
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.message) onSent(data.message);
-        setText("");
+        if (data.message) onConfirm(tempId, data.message);
+      } else {
+        onFail(tempId);
       }
+    } catch {
+      onFail(tempId);
     } finally {
       setSending(false);
     }
@@ -249,6 +281,9 @@ export default function WhatsAppPage() {
   const [showChat, setShowChat] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+
   const fetchSessions = useCallback(async () => {
     const token = getToken();
     if (!token) return;
@@ -265,6 +300,62 @@ export default function WhatsAppPage() {
   }, []);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
+
+  // SSE: real-time WhatsApp messages
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    const es = new EventSource(`/api/sse/whatsapp?token=${encodeURIComponent(token)}`);
+
+    es.addEventListener('message.new', (e) => {
+      const msg = JSON.parse(e.data) as Message;
+
+      // Update session list: bump session to top with new last_message
+      setSessions((prev) => {
+        const idx = prev.findIndex((s) => s.id === msg.session_id);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        const session = { ...updated[idx] };
+        session.last_message = { content: msg.content, role: msg.role, created_at: msg.created_at };
+        session.message_count = (session.message_count || 0) + 1;
+        session.updated_at = msg.created_at;
+        updated.splice(idx, 1);
+        return [session, ...updated];
+      });
+
+      // Append to active conversation if it matches
+      if (msg.session_id === selectedIdRef.current) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev; // dedup
+          // Replace pending temp message with the real one
+          const pendingIdx = prev.findIndex((m) => m.pending && m.content === msg.content && m.role === msg.role);
+          if (pendingIdx !== -1) {
+            const updated = [...prev];
+            updated[pendingIdx] = msg;
+            return updated;
+          }
+          return [...prev, msg];
+        });
+      }
+    });
+
+    es.addEventListener('session.new', (e) => {
+      const session = JSON.parse(e.data) as Session;
+      setSessions((prev) => {
+        if (prev.some((s) => s.id === session.id)) return prev;
+        return [{ ...session, message_count: 0, last_message: null, users: null, events: null }, ...prev];
+      });
+    });
+
+    es.addEventListener('session.updated', (e) => {
+      const update = JSON.parse(e.data);
+      setSessions((prev) => prev.map((s) => (s.id === update.id ? { ...s, ...update } : s)));
+      setActiveSession((prev) => (prev?.id === update.id ? { ...prev, ...update } : prev));
+    });
+
+    return () => es.close();
+  }, []);
 
   useEffect(() => {
     const q = search.toLowerCase();
@@ -287,6 +378,7 @@ export default function WhatsAppPage() {
     setActiveSession(session);
     setShowChat(true);
     setLoadingMessages(true);
+    prevMessageCount.current = 0;
     const token = getToken();
     if (!token) return;
     try {
@@ -332,8 +424,13 @@ export default function WhatsAppPage() {
     }
   };
 
+  const prevMessageCount = useRef(0);
   useEffect(() => {
-    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (!bottomRef.current) return;
+    // Instant scroll on initial load, smooth on new messages
+    const isInitialLoad = prevMessageCount.current === 0 && messages.length > 0;
+    bottomRef.current.scrollIntoView({ behavior: isInitialLoad ? "instant" : "smooth" });
+    prevMessageCount.current = messages.length;
   }, [messages]);
 
   const displayName = (s: Session) => s.users?.name || s.phone || "Desconocido";
@@ -428,8 +525,19 @@ export default function WhatsAppPage() {
             {activeSession.status === "active" && activeSession.phone && (
               <SendMessageBar
                 sessionId={activeSession.id}
-                onSent={(msg) => {
+                onPending={(_tempId, msg) => {
                   setMessages((prev) => [...prev, msg]);
+                }}
+                onConfirm={(tempId, msg) => {
+                  setMessages((prev) => {
+                    // Replace temp message with confirmed one, or dedup if SSE already delivered it
+                    const withoutTemp = prev.filter((m) => m.id !== tempId);
+                    if (withoutTemp.some((m) => m.id === msg.id)) return withoutTemp;
+                    return [...withoutTemp, msg];
+                  });
+                }}
+                onFail={(tempId) => {
+                  setMessages((prev) => prev.filter((m) => m.id !== tempId));
                 }}
               />
             )}

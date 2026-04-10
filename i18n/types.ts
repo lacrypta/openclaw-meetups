@@ -71,6 +71,12 @@ export interface Translations {
     extensionDetected: string;
     extensionNotFound: string;
     bunkerDesc: string;
+    bunkerQrDesc: string;
+    bunkerWaiting: string;
+    bunkerManualLink: string;
+    bunkerQrLink: string;
+    bunkerCopied: string;
+    bunkerOpenApp: string;
     nsecWarning: string;
     connecting: string;
     connectExtension: string;

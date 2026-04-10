@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getToken } from '../lib/auth';
 
 export interface Contact {
@@ -24,6 +24,12 @@ export function useContacts(filters?: Record<string, unknown>) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Stabilize filters by serializing — avoids infinite loop when caller
+  // passes a new object literal (e.g. `useContacts({})`) on every render.
+  const filtersKey = JSON.stringify(filters ?? {});
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
 
   const fetchContacts = useCallback(async () => {
     const token = getToken();
@@ -55,7 +61,8 @@ export function useContacts(filters?: Record<string, unknown>) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersKey]);
 
   useEffect(() => {
     fetchContacts();

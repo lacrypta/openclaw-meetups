@@ -5,50 +5,74 @@ import { getToken } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { WhatsAppProvider } from "@/lib/types";
 
-interface WaSenderIntegration {
+interface ProviderIntegration {
   id: string;
-  config: {
-    api_key: string;
-    phone_number: string;
-    webhook_secret?: string;
-    send_whatsapp_on_new_guest: boolean;
-  };
+  config: Record<string, any>;
 }
+
+const PROVIDERS: { value: WhatsAppProvider; label: string; description: string }[] = [
+  { value: "wasender", label: "WaSender", description: "WaSender API for WhatsApp messaging" },
+  { value: "kapso", label: "Kapso", description: "Kapso WhatsApp Cloud API (Meta)" },
+];
 
 export function WhatsAppIntegrationTab() {
   const token = getToken();
-  const [integration, setIntegration] = useState<WaSenderIntegration | null>(null);
+  const [provider, setProvider] = useState<WhatsAppProvider>("wasender");
+  const [integration, setIntegration] = useState<ProviderIntegration | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [sendOnNewGuest, setSendOnNewGuest] = useState(false);
+
+  // WaSender fields
   const [apiKey, setApiKey] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [webhookSecret, setWebhookSecret] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [sendOnNewGuest, setSendOnNewGuest] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [editing, setEditing] = useState(false);
+
+  // Kapso fields
+  const [kapsoApiKey, setKapsoApiKey] = useState("");
+  const [kapsoPhoneNumberId, setKapsoPhoneNumberId] = useState("");
+  const [kapsoPhoneNumber, setKapsoPhoneNumber] = useState("");
+  const [kapsoWebhookSecret, setKapsoWebhookSecret] = useState("");
+
+  // Master prompt
   const [masterPrompt, setMasterPrompt] = useState("");
   const [promptSaving, setPromptSaving] = useState(false);
   const [promptSaved, setPromptSaved] = useState(false);
 
-  const loadIntegration = useCallback(async () => {
+  // Detect which provider is currently active
+  const detectActiveProvider = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
     try {
-      const res = await fetch("/api/integrations/wasender", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const { integration: data } = await res.json();
-      setIntegration(data);
-      if (data?.config?.send_whatsapp_on_new_guest !== undefined) {
-        setSendOnNewGuest(data.config.send_whatsapp_on_new_guest);
-      }
-      if (data?.config?.phone_number) {
-        setPhoneNumber(data.config.phone_number);
-      }
-      if (data?.config?.webhook_secret) {
-        setWebhookSecret(data.config.webhook_secret);
+      // Check both providers
+      const [wasRes, kapsoRes] = await Promise.all([
+        fetch("/api/integrations/wasender", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/integrations/kapso", { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      const wasData = wasRes.ok ? await wasRes.json() : null;
+      const kapsoData = kapsoRes.ok ? await kapsoRes.json() : null;
+
+      if (kapsoData?.integration) {
+        setProvider("kapso");
+        setIntegration(kapsoData.integration);
+        const cfg = kapsoData.integration.config;
+        setKapsoPhoneNumberId(cfg.phone_number_id || "");
+        setKapsoPhoneNumber(cfg.phone_number || "");
+        setSendOnNewGuest(cfg.send_whatsapp_on_new_guest ?? false);
+      } else if (wasData?.integration) {
+        setProvider("wasender");
+        setIntegration(wasData.integration);
+        const cfg = wasData.integration.config;
+        setPhoneNumber(cfg.phone_number || "");
+        setWebhookSecret(cfg.webhook_secret || "");
+        setSendOnNewGuest(cfg.send_whatsapp_on_new_guest ?? false);
+      } else {
+        setIntegration(null);
       }
     } catch {
       setMessage({ type: "error", text: "Failed to load WhatsApp integration" });
@@ -57,17 +81,14 @@ export function WhatsAppIntegrationTab() {
     }
   }, [token]);
 
-  useEffect(() => { loadIntegration(); }, [loadIntegration]);
+  useEffect(() => { detectActiveProvider(); }, [detectActiveProvider]);
 
-  // Load master prompt
   useEffect(() => {
     (async () => {
       const t = getToken();
       if (!t) return;
       try {
-        const res = await fetch("/api/master-prompt", {
-          headers: { Authorization: `Bearer ${t}` },
-        });
+        const res = await fetch("/api/master-prompt", { headers: { Authorization: `Bearer ${t}` } });
         if (res.ok) {
           const data = await res.json();
           if (data.prompt?.content) setMasterPrompt(data.prompt.content);
@@ -77,20 +98,30 @@ export function WhatsAppIntegrationTab() {
   }, []);
 
   const handleVerify = async () => {
-    if (!apiKey.trim() || !token) return;
+    if (!token) return;
     setVerifying(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/integrations/wasender/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ api_key: apiKey }),
-      });
-      const data = await res.json();
-      if (data.valid) {
-        setMessage({ type: "success", text: "✅ API key verified successfully!" });
+      if (provider === "kapso") {
+        const res = await fetch("/api/integrations/kapso/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ api_key: kapsoApiKey, phone_number_id: kapsoPhoneNumberId }),
+        });
+        const data = await res.json();
+        setMessage(data.valid
+          ? { type: "success", text: "Kapso API key verified!" }
+          : { type: "error", text: data.error || "Invalid API key or phone number ID" });
       } else {
-        setMessage({ type: "error", text: data.error || "Invalid API key" });
+        const res = await fetch("/api/integrations/wasender/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ api_key: apiKey }),
+        });
+        const data = await res.json();
+        setMessage(data.valid
+          ? { type: "success", text: "WaSender API key verified!" }
+          : { type: "error", text: data.error || "Invalid API key" });
       }
     } catch {
       setMessage({ type: "error", text: "Verification failed" });
@@ -100,29 +131,30 @@ export function WhatsAppIntegrationTab() {
   };
 
   const handleSave = async () => {
-    if (!apiKey.trim() || !token) return;
+    if (!token) return;
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/integrations/wasender", {
+      const endpoint = provider === "kapso" ? "/api/integrations/kapso" : "/api/integrations/wasender";
+      const body = provider === "kapso"
+        ? { api_key: kapsoApiKey, phone_number_id: kapsoPhoneNumberId, phone_number: kapsoPhoneNumber, send_whatsapp_on_new_guest: sendOnNewGuest }
+        : { api_key: apiKey, phone_number: phoneNumber, webhook_secret: webhookSecret, send_whatsapp_on_new_guest: sendOnNewGuest };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          api_key: apiKey,
-          phone_number: phoneNumber,
-          webhook_secret: webhookSecret,
-          send_whatsapp_on_new_guest: sendOnNewGuest,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
         setMessage({ type: "error", text: data.error || "Save failed" });
         return;
       }
-      setMessage({ type: "success", text: "WhatsApp integration saved!" });
+      setMessage({ type: "success", text: `${provider === "kapso" ? "Kapso" : "WaSender"} integration saved!` });
       setApiKey("");
+      setKapsoApiKey("");
       setEditing(false);
-      loadIntegration();
+      detectActiveProvider();
     } catch {
       setMessage({ type: "error", text: "Failed to save" });
     } finally {
@@ -132,13 +164,14 @@ export function WhatsAppIntegrationTab() {
 
   const handleDisconnect = async () => {
     if (!token) return;
+    const endpoint = provider === "kapso" ? "/api/integrations/kapso" : "/api/integrations/wasender";
     try {
-      await fetch("/api/integrations/wasender", {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetch(endpoint, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
       setIntegration(null);
       setApiKey("");
+      setKapsoApiKey("");
+      setKapsoPhoneNumberId("");
+      setKapsoPhoneNumber("");
       setPhoneNumber("");
       setSendOnNewGuest(false);
       setMessage({ type: "success", text: "WhatsApp integration disconnected" });
@@ -147,30 +180,49 @@ export function WhatsAppIntegrationTab() {
     }
   };
 
+  const handleProviderSwitch = (p: WhatsAppProvider) => {
+    setProvider(p);
+    setEditing(false);
+    setMessage(null);
+    // If switching to a provider that has no integration, show edit mode
+    if (!integration || (p === "kapso" && integration.config?.phone_number_id === undefined) || (p === "wasender" && integration.config?.phone_number_id !== undefined)) {
+      setEditing(true);
+    }
+  };
+
   const toggleSendOnNewGuest = async () => {
     const newVal = !sendOnNewGuest;
     setSendOnNewGuest(newVal);
-    if (integration && token) {
-      try {
-        await fetch("/api/integrations/wasender", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            api_key: integration.config?.api_key || apiKey,
-            phone_number: phoneNumber || integration.config?.phone_number || "",
-            webhook_secret: webhookSecret || integration.config?.webhook_secret || "",
-            send_whatsapp_on_new_guest: newVal,
-          }),
-        });
-      } catch { /* silent */ }
-    }
+    if (!integration || !token) return;
+    try {
+      const endpoint = provider === "kapso" ? "/api/integrations/kapso" : "/api/integrations/wasender";
+      const body = provider === "kapso"
+        ? { api_key: integration.config?.api_key || kapsoApiKey, phone_number_id: kapsoPhoneNumberId || integration.config?.phone_number_id, phone_number: kapsoPhoneNumber || integration.config?.phone_number, send_whatsapp_on_new_guest: newVal }
+        : { api_key: integration.config?.api_key || apiKey, phone_number: phoneNumber || integration.config?.phone_number, webhook_secret: webhookSecret || integration.config?.webhook_secret, send_whatsapp_on_new_guest: newVal };
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+    } catch { /* silent */ }
   };
+
+  const webhookUrl = provider === "kapso"
+    ? "https://openclaw.lacrypta.ar/api/webhooks/kapso"
+    : "https://openclaw.lacrypta.ar/api/webhooks/wasender";
+
+  const canVerify = provider === "kapso"
+    ? kapsoApiKey.trim() && kapsoPhoneNumberId.trim()
+    : apiKey.trim();
+
+  const canSave = provider === "kapso"
+    ? kapsoApiKey.trim() && kapsoPhoneNumberId.trim()
+    : apiKey.trim();
 
   if (loading) return <div className="text-muted-foreground p-4">Loading...</div>;
 
   return (
     <div className="space-y-4 py-4">
-      {/* Status message */}
       {message && (
         <div className={`px-4 py-2 rounded-md text-sm ${
           message.type === "success" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
@@ -179,20 +231,43 @@ export function WhatsAppIntegrationTab() {
         </div>
       )}
 
+      {/* Provider selector */}
+      <Card>
+        <CardContent className="py-4">
+          <p className="text-sm font-medium mb-3">WhatsApp Provider</p>
+          <div className="flex gap-2">
+            {PROVIDERS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => handleProviderSwitch(p.value)}
+                className={`flex-1 rounded-md border px-3 py-2 text-left transition-colors ${
+                  provider === p.value
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-muted-foreground/30"
+                }`}
+              >
+                <p className="text-sm font-medium">{p.label}</p>
+                <p className="text-xs text-muted-foreground">{p.description}</p>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Connection card */}
       <Card>
         <CardContent className="py-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">WaSender API</p>
+              <p className="text-sm font-medium">{provider === "kapso" ? "Kapso" : "WaSender"} API</p>
               <p className="text-xs text-muted-foreground">
-                Connect your WaSender account to send WhatsApp messages.
+                {provider === "kapso"
+                  ? "Connect your Kapso account to send WhatsApp messages via Meta Cloud API."
+                  : "Connect your WaSender account to send WhatsApp messages."}
               </p>
             </div>
             {integration && !editing && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-green-500 font-medium">● Connected</span>
-              </div>
+              <span className="text-xs text-green-500 font-medium">● Connected</span>
             )}
           </div>
 
@@ -204,6 +279,14 @@ export function WhatsAppIntegrationTab() {
                   {integration.config.api_key}
                 </code>
               </div>
+              {provider === "kapso" && integration.config.phone_number_id && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Phone Number ID</p>
+                  <code className="text-xs bg-muted/40 rounded px-3 py-1.5 font-mono">
+                    {integration.config.phone_number_id}
+                  </code>
+                </div>
+              )}
               {integration.config.phone_number && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Phone Number</p>
@@ -213,12 +296,8 @@ export function WhatsAppIntegrationTab() {
                 </div>
               )}
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleDisconnect} className="text-red-500">
-                  Disconnect
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit</Button>
+                <Button variant="outline" size="sm" onClick={handleDisconnect} className="text-red-500">Disconnect</Button>
               </div>
             </div>
           ) : (
@@ -228,56 +307,82 @@ export function WhatsAppIntegrationTab() {
                 <div className="flex gap-2">
                   <Input
                     type="password"
-                    placeholder="Enter your WaSender API key"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={provider === "kapso" ? "Enter your Kapso API key" : "Enter your WaSender API key"}
+                    value={provider === "kapso" ? kapsoApiKey : apiKey}
+                    onChange={(e) => provider === "kapso" ? setKapsoApiKey(e.target.value) : setApiKey(e.target.value)}
                     className="text-sm font-mono"
                   />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleVerify}
-                    disabled={verifying || !apiKey.trim()}
-                  >
+                  <Button variant="outline" size="sm" onClick={handleVerify} disabled={verifying || !canVerify}>
                     {verifying ? "Verifying..." : "Verify"}
                   </Button>
                 </div>
               </div>
+
+              {provider === "kapso" && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Phone Number ID</label>
+                  <Input
+                    type="text"
+                    placeholder="Meta WhatsApp phone number ID"
+                    value={kapsoPhoneNumberId}
+                    onChange={(e) => setKapsoPhoneNumberId(e.target.value)}
+                    className="text-sm font-mono"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Found in your Kapso dashboard under Phone Numbers.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">
-                  Phone Number <span className="text-muted-foreground/50">(optional)</span>
+                  Phone Number <span className="text-muted-foreground/50">(display)</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="+5491100000000"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  value={provider === "kapso" ? kapsoPhoneNumber : phoneNumber}
+                  onChange={(e) => provider === "kapso" ? setKapsoPhoneNumber(e.target.value) : setPhoneNumber(e.target.value)}
                   className="text-sm font-mono"
                 />
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">
-                  Webhook Secret <span className="text-muted-foreground/50">(optional)</span>
-                </label>
-                <Input
-                  type="password"
-                  placeholder="Your webhook secret for signature verification"
-                  value={webhookSecret}
-                  onChange={(e) => setWebhookSecret(e.target.value)}
-                  className="text-sm font-mono"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Set the same secret in WaSender webhook config. Sent as <code className="text-xs">x-webhook-signature</code> header.
-                </p>
-              </div>
+
+              {provider === "wasender" && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Webhook Secret <span className="text-muted-foreground/50">(optional)</span>
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="Your webhook secret for signature verification"
+                    value={webhookSecret}
+                    onChange={(e) => setWebhookSecret(e.target.value)}
+                    className="text-sm font-mono"
+                  />
+                </div>
+              )}
+
+              {provider === "kapso" && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Webhook Secret <span className="text-muted-foreground/50">(optional, HMAC-SHA256)</span>
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="HMAC secret for webhook signature verification"
+                    value={kapsoWebhookSecret}
+                    onChange={(e) => setKapsoWebhookSecret(e.target.value)}
+                    className="text-sm font-mono"
+                  />
+                </div>
+              )}
+
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSave} disabled={saving || !apiKey.trim()}>
+                <Button size="sm" onClick={handleSave} disabled={saving || !canSave}>
                   {saving ? "Saving..." : "Save"}
                 </Button>
                 {editing && (
-                  <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
-                    Cancel
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
                 )}
               </div>
             </div>
@@ -285,7 +390,7 @@ export function WhatsAppIntegrationTab() {
         </CardContent>
       </Card>
 
-      {/* Send WhatsApp on new guest toggle */}
+      {/* Send on new guest toggle */}
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center justify-between">
@@ -301,22 +406,21 @@ export function WhatsAppIntegrationTab() {
                 sendOnNewGuest ? "bg-primary" : "bg-muted"
               }`}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  sendOnNewGuest ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                sendOnNewGuest ? "translate-x-6" : "translate-x-1"
+              }`} />
             </button>
           </div>
         </CardContent>
       </Card>
+
       {/* Master Prompt */}
       <Card>
         <CardContent className="py-4 space-y-3">
           <div>
             <p className="text-sm font-medium">AI Master Prompt</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              System prompt used by the AI to handle WhatsApp conversations. Controls tone, intent detection, and behavior.
+              System prompt used by the AI to handle WhatsApp conversations.
             </p>
           </div>
           <textarea
@@ -348,28 +452,30 @@ export function WhatsAppIntegrationTab() {
                 setPromptSaving(false);
               }}
             >
-              {promptSaving ? "Saving..." : promptSaved ? "✅ Saved" : "Save Prompt"}
+              {promptSaving ? "Saving..." : promptSaved ? "Saved" : "Save Prompt"}
             </Button>
             {promptSaved && <span className="text-xs text-green-500">Prompt updated</span>}
           </div>
         </CardContent>
       </Card>
 
-      {/* Webhook hint */}
+      {/* Webhook URL */}
       <Card>
         <CardContent className="py-4 space-y-2">
           <p className="text-sm font-medium">Webhook URL</p>
           <p className="text-xs text-muted-foreground">
-            Paste this URL in your WaSender session webhook settings to receive incoming messages:
+            {provider === "kapso"
+              ? "Register this URL in your Kapso dashboard to receive incoming messages:"
+              : "Paste this URL in your WaSender session webhook settings to receive incoming messages:"}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs bg-muted/40 rounded px-3 py-2 font-mono break-all">
-              https://openclaw.lacrypta.ar/api/webhooks/wasender
+              {webhookUrl}
             </code>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { navigator.clipboard.writeText("https://openclaw.lacrypta.ar/api/webhooks/wasender"); }}
+              onClick={() => navigator.clipboard.writeText(webhookUrl)}
             >
               Copy
             </Button>

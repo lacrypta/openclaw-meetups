@@ -12,6 +12,7 @@ import { logWebhook } from '@/lib/webhook-logger';
 import { getWaSenderConfig } from '@/lib/integrations';
 import { generateAIResponse } from '@/lib/ai-chat';
 import { sendWhatsAppMessage } from '@/lib/wasender';
+import { eventBus } from '@/lib/event-bus';
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
@@ -135,45 +136,44 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: sessErr.message }, { status: 500 });
       }
       session = newSession;
+      eventBus.publish({ type: 'session.new', data: { ...newSession, phone: normalizedPhone, status: 'active' } });
     }
 
     // Save message
-    const { error: msgErr } = await supabase.from('messages').insert({
+    const { data: savedMsg, error: msgErr } = await supabase.from('messages').insert({
       session_id: session!.id,
       role: 'user',
       content: messageText,
       wasender_message_id: wasenderMessageId || null,
-    });
+    }).select().single();
 
     if (msgErr) {
       await log.update({ status: 'error', error_message: `save_message: ${msgErr.message}` });
       return NextResponse.json({ error: msgErr.message }, { status: 500 });
     }
 
+    eventBus.publish({ type: 'message.new', data: savedMsg });
+
     // Generate AI response
     let aiResponseSent = false;
     try {
       const aiResponse = await generateAIResponse(messageText, {
         userName: firstUser?.name || senderName,
-        eventName: undefined, // could fetch from session
+        eventName: undefined,
       });
 
       if (aiResponse) {
-        // Send via WhatsApp
         await sendWhatsAppMessage(normalizedPhone, aiResponse);
-        
-        // Save AI response to session
-        await supabase.from('messages').insert({
+        const { data: savedAi } = await supabase.from('messages').insert({
           session_id: session!.id,
           role: 'assistant',
           content: aiResponse,
-        });
-        
+        }).select().single();
+        if (savedAi) eventBus.publish({ type: 'message.new', data: savedAi });
         aiResponseSent = true;
       }
     } catch (aiError: any) {
       console.error('AI response failed:', aiError);
-      // Don't fail the whole webhook if AI fails
     }
 
     await log.update({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { requireRole } from '@/lib/auth-server';
 import { sendWhatsAppMessage } from '@/lib/wasender';
+import { eventBus } from '@/lib/event-bus';
 
 export async function POST(
   request: NextRequest,
@@ -54,6 +55,10 @@ export async function POST(
 
     if (saveError) {
       console.error('Failed to save message:', saveError);
+    }
+
+    if (saved) {
+      eventBus.publish({ type: 'message.new', data: saved });
     }
 
     return NextResponse.json({ success: true, message: saved });

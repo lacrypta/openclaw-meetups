@@ -15,6 +15,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^1.0.15",
     "@aws-sdk/client-ses": "^3.998.0",
+    "@kapso/whatsapp-cloud-api": "^0.2.1",
     "@supabase/supabase-js": "^2.97.0",
     "ai": "^4.1.12",
     "class-variance-authority": "^0.7.1",
@@ -28,6 +29,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-qr-code": "^2.0.18",
     "tailwind-merge": "^3.5.0"
   },
   "pnpm": {
