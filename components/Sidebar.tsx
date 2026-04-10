@@ -12,6 +12,7 @@ const navItems: { label: string; href: string; icon: string; minRole: UserRole; 
   { label: "Campaigns", href: "/dashboard/campaigns", icon: "📨", minRole: "manager" },
   { label: "Talks", href: "/dashboard/talks", icon: "🎤", minRole: "guest", speakerOnly: true },
   { label: "WhatsApp", href: "/dashboard/whatsapp", icon: "💬", minRole: "manager" },
+  { label: "Model Tester", href: "/dashboard/model-tester", icon: "🧪", minRole: "manager" },
   { label: "Templates", href: "/dashboard/templates", icon: "✉️", minRole: "manager" },
   { label: "Logs", href: "/dashboard/logs", icon: "📋", minRole: "admin" },
   { label: "Settings", href: "/dashboard/settings", icon: "⚙️", minRole: "admin" },
