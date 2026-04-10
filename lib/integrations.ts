@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import type { Integration, LumaConfig, WaSenderConfig, AIConfig } from '@/lib/types';
+import type { Integration, LumaConfig, WaSenderConfig, KapsoConfig, AIConfig, WhatsAppProvider } from '@/lib/types';
 
 /**
  * Fetch an active integration config by provider name.
@@ -72,6 +72,49 @@ export async function getWaSenderConfig(): Promise<WaSenderConfig> {
     webhook_secret: process.env.WASENDER_WEBHOOK_SECRET,
     phone_number: process.env.WASENDER_PHONE_NUMBER || '',
   };
+}
+
+/**
+ * Returns typed Kapso config from the integrations table.
+ * Falls back to env vars if not configured in DB.
+ */
+export async function getKapsoConfig(): Promise<KapsoConfig> {
+  const integration = await getIntegration('kapso');
+
+  if (integration?.config) {
+    const cfg = integration.config as Partial<KapsoConfig>;
+    return {
+      api_key: cfg.api_key || process.env.KAPSO_API_KEY || '',
+      phone_number_id: cfg.phone_number_id || process.env.KAPSO_PHONE_NUMBER_ID || '',
+      phone_number: cfg.phone_number || '',
+      webhook_secret: cfg.webhook_secret || process.env.KAPSO_WEBHOOK_SECRET,
+      send_whatsapp_on_new_guest: cfg.send_whatsapp_on_new_guest ?? false,
+    };
+  }
+
+  return {
+    api_key: process.env.KAPSO_API_KEY || '',
+    phone_number_id: process.env.KAPSO_PHONE_NUMBER_ID || '',
+    phone_number: '',
+  };
+}
+
+/**
+ * Returns which WhatsApp provider is currently active.
+ * Checks for active integrations in priority order: kapso first, then wasender.
+ */
+export async function getActiveWhatsAppProvider(): Promise<WhatsAppProvider | null> {
+  const kapso = await getIntegration('kapso');
+  if (kapso) return 'kapso';
+
+  const wasender = await getIntegration('wasender');
+  if (wasender) return 'wasender';
+
+  // Fallback: check env vars
+  if (process.env.KAPSO_API_KEY) return 'kapso';
+  if (process.env.WASENDER_API_KEY) return 'wasender';
+
+  return null;
 }
 
 /**

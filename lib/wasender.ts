@@ -12,7 +12,7 @@ const WASENDER_API_URL = 'https://wasenderapi.com/api/send-message';
  * @param to - Phone number in international format (e.g. "+5491154177572")
  * @param text - Message text to send
  */
-export async function sendWhatsAppMessage(to: string, text: string): Promise<void> {
+export async function sendWaSenderMessage(to: string, text: string): Promise<void> {
   const config = await getWaSenderConfig();
 
   if (!config.api_key) {
@@ -37,6 +37,9 @@ export async function sendWhatsAppMessage(to: string, text: string): Promise<voi
     throw new Error(`WaSender API error ${response.status}: ${err}`);
   }
 }
+
+// Backward compat: re-export the provider-agnostic function
+export { sendWhatsAppMessage } from '@/lib/whatsapp';
 
 /**
  * Verify WaSender API key by testing the sessions endpoint.
