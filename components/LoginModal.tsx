@@ -15,7 +15,7 @@ interface Props {
   onNip07: () => void;
   onNsec: (nsec: string) => void;
   onBunker: (url: string) => void;
-  onNostrConnect?: () => { uri: string; promise: Promise<void>; abort: () => void };
+  onNostrConnect?: () => Promise<{ uri: string; promise: Promise<void>; abort: () => void }>;
   onLoginSuccess?: () => Promise<void>;
 }
 
