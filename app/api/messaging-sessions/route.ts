@@ -47,34 +47,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ sessions: [] });
     }
 
-    // Fetch last message and message count for each session
+    // Fetch message counts and last message per session
+    // Chunk the query to avoid PostgREST URL length limits with large IN clauses
     const sessionIds = sessions.map((s: { id: string }) => s.id);
 
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('session_id, content, role, created_at')
-      .in('session_id', sessionIds)
-      .order('created_at', { ascending: false });
-
-    // Group by session_id
-    const msgBySession: Record<string, { count: number; last: { content: string; role: string; created_at: string } | null }> = {};
+    const countMap: Record<string, number> = {};
+    const lastMsgMap: Record<string, { content: string; role: string; created_at: string } | null> = {};
     for (const sid of sessionIds) {
-      msgBySession[sid] = { count: 0, last: null };
+      countMap[sid] = 0;
+      lastMsgMap[sid] = null;
     }
-    if (messages) {
-      for (const msg of messages) {
-        const entry = msgBySession[msg.session_id];
-        if (entry) {
-          entry.count++;
-          if (!entry.last) entry.last = msg;
+
+    const CHUNK = 30;
+    const chunks: string[][] = [];
+    for (let i = 0; i < sessionIds.length; i += CHUNK) {
+      chunks.push(sessionIds.slice(i, i + CHUNK));
+    }
+
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('session_id, content, role, created_at')
+          .in('session_id', chunk)
+          .order('created_at', { ascending: false })
+          .limit(5000);
+
+        if (msgs) {
+          for (const msg of msgs) {
+            if (countMap[msg.session_id] !== undefined) {
+              countMap[msg.session_id]++;
+              if (!lastMsgMap[msg.session_id]) {
+                lastMsgMap[msg.session_id] = { content: msg.content, role: msg.role, created_at: msg.created_at };
+              }
+            }
+          }
         }
-      }
-    }
+      })
+    );
 
     const enriched = sessions.map((s: Record<string, unknown>) => ({
       ...s,
-      message_count: msgBySession[s.id as string]?.count ?? 0,
-      last_message: msgBySession[s.id as string]?.last ?? null,
+      message_count: countMap[s.id as string] ?? 0,
+      last_message: lastMsgMap[s.id as string] ?? null,
     }));
 
     return NextResponse.json({ sessions: enriched });

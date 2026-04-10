@@ -249,6 +249,9 @@ export default function WhatsAppPage() {
   const [showChat, setShowChat] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+
   const fetchSessions = useCallback(async () => {
     const token = getToken();
     if (!token) return;
@@ -265,6 +268,55 @@ export default function WhatsAppPage() {
   }, []);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
+
+  // SSE: real-time WhatsApp messages
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    const es = new EventSource(`/api/sse/whatsapp?token=${encodeURIComponent(token)}`);
+
+    es.addEventListener('message.new', (e) => {
+      const msg = JSON.parse(e.data) as Message;
+
+      // Update session list: bump session to top with new last_message
+      setSessions((prev) => {
+        const idx = prev.findIndex((s) => s.id === msg.session_id);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        const session = { ...updated[idx] };
+        session.last_message = { content: msg.content, role: msg.role, created_at: msg.created_at };
+        session.message_count = (session.message_count || 0) + 1;
+        session.updated_at = msg.created_at;
+        updated.splice(idx, 1);
+        return [session, ...updated];
+      });
+
+      // Append to active conversation if it matches
+      if (msg.session_id === selectedIdRef.current) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev; // dedup
+          return [...prev, msg];
+        });
+      }
+    });
+
+    es.addEventListener('session.new', (e) => {
+      const session = JSON.parse(e.data) as Session;
+      setSessions((prev) => {
+        if (prev.some((s) => s.id === session.id)) return prev;
+        return [{ ...session, message_count: 0, last_message: null, users: null, events: null }, ...prev];
+      });
+    });
+
+    es.addEventListener('session.updated', (e) => {
+      const update = JSON.parse(e.data);
+      setSessions((prev) => prev.map((s) => (s.id === update.id ? { ...s, ...update } : s)));
+      setActiveSession((prev) => (prev?.id === update.id ? { ...prev, ...update } : prev));
+    });
+
+    return () => es.close();
+  }, []);
 
   useEffect(() => {
     const q = search.toLowerCase();
