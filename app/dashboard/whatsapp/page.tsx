@@ -481,7 +481,10 @@ export default function WhatsAppPage() {
               <SendMessageBar
                 sessionId={activeSession.id}
                 onSent={(msg) => {
-                  setMessages((prev) => [...prev, msg]);
+                  setMessages((prev) => {
+                    if (prev.some((m) => m.id === msg.id)) return prev;
+                    return [...prev, msg];
+                  });
                 }}
               />
             )}
