@@ -1,39 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import meetupConfig from "../config/meetup.json";
-
-const MEETUP_DATE =
-  process.env.NEXT_PUBLIC_MEETUP_DATE ?? meetupConfig.nextMeetupDate;
-
-const LUMA_URL = "https://luma.com/openclaw2";
-
-function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    const target = new Date(targetDate).getTime();
-    const tick = () => {
-      const now = Date.now();
-      const diff = Math.max(0, target - now);
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60),
-      });
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [targetDate]);
-
-  return timeLeft;
-}
+import { useEffect, useRef } from "react";
 
 export function HeroSection() {
   const logoRef = useRef<HTMLImageElement>(null);
-  const countdown = useCountdown(MEETUP_DATE);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,14 +16,6 @@ export function HeroSection() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const nextDate = new Date(MEETUP_DATE);
-  const formattedDate = nextDate.toLocaleDateString("es-AR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
   return (
     <section className="relative min-h-screen bg-[#121212] overflow-hidden pt-16 flex flex-col justify-between">
@@ -81,38 +43,38 @@ export function HeroSection() {
         <div className="flex-1">
           {/* Event badge */}
           <div className="inline-flex items-center gap-2 bg-[#C04040]/15 border border-[#C04040]/30 rounded-full px-4 py-1.5 mb-8">
-            <span className="w-2 h-2 rounded-full bg-[#C04040] animate-pulse" />
-            <span className="text-[#C04040] text-sm font-semibold tracking-wide">2do Meetup · 10 Abril</span>
+            <span className="w-2 h-2 rounded-full bg-[#C04040]" />
+            <span className="text-[#C04040] text-sm font-semibold tracking-wide">Evento finalizado · +180 asistentes</span>
           </div>
 
           <h1 className="text-white font-bold leading-[0.95] tracking-[-0.04em] text-[56px] sm:text-[80px] md:text-[100px] lg:text-[130px] xl:text-[170px]">
-            OpenClaw
+            ¡Gracias!
             <br />
-            <span className="text-[0.55em] font-bold text-white/80">Meetups.</span>
+            <span className="text-[0.55em] font-bold text-white/80">A toda la comunidad.</span>
           </h1>
 
           <p className="mt-8 md:mt-12 text-white/60 text-base md:text-lg max-w-md leading-relaxed">
-            De asistente a entidad.{" "}
+            Más de 180 personas se sumaron al segundo meetup de OpenClaw.{" "}
             <span className="text-white font-semibold italic">
-              Construí tu propio ser digital autónomo.
+              Gracias a cada quien que hizo posible esta noche.
             </span>
           </p>
 
           {/* CTA primary */}
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <a
-              href={LUMA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#experiencias"
               className="inline-flex items-center justify-center gap-3 bg-[#C04040] text-white px-8 py-4 rounded-full text-base font-bold transition-all hover:bg-[#d04848] hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(192,64,64,0.4)]"
             >
-              Reservá tu lugar ⚡
+              Ver el recap ⚡
             </a>
             <a
-              href="#experiencias"
+              href="https://lacrypta.ar"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-3 bg-white/10 text-white px-6 py-4 rounded-full text-base font-medium transition-all hover:bg-white/15 border border-white/10"
             >
-              Ver agenda
+              Sumate a la comunidad
             </a>
           </div>
 
@@ -125,31 +87,27 @@ export function HeroSection() {
 
         {/* Right side */}
         <div className="flex flex-col gap-8 lg:items-end lg:text-right w-full lg:w-[340px] lg:flex-shrink-0">
-          {/* Countdown */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { value: countdown.days, label: "días" },
-              { value: countdown.hours, label: "hs" },
-              { value: countdown.minutes, label: "min" },
-              { value: countdown.seconds, label: "seg" },
-            ].map(({ value, label }) => (
-              <div key={label} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl px-3 py-3">
-                <span className="text-white text-2xl md:text-3xl font-bold font-['Fragment_Mono',monospace] tabular-nums">
-                  {String(value).padStart(2, "0")}
-                </span>
-                <span className="text-white/40 text-xs mt-1">{label}</span>
-              </div>
-            ))}
+          {/* Attendance stat card */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-8 w-full flex flex-col items-center text-center">
+            <span className="text-white/40 text-xs font-medium uppercase tracking-widest">
+              Asistentes
+            </span>
+            <span className="text-white text-6xl md:text-7xl font-bold font-['Fragment_Mono',monospace] tabular-nums mt-3">
+              +180
+            </span>
+            <span className="text-white/50 text-sm mt-3 max-w-[240px]">
+              personas llenaron La Crypta para la segunda edición
+            </span>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <span className="text-white text-base font-medium">🎤 Bloque 1 — Charlas</span>
-            <span className="text-white text-base font-medium">🔧 Bloque 2 — Hardware</span>
-            <span className="text-white text-base font-medium">🥙 Shawarma & barra</span>
-            <span className="text-white text-base font-medium">🔥 Fogonero & networking</span>
+          <div className="flex flex-col gap-3 lg:items-end">
+            <span className="text-white text-base font-medium">🎤 Bloque 1 — Charlas ✓</span>
+            <span className="text-white text-base font-medium">🔧 Bloque 2 — Hardware ✓</span>
+            <span className="text-white text-base font-medium">🥙 Shawarma & barra ✓</span>
+            <span className="text-white text-base font-medium">🔥 Fogonero & networking ✓</span>
           </div>
 
-          {/* Next event card */}
+          {/* Organizer card */}
           <div className="bg-white rounded-2xl p-6 w-full">
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-full bg-[#f5f5f5] flex items-center justify-center flex-shrink-0">
@@ -169,18 +127,18 @@ export function HeroSection() {
               <span className="text-[#737373] text-xs font-medium uppercase tracking-wide">
                 Próximo meetup
               </span>
-              <p className="text-[#171717] text-sm font-bold capitalize mt-1">
-                {formattedDate}
+              <p className="text-[#171717] text-sm font-bold mt-1">
+                Muy pronto
               </p>
-              <p className="text-[#737373] text-sm mt-0.5">19:00 hs · Entrada libre</p>
+              <p className="text-[#737373] text-sm mt-0.5">Seguinos para enterarte primero</p>
             </div>
             <a
-              href={LUMA_URL}
+              href="https://lacrypta.ar"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 w-full justify-center text-sm inline-flex items-center gap-2 bg-[#C04040] text-white px-5 py-3 rounded-full font-semibold transition-all hover:bg-[#d04848]"
+              className="mt-4 w-full justify-center text-sm inline-flex items-center gap-2 bg-[#171717] text-white px-5 py-3 rounded-full font-semibold transition-all hover:bg-[#333]"
             >
-              Registrarse en Luma <span className="w-2 h-2 rounded-full bg-white" />
+              Visitar lacrypta.ar <span className="w-2 h-2 rounded-full bg-white" />
             </a>
           </div>
         </div>

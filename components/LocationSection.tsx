@@ -3,8 +3,6 @@
 const googleMapsUrl =
   "https://www.google.com/maps/search/?api=1&query=Villanueva+1367+Buenos+Aires+Argentina";
 
-const LUMA_URL = "https://luma.com/openclaw2";
-
 export function LocationSection() {
   return (
     <section id="contacto" className="py-24 md:py-32 bg-[#f5f5f5]">
@@ -30,14 +28,6 @@ export function LocationSection() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <a
-                href={LUMA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 bg-[#C04040] text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:bg-[#d04848] hover:shadow-[0_0_24px_rgba(192,64,64,0.35)] w-fit"
-              >
-                Reservá tu lugar ⚡
-              </a>
               <a
                 href={googleMapsUrl}
                 target="_blank"
