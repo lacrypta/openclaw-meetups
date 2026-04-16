@@ -1,17 +1,15 @@
 "use client";
 
-const LUMA_URL = "https://luma.com/openclaw2";
-
 export function AboutSection() {
   return (
     <section id="about" className="py-24 md:py-32 bg-[#f5f5f5]">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
         {/* Section label */}
-        <div className="section-label mb-8">Nosotros</div>
+        <div className="section-label mb-8">Lo que pasó</div>
 
         {/* Giant heading */}
         <h2 className="text-[#171717] font-bold text-[48px] sm:text-[72px] md:text-[96px] lg:text-[120px] leading-[0.95] tracking-[-0.04em] mb-16">
-          Nosotros.
+          Gracias.
         </h2>
 
         {/* Two column layout */}
@@ -19,26 +17,32 @@ export function AboutSection() {
           {/* Left column */}
           <div>
             <p className="text-[#171717] text-xl md:text-2xl font-bold leading-snug mb-6">
-              Somos una comunidad que une inteligencia artificial open-source con la cultura Bitcoin y Nostr.
+              Más de 180 personas llenaron La Crypta para la segunda edición de OpenClaw Meetups.
             </p>
           </div>
 
           {/* Right column */}
           <div className="flex flex-col gap-6">
             <p className="text-[#737373] text-base md:text-lg leading-relaxed">
-              OpenClaw es tu asistente de IA personal, open-source, que corre localmente en tu máquina. No necesitás depender de servicios de terceros ni entregar tus datos a nadie.
+              Gracias a cada persona que se acercó, preguntó, programó, compartió una birra y ayudó a construir esta comunidad. Sin ustedes no hay meetup.
             </p>
             <p className="text-[#737373] text-base md:text-lg leading-relaxed">
-              La Crypta es un espacio comunitario en Buenos Aires dedicado a Bitcoin, Nostr y tecnologías libres. Juntos creamos encuentros donde la tecnología se vive en primera persona.
+              Gracias también a los speakers, voluntarios y al equipo de La Crypta que hicieron posible una noche llena de charlas, demos, hardware y networking.
             </p>
             <a href="#experiencias" className="btn-pill w-fit">
-              Ver agenda <span className="dot" />
+              Ver el recap <span className="dot" />
             </a>
           </div>
         </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 border-t border-[#e5e5e5]">
+          <div>
+            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">+180</span>
+            <p className="text-[#737373] text-[13px] mt-2 leading-snug">
+              Asistentes en el segundo meetup
+            </p>
+          </div>
           <div>
             <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">2</span>
             <p className="text-[#737373] text-[13px] mt-2 leading-snug">
@@ -49,12 +53,6 @@ export function AboutSection() {
             <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">5+</span>
             <p className="text-[#737373] text-[13px] mt-2 leading-snug">
               Charlas y demos realizadas
-            </p>
-          </div>
-          <div>
-            <span className="text-[#171717] text-[48px] md:text-[64px] font-bold leading-none">75</span>
-            <p className="text-[#737373] text-[13px] mt-2 leading-snug">
-              Personas en el primer evento
             </p>
           </div>
           <div>
@@ -69,7 +67,7 @@ export function AboutSection() {
         <div className="mt-20 bg-[#121212] rounded-3xl p-8 md:p-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle,rgba(192,64,64,0.1)_0%,transparent_70%)] pointer-events-none" />
           <div className="relative z-10">
-            <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speakers destacados</span>
+            <span className="text-[#C04040] text-xs font-bold uppercase tracking-widest">Speakers que pasaron por el escenario</span>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Cami */}
@@ -106,12 +104,12 @@ export function AboutSection() {
             </div>
 
             <a
-              href={LUMA_URL}
+              href="https://lacrypta.ar"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 bg-[#C04040] text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all hover:bg-[#d04848] hover:shadow-[0_0_24px_rgba(192,64,64,0.35)] mt-8"
             >
-              No te lo pierdas ⚡
+              Seguí a la comunidad ⚡
             </a>
           </div>
         </div>
