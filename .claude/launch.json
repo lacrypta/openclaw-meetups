@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nextjs-dev",
+      "runtimeExecutable": "/Users/agustinkassis/.nvm/versions/node/v22.14.0/bin/node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "nextjs-prod",
+      "runtimeExecutable": "/Users/agustinkassis/.nvm/versions/node/v22.14.0/bin/pnpm",
+      "runtimeArgs": ["next", "start"],
+      "port": 3000
+    },
+    {
+      "name": "supabase-local",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["supabase", "start"],
+      "port": 54321
+    }
+  ]
+}
